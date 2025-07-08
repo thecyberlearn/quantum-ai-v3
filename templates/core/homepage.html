@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetCop Hub - AI Agent Marketplace</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .user-info { float: right; }
+        .balance { background: #e8f5e8; padding: 5px 15px; border-radius: 20px; color: #2d5a2d; }
+        .agents-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .agent-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .agent-header { display: flex; align-items: center; margin-bottom: 15px; }
+        .agent-icon { font-size: 2em; margin-right: 15px; }
+        .agent-name { font-size: 1.3em; font-weight: bold; margin: 0; }
+        .agent-price { color: #007bff; font-weight: bold; }
+        .agent-rating { color: #ffa500; }
+        .category-section { margin-bottom: 30px; }
+        .category-title { font-size: 1.5em; margin-bottom: 15px; padding: 10px; background: #007bff; color: white; border-radius: 5px; }
+        .btn { padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px; }
+        .btn:hover { background: #0056b3; }
+        .auth-links { margin-top: 10px; }
+        .auth-links a { margin-right: 15px; text-decoration: none; color: #007bff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>NetCop Hub - AI Agent Marketplace</h1>
+            <div class="user-info">
+                {% if user.is_authenticated %}
+                    <p>Welcome, {{ user.username }}!</p>
+                    <div class="balance">Balance: ${{ user_balance }}</div>
+                    <div class="auth-links">
+                        <a href="{% url 'profile' %}">Profile</a>
+                        <a href="{% url 'wallet' %}">Wallet</a>
+                        <a href="{% url 'logout' %}">Logout</a>
+                    </div>
+                {% else %}
+                    <div class="auth-links">
+                        <a href="{% url 'login' %}">Login</a>
+                        <a href="{% url 'register' %}">Register</a>
+                    </div>
+                {% endif %}
+            </div>
+            <div style="clear: both;"></div>
+        </div>
+
+        {% if categories %}
+            {% for category_name, category_agents in categories.items %}
+                <div class="category-section">
+                    <div class="category-title">{{ category_name }}</div>
+                    <div class="agents-grid">
+                        {% for agent in category_agents %}
+                            <div class="agent-card">
+                                <div class="agent-header">
+                                    <div class="agent-icon">{{ agent.icon }}</div>
+                                    <div>
+                                        <div class="agent-name">{{ agent.name }}</div>
+                                        <div class="agent-price">${{ agent.price }}</div>
+                                        <div class="agent-rating">
+                                            ★ {{ agent.rating }} ({{ agent.review_count }} reviews)
+                                        </div>
+                                    </div>
+                                </div>
+                                <p>{{ agent.description }}</p>
+                                <a href="{% url 'agent_detail' agent.slug %}" class="btn">Use Agent</a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="agents-grid">
+                <div class="agent-card">
+                    <h3>No agents available</h3>
+                    <p>Please check back later or contact the administrator.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

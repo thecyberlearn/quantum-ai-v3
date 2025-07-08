@@ -1,0 +1,119 @@
+ │ Simplified Hardcoded Agent Pages Plan                                                                      │
+     │                                                                                                            │
+     │ Overview                                                                                                   │
+     │                                                                                                            │
+     │ Create individual hardcoded pages for each agent with specific integrations to n8n workflows. Each agent   │
+     │ gets its own custom page with tailored UI and webhook connections.                                         │
+     │                                                                                                            │
+     │ Implementation Approach                                                                                    │
+     │                                                                                                            │
+     │ 1. Route Structure                                                                                         │
+     │                                                                                                            │
+     │ - /agent/pdf-processor - PDF processing agent page                                                         │
+     │ - /agent/weather-report - Weather report agent page                                                        │
+     │ - /agent/content-writer - Content writing agent page                                                       │
+     │ - /agent/data-analyzer - Data analysis agent page                                                          │
+     │ - /agent/email-automation - Email automation agent page                                                    │
+     │ - /agent/task-automation - Task automation agent page                                                      │
+     │                                                                                                            │
+     │ 2. Update Current Flow                                                                                     │
+     │                                                                                                            │
+     │ Modify useAgent function in page.tsx:                                                                      │
+     │ - Instead of showing modal with mock results                                                               │
+     │ - Redirect to specific agent page: router.push(/agent/${agent.slug})                                       │
+     │ - Pass agent info and user data via URL params or state                                                    │
+     │                                                                                                            │
+     │ 3. Example Implementation: PDF Processor Agent                                                             │
+     │                                                                                                            │
+     │ Page: /app/agent/pdf-processor/page.tsx                                                                    │
+     │ - File upload component for PDF                                                                            │
+     │ - Form fields for processing options                                                                       │
+     │ - Connect to specific n8n webhook                                                                          │
+     │ - Display results from Google Sheets API                                                                   │
+     │ - Deduct credits on successful processing                                                                  │
+     │                                                                                                            │
+     │ Workflow:                                                                                                  │
+     │ 1. User uploads PDF file                                                                                   │
+     │ 2. Send file + options to n8n webhook                                                                      │
+     │ 3. n8n processes PDF and saves results to Google Sheet                                                     │
+     │ 4. Page fetches results from Google Sheets                                                                 │
+     │ 5. Display formatted results to user                                                                       │
+     │ 6. Deduct credits from user account                                                                        │
+     │                                                                                                            │
+     │ 4. Agent Page Components                                                                                   │
+     │                                                                                                            │
+     │ Each agent page will have:                                                                                 │
+     │ - Custom input form (file upload, text fields, dropdowns)                                                  │
+     │ - Processing status indicator                                                                              │
+     │ - Results display section                                                                                  │
+     │ - Credit cost display                                                                                      │
+     │ - Back to agents list button                                                                               │
+     │                                                                                                            │
+     │ 5. N8N Integration Pattern                                                                                 │
+     │                                                                                                            │
+     │ For each agent:                                                                                            │
+     │ - Unique n8n webhook URL                                                                                   │
+     │ - Hardcoded request format                                                                                 │
+     │ - Specific response handling                                                                               │
+     │ - Google Sheets integration for data storage/retrieval                                                     │
+     │                                                                                                            │
+     │ 6. Example Agent Pages Structure                                                                           │
+     │                                                                                                            │
+     │ PDF Processor:                                                                                             │
+     │ - Input: PDF file, processing type (extract text/data/images)                                              │
+     │ - N8N: PDF processing workflow                                                                             │
+     │ - Output: Extracted data displayed in tables/lists                                                         │
+     │                                                                                                            │
+     │ Weather Report:                                                                                            │
+     │ - Input: Location, date range                                                                              │
+     │ - N8N: Weather API workflow                                                                                │
+     │ - Output: Weather forecast with charts                                                                     │
+     │                                                                                                            │
+     │ Content Writer:                                                                                            │
+     │ - Input: Topic, content type, length                                                                       │
+     │ - N8N: OpenAI integration workflow                                                                         │
+     │ - Output: Generated content with formatting                                                                │
+     │                                                                                                            │
+     │ Data Analyzer:                                                                                             │
+     │ - Input: CSV/Excel file upload                                                                             │
+     │ - N8N: Data processing workflow                                                                            │
+     │ - Output: Analysis results, charts, insights                                                               │
+     │                                                                                                            │
+     │ 7. File Structure                                                                                          │
+     │                                                                                                            │
+     │ src/app/agent/                                                                                             │
+     │ ├── pdf-processor/                                                                                         │
+     │ │   └── page.tsx                                                                                           │
+     │ ├── weather-report/                                                                                        │
+     │ │   └── page.tsx                                                                                           │
+     │ ├── content-writer/                                                                                        │
+     │ │   └── page.tsx                                                                                           │
+     │ ├── data-analyzer/                                                                                         │
+     │ │   └── page.tsx                                                                                           │
+     │ ├── email-automation/                                                                                      │
+     │ │   └── page.tsx                                                                                           │
+     │ └── task-automation/                                                                                       │
+     │     └── page.tsx                                                                                           │
+     │                                                                                                            │
+     │ 8. Shared Components                                                                                       │
+     │                                                                                                            │
+     │ src/components/agent-shared/                                                                               │
+     │ ├── AgentLayout.tsx       # Common layout for all agent pages                                              │
+     │ ├── FileUpload.tsx        # File upload component                                                          │
+     │ ├── ProcessingStatus.tsx  # Status indicator                                                               │
+     │ ├── ResultsDisplay.tsx    # Results formatting                                                             │
+     │ └── CreditCounter.tsx     # Credit cost display                                                            │
+     │                                                                                                            │
+     │ 9. Implementation Steps                                                                                    │
+     │                                                                                                            │
+     │ 1. Create agent slug mapping in database                                                                   │
+     │ 2. Update main page to redirect instead of showing modal                                                   │
+     │ 3. Create first agent page (PDF processor) as template                                                     │
+     │ 4. Add n8n webhook integration                                                                             │
+     │ 5. Implement Google Sheets result fetching                                                                 │
+     │ 6. Add credit deduction on success                                                                         │
+     │ 7. Replicate pattern for other agents                                                                      │
+     │                                                                                                            │
+     │ This approach keeps each agent simple and hardcoded while providing real functionality through n8n         │
+     │ workflows and external integrations.                                                                       │
+     ╰──────────────────────────────────────

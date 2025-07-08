@@ -1,0 +1,1535 @@
+# Complete Next.js + Supabase Development Guide 2025
+
+**A comprehensive, standalone guide for building production-ready applications with Next.js 15 and Supabase**
+
+This guide covers everything from project setup to deployment, including authentication, database operations, TypeScript integration, and modern best practices. Perfect for beginners and as a reference for experienced developers.
+
+---
+
+## Table of Contents
+1. [Prerequisites & Initial Setup](#prerequisites--initial-setup)
+2. [Project Creation & Configuration](#project-creation--configuration)
+3. [Supabase Integration](#supabase-integration)
+4. [Project Structure](#project-structure)
+5. [Database Schema & Security](#database-schema--security)
+6. [Authentication Implementation](#authentication-implementation)
+7. [CRUD Operations](#crud-operations)
+8. [UI Components & Styling](#ui-components--styling)
+9. [Error Handling & Loading States](#error-handling--loading-states)
+10. [TypeScript Configuration](#typescript-configuration)
+11. [Deployment & Production](#deployment--production)
+12. [Complete Code Examples](#complete-code-examples)
+
+---
+
+## Prerequisites & Initial Setup
+
+### System Requirements
+- **Node.js**: 18.17.0 or higher
+- **npm**: 9.0.0 or higher (or yarn/pnpm equivalent)
+- **Git**: For version control
+- **Code Editor**: VS Code recommended
+
+### Version Requirements (2025)
+- **Next.js**: 15.x (latest)
+- **React**: 19 RC
+- **Supabase JS**: 2.50.1+
+- **TypeScript**: 5.1.3+
+- **Tailwind CSS**: 4.x
+
+### Supabase Account Setup
+1. Go to [supabase.com](https://supabase.com)
+2. Sign up for a free account
+3. Create a new project
+4. Choose a database password (save it securely)
+5. Wait for project initialization (~2 minutes)
+
+---
+
+## Project Creation & Configuration
+
+### 1. Create Next.js Application
+
+```bash
+npx create-next-app@latest my-supabase-app
+```
+
+**Choose these options when prompted:**
+```
+✓ Would you like to use TypeScript? → Yes
+✓ Would you like to use ESLint? → Yes
+✓ Would you like to use Tailwind CSS? → Yes
+✓ Would you like to use `src/` directory? → Yes
+✓ Would you like to use App Router? → Yes
+✓ Would you like to use Turbopack for `next dev`? → Yes
+✓ Would you like to customize the default import alias (@/*)? → Yes
+```
+
+### 2. Navigate to Project & Install Dependencies
+
+```bash
+cd my-supabase-app
+npm install @supabase/supabase-js @supabase/ssr
+```
+
+**Important**: Don't install `@supabase/auth-helpers-nextjs` - it's deprecated. Use `@supabase/ssr` instead.
+
+### 3. Environment Variables Setup
+
+Create `.env.local` in your project root:
+
+```env
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Optional: For admin operations (keep secure, never expose to client)
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+```
+
+**To find your Supabase credentials:**
+1. Go to your Supabase project dashboard
+2. Click on "Settings" → "API"
+3. Copy "Project URL" and "anon public" key
+
+---
+
+## Supabase Integration
+
+### 1. Client-Side Supabase Client
+
+Create `src/lib/supabase/client.ts`:
+
+```typescript
+import { createBrowserClient } from '@supabase/ssr'
+
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
+```
+
+### 2. Server-Side Supabase Client
+
+Create `src/lib/supabase/server.ts`:
+
+```typescript
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+
+export async function createClient() {
+  const cookieStore = await cookies()
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
+          } catch {
+            // Server component case - cookies can't be set
+          }
+        },
+      },
+    }
+  )
+}
+```
+
+### 3. Session Management Middleware
+
+Create `middleware.ts` in your project root (same level as `package.json`):
+
+```typescript
+import { type NextRequest } from 'next/server'
+import { updateSession } from '@/lib/supabase/middleware'
+
+export async function middleware(request: NextRequest) {
+  return await updateSession(request)
+}
+
+export const config = {
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
+}
+```
+
+Create `src/lib/supabase/middleware.ts`:
+
+```typescript
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+
+export async function updateSession(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({
+    request,
+  })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value)
+            supabaseResponse.cookies.set(name, value, options)
+          })
+        },
+      },
+    }
+  )
+
+  // Refresh session if needed
+  const { data: { user } } = await supabase.auth.getUser()
+
+  return supabaseResponse
+}
+```
+
+---
+
+## Project Structure
+
+### Recommended File Organization
+
+```
+my-supabase-app/
+├── src/
+│   ├── app/                          # App Router (Next.js 13+)
+│   │   ├── globals.css              # Global styles
+│   │   ├── layout.tsx               # Root layout
+│   │   ├── page.tsx                 # Home page
+│   │   ├── loading.tsx              # Global loading UI
+│   │   ├── error.tsx                # Global error boundary
+│   │   ├── not-found.tsx            # 404 page
+│   │   │
+│   │   ├── (auth)/                  # Route groups for organization
+│   │   │   ├── login/
+│   │   │   │   ├── page.tsx
+│   │   │   │   ├── actions.ts       # Server actions
+│   │   │   │   └── loading.tsx
+│   │   │   └── signup/
+│   │   │       └── page.tsx
+│   │   │
+│   │   ├── dashboard/               # Protected routes
+│   │   │   ├── layout.tsx           # Dashboard layout
+│   │   │   ├── page.tsx
+│   │   │   ├── actions.ts           # Server actions for dashboard
+│   │   │   ├── loading.tsx
+│   │   │   ├── error.tsx
+│   │   │   └── tasks/
+│   │   │       └── page.tsx
+│   │   │
+│   │   └── api/                     # API routes
+│   │       └── auth/
+│   │           └── confirm/
+│   │               └── route.ts     # Email confirmation
+│   │
+│   ├── components/                  # Reusable components
+│   │   ├── ui/                     # Basic UI components (shadcn/ui)
+│   │   │   ├── button.tsx
+│   │   │   ├── card.tsx
+│   │   │   ├── input.tsx
+│   │   │   └── skeleton.tsx
+│   │   ├── layout/                 # Layout components
+│   │   │   ├── header.tsx
+│   │   │   ├── nav.tsx
+│   │   │   └── footer.tsx
+│   │   └── features/               # Feature-specific components
+│   │       ├── auth/
+│   │       │   ├── login-form.tsx
+│   │       │   └── logout-button.tsx
+│   │       └── tasks/
+│   │           ├── task-list.tsx
+│   │           └── task-form.tsx
+│   │
+│   ├── lib/                        # Utility libraries
+│   │   ├── utils.ts               # General utilities
+│   │   ├── dal.ts                 # Data Access Layer (security)
+│   │   ├── validations.ts         # Schema validations
+│   │   └── supabase/              # Supabase configuration
+│   │       ├── client.ts          # Client-side client
+│   │       ├── server.ts          # Server-side client
+│   │       └── middleware.ts      # Session management
+│   │
+│   ├── hooks/                      # Custom React hooks
+│   │   ├── use-auth.ts
+│   │   └── use-local-storage.ts
+│   │
+│   └── types/                      # TypeScript definitions
+│       └── database.types.ts       # Generated Supabase types
+│
+├── middleware.ts                   # Next.js middleware
+├── next.config.ts                  # Next.js configuration
+├── tailwind.config.ts             # Tailwind configuration
+├── tsconfig.json                  # TypeScript configuration
+└── package.json
+```
+
+---
+
+## Database Schema & Security
+
+### 1. Create Tables in Supabase
+
+Go to your Supabase project → SQL Editor → New Query, and run:
+
+```sql
+-- Create the tasks table
+CREATE TABLE tasks (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT,
+  completed BOOLEAN DEFAULT FALSE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
+
+-- Create security policies
+CREATE POLICY "Users can view own tasks" ON tasks
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own tasks" ON tasks
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own tasks" ON tasks
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own tasks" ON tasks
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Create indexes for performance
+CREATE INDEX idx_tasks_user_id ON tasks(user_id);
+CREATE INDEX idx_tasks_created_at ON tasks(created_at DESC);
+
+-- Add updated_at trigger
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = TIMEZONE('utc'::text, NOW());
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_tasks_updated_at 
+    BEFORE UPDATE ON tasks 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+```
+
+### 2. Generate TypeScript Types
+
+Run this command to generate types from your database:
+
+```bash
+npx supabase gen types typescript --project-id your_project_id > src/types/database.types.ts
+```
+
+Replace `your_project_id` with your actual Supabase project ID (found in Project Settings → General).
+
+---
+
+## Authentication Implementation
+
+### 1. Data Access Layer (Security)
+
+Create `src/lib/dal.ts`:
+
+```typescript
+import 'server-only'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { cache } from 'react'
+
+export const verifySession = cache(async () => {
+  const supabase = await createClient()
+  const { data: { user }, error } = await supabase.auth.getUser()
+  
+  if (error || !user) {
+    redirect('/login')
+  }
+  
+  return { isAuth: true, user }
+})
+
+export const getUser = cache(async () => {
+  const session = await verifySession()
+  if (!session) return null
+  
+  return session.user
+})
+```
+
+### 2. Login Page
+
+Create `src/app/(auth)/login/page.tsx`:
+
+```typescript
+import { login, signup } from './actions'
+
+export default function LoginPage() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="w-full max-w-md space-y-8">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-gray-900">
+            Sign in to your account
+          </h2>
+        </div>
+        <form className="mt-8 space-y-6">
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                placeholder="Enter your email"
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                placeholder="Enter your password"
+              />
+            </div>
+          </div>
+          <div className="flex space-x-4">
+            <button
+              formAction={login}
+              className="flex-1 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            >
+              Log in
+            </button>
+            <button
+              formAction={signup}
+              className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            >
+              Sign up
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+```
+
+### 3. Authentication Server Actions
+
+Create `src/app/(auth)/login/actions.ts`:
+
+```typescript
+'use server'
+
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+
+export async function login(formData: FormData) {
+  const supabase = await createClient()
+
+  const data = {
+    email: formData.get('email') as string,
+    password: formData.get('password') as string,
+  }
+
+  const { error } = await supabase.auth.signInWithPassword(data)
+
+  if (error) {
+    console.error('Login error:', error)
+    redirect('/login?error=Invalid credentials')
+  }
+
+  revalidatePath('/', 'layout')
+  redirect('/dashboard')
+}
+
+export async function signup(formData: FormData) {
+  const supabase = await createClient()
+
+  const data = {
+    email: formData.get('email') as string,
+    password: formData.get('password') as string,
+  }
+
+  const { error } = await supabase.auth.signUp(data)
+
+  if (error) {
+    console.error('Signup error:', error)
+    redirect('/login?error=Could not create account')
+  }
+
+  revalidatePath('/', 'layout')
+  redirect('/login?message=Check your email to confirm your account')
+}
+
+export async function logout() {
+  const supabase = await createClient()
+  await supabase.auth.signOut()
+  revalidatePath('/', 'layout')
+  redirect('/login')
+}
+```
+
+### 4. Email Confirmation Route
+
+Create `src/app/api/auth/confirm/route.ts`:
+
+```typescript
+import { createClient } from '@/lib/supabase/server'
+import { NextRequest, NextResponse } from 'next/server'
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url)
+  const token_hash = searchParams.get('token_hash')
+  const type = searchParams.get('type')
+  const next = searchParams.get('next') ?? '/dashboard'
+
+  if (token_hash && type) {
+    const supabase = await createClient()
+
+    const { error } = await supabase.auth.verifyOtp({
+      type: type as any,
+      token_hash,
+    })
+
+    if (!error) {
+      return NextResponse.redirect(new URL(next, request.url))
+    }
+  }
+
+  // Redirect to error page if confirmation fails
+  return NextResponse.redirect(new URL('/login?error=Could not confirm account', request.url))
+}
+```
+
+---
+
+## CRUD Operations
+
+### 1. Dashboard Page with Data Fetching
+
+Create `src/app/dashboard/page.tsx`:
+
+```typescript
+import { verifySession } from '@/lib/dal'
+import { createClient } from '@/lib/supabase/server'
+import TaskList from '@/components/features/tasks/task-list'
+import TaskForm from '@/components/features/tasks/task-form'
+import LogoutButton from '@/components/features/auth/logout-button'
+
+export default async function Dashboard() {
+  const session = await verifySession()
+  const supabase = await createClient()
+  
+  const { data: tasks, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching tasks:', error)
+    return <div>Error loading tasks</div>
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="py-10">
+          <header className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold leading-tight text-gray-900">
+                Dashboard
+              </h1>
+              <p className="text-gray-600">Welcome back, {session.user.email}</p>
+            </div>
+            <LogoutButton />
+          </header>
+          <main className="mt-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2">
+                <TaskList tasks={tasks || []} />
+              </div>
+              <div>
+                <TaskForm />
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  )
+}
+```
+
+### 2. Server Actions for CRUD Operations
+
+Create `src/app/dashboard/actions.ts`:
+
+```typescript
+'use server'
+
+import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
+
+export async function createTask(formData: FormData) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const title = formData.get('title') as string
+  const description = formData.get('description') as string
+
+  if (!title.trim()) {
+    return { error: 'Title is required' }
+  }
+
+  const { error } = await supabase
+    .from('tasks')
+    .insert([
+      {
+        title: title.trim(),
+        description: description?.trim() || null,
+        user_id: user.id,
+      },
+    ])
+
+  if (error) {
+    console.error('Error creating task:', error)
+    return { error: 'Failed to create task' }
+  }
+
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+
+export async function updateTask(id: string, formData: FormData) {
+  const supabase = await createClient()
+
+  const title = formData.get('title') as string
+  const description = formData.get('description') as string
+  const completed = formData.get('completed') === 'on'
+
+  const { error } = await supabase
+    .from('tasks')
+    .update({
+      title: title.trim(),
+      description: description?.trim() || null,
+      completed,
+    })
+    .eq('id', id)
+
+  if (error) {
+    console.error('Error updating task:', error)
+    return { error: 'Failed to update task' }
+  }
+
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+
+export async function deleteTask(id: string) {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('tasks')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error('Error deleting task:', error)
+    return { error: 'Failed to delete task' }
+  }
+
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+
+export async function toggleTask(id: string, completed: boolean) {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('tasks')
+    .update({ completed })
+    .eq('id', id)
+
+  if (error) {
+    console.error('Error toggling task:', error)
+    return { error: 'Failed to update task' }
+  }
+
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+```
+
+---
+
+## UI Components & Styling
+
+### 1. Utility Functions
+
+Create `src/lib/utils.ts`:
+
+```typescript
+import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+export function formatDate(date: string | Date) {
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(date))
+}
+```
+
+### 2. Task List Component
+
+Create `src/components/features/tasks/task-list.tsx`:
+
+```typescript
+import { toggleTask, deleteTask } from '@/app/dashboard/actions'
+import { formatDate } from '@/lib/utils'
+
+type Task = {
+  id: string
+  title: string
+  description: string | null
+  completed: boolean
+  created_at: string
+  updated_at: string
+}
+
+type TaskListProps = {
+  tasks: Task[]
+}
+
+export default function TaskList({ tasks }: TaskListProps) {
+  if (tasks.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500">No tasks yet. Create your first task!</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold text-gray-900">Your Tasks</h2>
+      <div className="space-y-3">
+        {tasks.map((task) => (
+          <div
+            key={task.id}
+            className="bg-white p-4 rounded-lg shadow-sm border border-gray-200"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex items-start space-x-3 flex-1">
+                <form action={toggleTask.bind(null, task.id, !task.completed)}>
+                  <button
+                    type="submit"
+                    className={`mt-1 w-4 h-4 rounded border-2 flex items-center justify-center ${
+                      task.completed
+                        ? 'bg-green-500 border-green-500 text-white'
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                  >
+                    {task.completed && (
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                </form>
+                <div className="flex-1">
+                  <h3
+                    className={`font-medium ${
+                      task.completed
+                        ? 'text-gray-500 line-through'
+                        : 'text-gray-900'
+                    }`}
+                  >
+                    {task.title}
+                  </h3>
+                  {task.description && (
+                    <p
+                      className={`mt-1 text-sm ${
+                        task.completed ? 'text-gray-400' : 'text-gray-600'
+                      }`}
+                    >
+                      {task.description}
+                    </p>
+                  )}
+                  <p className="mt-2 text-xs text-gray-400">
+                    Created {formatDate(task.created_at)}
+                  </p>
+                </div>
+              </div>
+              <form action={deleteTask.bind(null, task.id)}>
+                <button
+                  type="submit"
+                  className="text-red-400 hover:text-red-600 p-1"
+                  onClick={(e) => {
+                    if (!confirm('Are you sure you want to delete this task?')) {
+                      e.preventDefault()
+                    }
+                  }}
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2h8a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 112 0v3a1 1 0 11-2 0V9zm4 0a1 1 0 112 0v3a1 1 0 11-2 0V9z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </form>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+```
+
+### 3. Task Form Component
+
+Create `src/components/features/tasks/task-form.tsx`:
+
+```typescript
+'use client'
+
+import { createTask } from '@/app/dashboard/actions'
+import { useActionState } from 'react'
+
+export default function TaskForm() {
+  const [state, formAction, pending] = useActionState(createTask, null)
+
+  return (
+    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+      <h2 className="text-lg font-semibold text-gray-900 mb-4">Add New Task</h2>
+      <form action={formAction} className="space-y-4">
+        <div>
+          <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+            Title *
+          </label>
+          <input
+            type="text"
+            id="title"
+            name="title"
+            required
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            placeholder="Enter task title"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+            Description
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            rows={3}
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            placeholder="Enter task description (optional)"
+          />
+        </div>
+        
+        <button
+          type="submit"
+          disabled={pending}
+          className="w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {pending ? 'Creating...' : 'Create Task'}
+        </button>
+        
+        {state?.error && (
+          <p className="text-sm text-red-600" aria-live="polite">
+            {state.error}
+          </p>
+        )}
+      </form>
+    </div>
+  )
+}
+```
+
+### 4. Logout Button Component
+
+Create `src/components/features/auth/logout-button.tsx`:
+
+```typescript
+import { logout } from '@/app/(auth)/login/actions'
+
+export default function LogoutButton() {
+  return (
+    <form action={logout}>
+      <button
+        type="submit"
+        className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+      >
+        Logout
+      </button>
+    </form>
+  )
+}
+```
+
+---
+
+## Error Handling & Loading States
+
+### 1. Global Error Boundary
+
+Create `src/app/error.tsx`:
+
+```typescript
+'use client'
+
+import { useEffect } from 'react'
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string }
+  reset: () => void
+}) {
+  useEffect(() => {
+    console.error(error)
+  }, [error])
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Something went wrong!</h2>
+        <p className="text-gray-600 mb-6">
+          An error occurred while loading this page.
+        </p>
+        <button
+          onClick={() => reset()}
+          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        >
+          Try again
+        </button>
+      </div>
+    </div>
+  )
+}
+```
+
+### 2. Global Loading State
+
+Create `src/app/loading.tsx`:
+
+```typescript
+export default function Loading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Loading...</p>
+      </div>
+    </div>
+  )
+}
+```
+
+### 3. Dashboard Loading State
+
+Create `src/app/dashboard/loading.tsx`:
+
+```typescript
+export default function DashboardLoading() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="py-10">
+          <header className="flex justify-between items-center">
+            <div>
+              <div className="h-8 w-48 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mt-2"></div>
+            </div>
+            <div className="h-10 w-20 bg-gray-200 rounded animate-pulse"></div>
+          </header>
+          <main className="mt-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 space-y-4">
+                <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-4 h-4 bg-gray-200 rounded animate-pulse mt-1"></div>
+                      <div className="flex-1">
+                        <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-4 w-full bg-gray-200 rounded animate-pulse mt-2"></div>
+                        <div className="h-3 w-24 bg-gray-200 rounded animate-pulse mt-3"></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                  <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mb-4"></div>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="h-4 w-16 bg-gray-200 rounded animate-pulse mb-2"></div>
+                      <div className="h-10 w-full bg-gray-200 rounded animate-pulse"></div>
+                    </div>
+                    <div>
+                      <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mb-2"></div>
+                      <div className="h-20 w-full bg-gray-200 rounded animate-pulse"></div>
+                    </div>
+                    <div className="h-10 w-full bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  )
+}
+```
+
+### 4. Not Found Page
+
+Create `src/app/not-found.tsx`:
+
+```typescript
+import Link from 'next/link'
+
+export default function NotFound() {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <h1 className="text-6xl font-bold text-gray-900">404</h1>
+        <h2 className="text-2xl font-semibold text-gray-700 mt-4">Page Not Found</h2>
+        <p className="text-gray-600 mt-2 mb-6">
+          The page you're looking for doesn't exist.
+        </p>
+        <Link
+          href="/dashboard"
+          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        >
+          Go to Dashboard
+        </Link>
+      </div>
+    </div>
+  )
+}
+```
+
+---
+
+## TypeScript Configuration
+
+### 1. Enhanced tsconfig.json
+
+Update your `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "es6"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/types/*": ["./src/types/*"],
+      "@/app/*": ["./src/app/*"],
+      "@/hooks/*": ["./src/hooks/*"]
+    },
+    "target": "ES2017",
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
+}
+```
+
+### 2. Type Definitions
+
+Create `src/types/auth.ts`:
+
+```typescript
+export interface User {
+  id: string
+  email: string
+  created_at: string
+}
+
+export interface Session {
+  user: User
+  access_token: string
+  refresh_token: string
+}
+```
+
+Create `src/types/tasks.ts`:
+
+```typescript
+export interface Task {
+  id: string
+  title: string
+  description: string | null
+  completed: boolean
+  user_id: string
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateTaskData {
+  title: string
+  description?: string
+}
+
+export interface UpdateTaskData {
+  title?: string
+  description?: string | null
+  completed?: boolean
+}
+```
+
+---
+
+## Deployment & Production
+
+### 1. Next.js Configuration
+
+Update `next.config.ts`:
+
+```typescript
+import type { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {
+  experimental: {
+    // Enable React Compiler (experimental)
+    reactCompiler: false, // Set to true when ready for production
+    // Enable typed routes
+    typedRoutes: true,
+  },
+  
+  // TypeScript configuration
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  
+  // ESLint configuration
+  eslint: {
+    ignoreDuringBuilds: false,
+  },
+  
+  // Images configuration for Supabase storage
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
+  },
+  
+  // Security headers
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin',
+          },
+        ],
+      },
+    ]
+  },
+}
+
+export default nextConfig
+```
+
+### 2. Environment Variables for Production
+
+Create `.env.example`:
+
+```env
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+
+# Optional: For admin operations (keep secure)
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# Next.js
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-nextauth-secret
+```
+
+### 3. Deployment Checklist
+
+**Before deploying:**
+
+1. ✅ Test authentication flow completely
+2. ✅ Verify RLS policies work correctly
+3. ✅ Test all CRUD operations
+4. ✅ Check error handling works
+5. ✅ Verify environment variables are set
+6. ✅ Test responsive design
+7. ✅ Run type checking: `npm run type-check`
+8. ✅ Run linting: `npm run lint`
+9. ✅ Build successfully: `npm run build`
+
+**Deployment platforms:**
+
+- **Vercel** (Recommended): Connect your GitHub repo and deploy automatically
+- **Netlify**: Similar to Vercel with good Next.js support
+- **Railway**: Good for full-stack apps with databases
+- **AWS Amplify**: Enterprise-grade with extensive AWS integration
+
+### 4. Production Environment Setup
+
+**For Vercel deployment:**
+
+1. Push your code to GitHub
+2. Connect repository to Vercel
+3. Add environment variables in Vercel dashboard
+4. Enable preview deployments for testing
+5. Set up custom domain if needed
+
+**Environment variables to set:**
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (if using admin operations)
+
+---
+
+## Complete Code Examples
+
+### 1. Root Layout
+
+Create/Update `src/app/layout.tsx`:
+
+```typescript
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: 'Next.js + Supabase App',
+  description: 'A modern full-stack application built with Next.js and Supabase',
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body className={inter.className}>
+        {children}
+      </body>
+    </html>
+  )
+}
+```
+
+### 2. Home Page with Authentication Check
+
+Update `src/app/page.tsx`:
+
+```typescript
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import Link from 'next/link'
+
+export default async function Home() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (user) {
+    redirect('/dashboard')
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          Welcome to Next.js + Supabase
+        </h1>
+        <p className="text-lg text-gray-600 mb-8">
+          A modern full-stack application template
+        </p>
+        <div className="space-x-4">
+          <Link
+            href="/login"
+            className="rounded-md bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          >
+            Get Started
+          </Link>
+          <Link
+            href="https://github.com"
+            className="rounded-md border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          >
+            View on GitHub
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+```
+
+### 3. Dashboard Layout with Navigation
+
+Create `src/app/dashboard/layout.tsx`:
+
+```typescript
+import { verifySession } from '@/lib/dal'
+
+export default async function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  // This ensures the user is authenticated before accessing any dashboard pages
+  await verifySession()
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {children}
+    </div>
+  )
+}
+```
+
+### 4. Package.json Scripts
+
+Update your `package.json` scripts:
+
+```json
+{
+  "scripts": {
+    "dev": "next dev --turbo",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "db:types": "npx supabase gen types typescript --project-id YOUR_PROJECT_ID > src/types/database.types.ts"
+  }
+}
+```
+
+### 5. Custom Hook for Authentication
+
+Create `src/hooks/use-auth.ts`:
+
+```typescript
+'use client'
+
+import { createClient } from '@/lib/supabase/client'
+import { useEffect, useState } from 'react'
+import type { User } from '@supabase/supabase-js'
+
+export function useAuth() {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+      setLoading(false)
+    }
+
+    getUser()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setUser(session?.user ?? null)
+        setLoading(false)
+      }
+    )
+
+    return () => subscription.unsubscribe()
+  }, [supabase.auth])
+
+  return { user, loading }
+}
+```
+
+---
+
+## Quick Start Commands
+
+**Clone and setup:**
+```bash
+# Create new project
+npx create-next-app@latest my-supabase-app
+
+# Install dependencies
+cd my-supabase-app
+npm install @supabase/supabase-js @supabase/ssr
+
+# Setup environment
+cp .env.example .env.local
+# Edit .env.local with your Supabase credentials
+
+# Generate database types
+npm run db:types
+
+# Start development server
+npm run dev
+```
+
+**Development workflow:**
+```bash
+# Start development
+npm run dev
+
+# Type checking
+npm run type-check
+
+# Linting
+npm run lint
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+```
+
+---
+
+## Troubleshooting
+
+### Common Issues & Solutions
+
+**1. "Cannot read properties of undefined (reading 'getUser')"**
+- Ensure you're using the correct client (server vs browser)
+- Check that environment variables are set correctly
+
+**2. "Row Level Security policy violation"**
+- Make sure you're authenticated when performing database operations
+- Verify your RLS policies are correctly configured
+- Check that `auth.uid()` matches your user_id field
+
+**3. "Module not found: Can't resolve '@/...'"**
+- Verify your `tsconfig.json` paths configuration
+- Ensure you're using the correct import paths
+
+**4. Authentication redirects not working**
+- Check your middleware configuration
+- Verify the redirect URLs in your Supabase auth settings
+- Ensure cookies are being set correctly
+
+**5. Build errors in production**
+- Run `npm run type-check` to catch TypeScript errors
+- Check that all environment variables are set in production
+- Verify Next.js configuration is correct
+
+### Performance Tips
+
+1. **Use Server Components when possible** - They're faster and don't increase bundle size
+2. **Implement proper loading states** - Better user experience
+3. **Use React Suspense** - For progressive loading
+4. **Optimize images** - Use Next.js Image component
+5. **Enable caching** - Use Next.js built-in caching strategies
+
+---
+
+## Additional Resources
+
+- **Next.js Documentation**: [nextjs.org/docs](https://nextjs.org/docs)
+- **Supabase Documentation**: [supabase.com/docs](https://supabase.com/docs)
+- **Tailwind CSS**: [tailwindcss.com](https://tailwindcss.com)
+- **TypeScript**: [typescriptlang.org](https://typescriptlang.org)
+
+This guide provides a complete foundation for building modern, production-ready applications with Next.js and Supabase. Save this guide and refer to it whenever you need to set up a new project or implement specific features!
