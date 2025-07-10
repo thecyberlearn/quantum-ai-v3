@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     'agent_base',
     'weather_reporter',
     'data_analyzer',
+    'job_posting_generator',
+    'social_ads_generator',
 ]
 
 MIDDLEWARE = [

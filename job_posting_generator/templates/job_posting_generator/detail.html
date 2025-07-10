@@ -1,0 +1,850 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Posting Generator Agent - NetCop AI Hub</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+            overflow-x: hidden;
+        }
+        
+        /* Responsive utilities */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 clamp(16px, 4vw, 24px);
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(350px, 100%), 1fr));
+            gap: clamp(16px, 4vw, 24px);
+            align-items: start;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: clamp(12px, 3vw, 16px);
+            padding: clamp(16px, 4vw, 24px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            margin-bottom: clamp(16px, 4vw, 24px);
+        }
+        
+        .form-group {
+            margin-bottom: clamp(12px, 3vw, 16px);
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: clamp(6px, 2vw, 8px);
+            font-size: clamp(14px, 3.5vw, 16px);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: clamp(12px, 3vw, 16px) clamp(16px, 4vw, 20px);
+            border: 2px solid #e5e7eb;
+            border-radius: clamp(8px, 2vw, 12px);
+            font-size: clamp(14px, 3.5vw, 16px);
+            transition: border-color 0.2s ease;
+            min-height: 48px;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #f59e0b;
+        }
+        
+        .form-control.textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .btn {
+            padding: clamp(12px, 3vw, 16px) clamp(20px, 5vw, 32px);
+            border: none;
+            border-radius: clamp(8px, 2vw, 12px);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: clamp(14px, 3.5vw, 16px);
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+            gap: clamp(12px, 3vw, 16px);
+        }
+        
+        .processing-status {
+            padding: clamp(16px, 4vw, 20px);
+            background: #fffbeb;
+            border: 1px solid #f59e0b;
+            border-radius: clamp(8px, 2vw, 12px);
+            color: #d97706;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: clamp(16px, 4vw, 24px);
+            display: none;
+        }
+        
+        .job-posting-results {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            margin-top: 24px;
+            display: none;
+        }
+        
+        .help-text {
+            font-size: clamp(12px, 3vw, 14px);
+            color: #6b7280;
+            margin-top: 8px;
+        }
+        
+        .section-title {
+            font-size: clamp(16px, 4vw, 18px);
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: clamp(12px, 3vw, 16px);
+        }
+        
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .success-message {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            color: #166534;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .job-posting-content {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            line-height: 1.7;
+            color: #374151;
+            white-space: pre-wrap;
+        }
+        
+        .job-posting-content h1, .job-posting-content h2, .job-posting-content h3 {
+            color: #1f2937;
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+        
+        .job-posting-content h1 {
+            font-size: 28px;
+            border-bottom: 2px solid #f59e0b;
+            padding-bottom: 8px;
+        }
+        
+        .job-posting-content h2 {
+            font-size: 22px;
+            color: #d97706;
+        }
+        
+        .job-posting-content h3 {
+            font-size: 18px;
+            color: #92400e;
+        }
+        
+        .job-posting-content ul, .job-posting-content ol {
+            padding-left: 20px;
+            margin: 12px 0;
+        }
+        
+        .job-posting-content li {
+            margin: 8px 0;
+        }
+        
+        .job-posting-content strong {
+            color: #1f2937;
+            font-weight: 600;
+        }
+        
+        .job-posting-content em {
+            color: #6b7280;
+            font-style: italic;
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div style="
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f6f8ff 0%, #e8f0fe 50%, #f0f7ff 100%);
+        padding: clamp(20px, 5vw, 40px) 0;
+    ">
+        <!-- Header -->
+        <nav style="
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            padding: 16px 0;
+            margin-bottom: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        ">
+            <div class="container">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <a href="{% url 'core:homepage' %}" style="
+                            font-size: 24px;
+                            font-weight: 700;
+                            color: #f59e0b;
+                            text-decoration: none;
+                        ">
+                            🚀 NetCop AI Hub
+                        </a>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <a href="{% url 'core:marketplace' %}" style="color: #374151; text-decoration: none; font-weight: 500;">Marketplace</a>
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'authentication:profile' %}" style="color: #374151; text-decoration: none; font-weight: 500;">Profile</a>
+                            <span style="color: #6b7280;" data-wallet-balance>{{ user.wallet_balance|floatformat:2 }} AED</span>
+                        {% else %}
+                            <a href="{% url 'authentication:login' %}" style="color: #f59e0b; text-decoration: none; font-weight: 600;">Login</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </nav>
+        
+        <div class="container">
+            <!-- Page Title -->
+            <div style="text-align: center; margin-bottom: clamp(24px, 6vw, 40px);">
+                <h1 style="
+                    font-size: clamp(28px, 7vw, 36px);
+                    font-weight: 700;
+                    color: #1f2937;
+                    margin: 0 0 clamp(12px, 3vw, 16px) 0;
+                ">
+                    💼 Job Posting Generator Agent
+                </h1>
+                <p style="
+                    font-size: clamp(16px, 4vw, 18px);
+                    color: #6b7280;
+                    margin: 0;
+                    max-width: 600px;
+                    margin: 0 auto;
+                ">
+                    Create professional job postings with detailed requirements, company culture integration, and SEO optimization.
+                </p>
+                <div style="
+                    background: rgba(245, 158, 11, 0.1);
+                    color: #d97706;
+                    padding: 8px 16px;
+                    border-radius: 20px;
+                    display: inline-block;
+                    margin-top: 12px;
+                    font-size: clamp(14px, 3.5vw, 16px);
+                    font-weight: 600;
+                ">
+                    💰 Cost: 4.00 AED
+                </div>
+            </div>
+            
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="{% if message.tags == 'error' %}error-message{% else %}success-message{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <!-- Main Content -->
+            <div class="grid">
+                <!-- Job Posting Form -->
+                <div>
+                    <form method="POST" id="jobPostingForm">
+                        {% csrf_token %}
+                        
+                        <!-- Basic Information -->
+                        <div class="card">
+                            <h3 class="section-title">📝 Basic Information</h3>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="job_title">Job Title *</label>
+                                    <input
+                                        type="text"
+                                        name="job_title"
+                                        id="job_title"
+                                        class="form-control"
+                                        placeholder="e.g., Senior Software Engineer"
+                                        required
+                                    />
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="company_name">Company Name *</label>
+                                    <input
+                                        type="text"
+                                        name="company_name"
+                                        id="company_name"
+                                        class="form-control"
+                                        placeholder="e.g., TechCorp Inc."
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="job_description">Job Description *</label>
+                                <textarea
+                                    name="job_description"
+                                    id="job_description"
+                                    class="form-control textarea"
+                                    placeholder="Describe the role, responsibilities, and what makes this position unique..."
+                                    required
+                                ></textarea>
+                                <div class="help-text">
+                                    Include key responsibilities, day-to-day tasks, and what success looks like in this role.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Position Details -->
+                        <div class="card">
+                            <h3 class="section-title">🎯 Position Details</h3>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="seniority_level">Seniority Level *</label>
+                                    <select name="seniority_level" id="seniority_level" class="form-control" required>
+                                        <option value="">Select Level</option>
+                                        <option value="entry">Entry Level (0-2 years)</option>
+                                        <option value="mid">Mid Level (2-5 years)</option>
+                                        <option value="senior">Senior Level (5-8 years)</option>
+                                        <option value="lead">Lead/Principal (8+ years)</option>
+                                        <option value="executive">Executive/C-Level</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="contract_type">Contract Type *</label>
+                                    <select name="contract_type" id="contract_type" class="form-control" required>
+                                        <option value="">Select Type</option>
+                                        <option value="full-time">Full-time</option>
+                                        <option value="part-time">Part-time</option>
+                                        <option value="contract">Contract</option>
+                                        <option value="freelance">Freelance</option>
+                                        <option value="internship">Internship</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="location">Location *</label>
+                                    <input
+                                        type="text"
+                                        name="location"
+                                        id="location"
+                                        class="form-control"
+                                        placeholder="e.g., Dubai, UAE or Remote"
+                                        required
+                                    />
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="language">Language *</label>
+                                    <select name="language" id="language" class="form-control" required>
+                                        <option value="English">English</option>
+                                        <option value="Arabic">Arabic (العربية)</option>
+                                        <option value="Spanish">Spanish (Español)</option>
+                                        <option value="French">French (Français)</option>
+                                        <option value="German">German (Deutsch)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Company Information -->
+                        <div class="card">
+                            <h3 class="section-title">🏢 Company Information</h3>
+                            
+                            <div class="form-group">
+                                <label for="company_website">Company Website</label>
+                                <input
+                                    type="url"
+                                    name="company_website"
+                                    id="company_website"
+                                    class="form-control"
+                                    placeholder="https://company.com"
+                                />
+                                <div class="help-text">
+                                    Optional: Include company website for better context and SEO.
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="how_to_apply">How to Apply</label>
+                                <textarea
+                                    name="how_to_apply"
+                                    id="how_to_apply"
+                                    class="form-control textarea"
+                                    placeholder="Instructions for candidates on how to apply..."
+                                ></textarea>
+                                <div class="help-text">
+                                    Optional: Specific application instructions, required documents, or contact information.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Processing Status -->
+                        <div class="processing-status" id="processingStatus">
+                            <div style="font-size: clamp(16px, 4vw, 18px); margin-bottom: 8px;">
+                                ⏳ Processing...
+                            </div>
+                            <div style="font-size: clamp(14px, 3.5vw, 16px);">
+                                Creating your professional job posting...
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Sidebar -->
+                <div>
+                    <!-- Wallet Balance Card -->
+                    <div class="card">
+                        <h3 class="section-title">💳 Your Wallet</h3>
+                        
+                        <div style="margin-bottom: clamp(16px, 4vw, 20px);">
+                            <div style="font-size: clamp(24px, 6vw, 28px); font-weight: 700; color: #1f2937;" data-wallet-balance>
+                                {% if user.is_authenticated %}
+                                    {{ user.wallet_balance|floatformat:2 }} AED
+                                {% else %}
+                                    0.00 AED
+                                {% endif %}
+                            </div>
+                            <div style="font-size: clamp(14px, 3.5vw, 16px); color: #6b7280;">
+                                Available Balance
+                            </div>
+                        </div>
+                        
+                        {% if user.is_authenticated %}
+                            {% if user.wallet_balance >= 4.00 %}
+                                <button
+                                    type="submit"
+                                    form="jobPostingForm"
+                                    class="btn btn-primary"
+                                    style="width: 100%; margin-bottom: 12px;"
+                                    id="generateButton"
+                                >
+                                    💼 Generate Job Posting (4.00 AED)
+                                </button>
+                            {% else %}
+                                <div style="
+                                    background: #fef2f2;
+                                    border: 1px solid #fca5a5;
+                                    color: #dc2626;
+                                    padding: 12px;
+                                    border-radius: 8px;
+                                    text-align: center;
+                                    font-size: clamp(14px, 3.5vw, 16px);
+                                    margin-bottom: 12px;
+                                ">
+                                    Insufficient balance! You need 4.00 AED.
+                                </div>
+                                <a href="{% url 'core:wallet' %}" class="btn btn-primary" style="width: 100%; text-decoration: none;">
+                                    💰 Top Up Wallet
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'authentication:login' %}" class="btn btn-primary" style="width: 100%; text-decoration: none;">
+                                🔑 Login to Continue
+                            </a>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Usage Info -->
+                    <div style="
+                        padding: 16px;
+                        background: rgba(245, 158, 11, 0.1);
+                        border-radius: 12px;
+                        border: 1px solid rgba(245, 158, 11, 0.2);
+                    ">
+                        <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: #d97706;">
+                            💡 How it works
+                        </h4>
+                        <ul style="margin: 0; font-size: 12px; color: #374151; line-height: 1.4; list-style: none; padding-left: 0;">
+                            <li style="margin: 4px 0; padding-left: 16px; position: relative;">
+                                <span style="position: absolute; left: 0; color: #f59e0b;">•</span>
+                                Enter job and company details
+                            </li>
+                            <li style="margin: 4px 0; padding-left: 16px; position: relative;">
+                                <span style="position: absolute; left: 0; color: #f59e0b;">•</span>
+                                AI generates professional posting
+                            </li>
+                            <li style="margin: 4px 0; padding-left: 16px; position: relative;">
+                                <span style="position: absolute; left: 0; color: #f59e0b;">•</span>
+                                Includes requirements & culture
+                            </li>
+                            <li style="margin: 4px 0; padding-left: 16px; position: relative;">
+                                <span style="position: absolute; left: 0; color: #f59e0b;">•</span>
+                                SEO optimized for job boards
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Job Posting Results -->
+            <div class="job-posting-results" id="jobPostingResults">
+                <!-- Status Header -->
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                    <div style="font-size: 24px;">✅</div>
+                    <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin: 0;">
+                        Professional Job Posting
+                    </h3>
+                    <div style="
+                        background: #f59e0b;
+                        color: white;
+                        padding: 6px 12px;
+                        border-radius: 6px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        margin-left: auto;
+                    ">
+                        ✅ Complete
+                    </div>
+                </div>
+                
+                <!-- Job Posting Content -->
+                <div class="job-posting-content" id="jobPostingContent">
+                    <!-- Content will be populated here -->
+                </div>
+                
+                <!-- Download/Copy Actions -->
+                <div style="
+                    margin-top: 20px;
+                    padding-top: 20px;
+                    border-top: 1px solid #e5e7eb;
+                    display: flex;
+                    gap: 12px;
+                    flex-wrap: wrap;
+                ">
+                    <button
+                        onclick="copyJobPosting()"
+                        class="btn btn-primary"
+                        style="flex: 1; min-width: 120px;"
+                    >
+                        📋 Copy Job Posting
+                    </button>
+                    
+                    <button
+                        onclick="downloadJobPosting()"
+                        class="btn"
+                        style="
+                            flex: 1;
+                            min-width: 120px;
+                            background: white;
+                            color: #374151;
+                            border: 2px solid #e5e7eb;
+                        "
+                    >
+                        💾 Download Posting
+                    </button>
+
+                    <button
+                        onclick="resetForm()"
+                        class="btn"
+                        style="
+                            flex: 1;
+                            min-width: 120px;
+                            background: #f59e0b;
+                            color: white;
+                        "
+                    >
+                        🔄 Create Another
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer style="
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            padding: 24px 0;
+            margin-top: 48px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            color: #6b7280;
+        ">
+            <div class="container">
+                <p style="margin: 0; font-size: 14px;">
+                    © 2024 NetCop AI Hub. Powered by AI agents.
+                </p>
+            </div>
+        </footer>
+    </div>
+    
+    <script>
+        // Copy job posting to clipboard
+        function copyJobPosting() {
+            const jobText = generateJobText();
+            navigator.clipboard.writeText(jobText).then(() => {
+                showToast('📋 Job posting copied to clipboard!', 'success');
+            }).catch(() => {
+                showToast('Failed to copy job posting', 'error');
+            });
+        }
+        
+        // Download job posting as text file
+        function downloadJobPosting() {
+            const jobText = generateJobText();
+            const blob = new Blob([jobText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'job-posting-' + Date.now() + '.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('💾 Job posting downloaded!', 'success');
+        }
+        
+        // Generate job text for copy/download
+        function generateJobText() {
+            const content = document.querySelector('#jobPostingContent');
+            if (content) {
+                return content.textContent || content.innerText || '';
+            }
+            return 'No job posting content available';
+        }
+
+        // Reset form for creating another job posting
+        function resetForm() {
+            document.getElementById('jobPostingForm').reset();
+            document.getElementById('jobPostingResults').style.display = 'none';
+            document.getElementById('processingStatus').style.display = 'none';
+            document.getElementById('generateButton').disabled = false;
+            document.getElementById('generateButton').innerHTML = '💼 Generate Job Posting (4.00 AED)';
+            showToast('Form reset! Ready for another job posting.', 'success');
+        }
+        
+        // Simple toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 600;
+                z-index: 1000;
+                ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Update wallet balance display
+        function updateWalletBalance(newBalance) {
+            const balanceElements = document.querySelectorAll('[data-wallet-balance]');
+            balanceElements.forEach(element => {
+                element.textContent = `${newBalance.toFixed(2)} AED`;
+            });
+            window.currentWalletBalance = newBalance;
+        }
+
+        // Display job posting results
+        function displayResults(result) {
+            const resultsContainer = document.getElementById('jobPostingResults');
+            const contentContainer = document.getElementById('jobPostingContent');
+            
+            if (result.success && result.status === 'completed') {
+                contentContainer.textContent = result.content || result.job_posting_content || result.output_text || 'Job posting generated successfully!';
+                resultsContainer.style.display = 'block';
+                
+                // Update wallet balance if provided
+                if (result.wallet_balance !== undefined) {
+                    updateWalletBalance(result.wallet_balance);
+                }
+                
+                showToast('✅ Job posting created and payment processed!', 'success');
+            } else {
+                showToast('❌ Failed to generate job posting - no charge applied', 'error');
+            }
+        }
+
+        // Poll for results
+        function pollForResults(requestId) {
+            let pollCount = 0;
+            const maxPolls = 30; // 30 seconds maximum
+            
+            const pollInterval = setInterval(() => {
+                pollCount++;
+                
+                fetch(`/agents/job-posting-generator/status/${requestId}/`)
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.status === 'completed' || result.status === 'failed') {
+                            clearInterval(pollInterval);
+                            document.getElementById('processingStatus').style.display = 'none';
+                            document.getElementById('generateButton').disabled = false;
+                            document.getElementById('generateButton').innerHTML = '💼 Generate Job Posting (4.00 AED)';
+                            
+                            displayResults(result);
+                        } else if (pollCount >= maxPolls) {
+                            clearInterval(pollInterval);
+                            document.getElementById('processingStatus').style.display = 'none';
+                            document.getElementById('generateButton').disabled = false;
+                            document.getElementById('generateButton').innerHTML = '💼 Generate Job Posting (4.00 AED)';
+                            showToast('❌ Processing timeout - please try again', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error polling results:', error);
+                        if (pollCount >= maxPolls) {
+                            clearInterval(pollInterval);
+                            document.getElementById('processingStatus').style.display = 'none';
+                            document.getElementById('generateButton').disabled = false;
+                            document.getElementById('generateButton').innerHTML = '💼 Generate Job Posting (4.00 AED)';
+                            showToast('❌ Network error - please try again', 'error');
+                        }
+                    });
+            }, 1000);
+        }
+        
+        // Handle form submission
+        document.getElementById('jobPostingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const jobTitle = document.getElementById('job_title').value.trim();
+            const companyName = document.getElementById('company_name').value.trim();
+            const jobDescription = document.getElementById('job_description').value.trim();
+            const seniorityLevel = document.getElementById('seniority_level').value;
+            const contractType = document.getElementById('contract_type').value;
+            const location = document.getElementById('location').value.trim();
+            
+            if (!jobTitle || !companyName || !jobDescription || !seniorityLevel || !contractType || !location) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            // Check user authentication
+            {% if not user.is_authenticated %}
+            window.location.href = "{% url 'authentication:login' %}";
+            return;
+            {% endif %}
+            
+            // Check wallet balance
+            const balance = {{ user.wallet_balance|default:0 }};
+            if (balance < 4.00) {
+                showToast('Insufficient balance! You need 4.00 AED.', 'error');
+                setTimeout(() => {
+                    window.location.href = "{% url 'core:wallet' %}";
+                }, 2000);
+                return;
+            }
+
+            // Show processing status
+            document.getElementById('processingStatus').style.display = 'block';
+            document.getElementById('generateButton').disabled = true;
+            document.getElementById('generateButton').innerHTML = '⏳ Processing...';
+            document.getElementById('jobPostingResults').style.display = 'none';
+
+            // Submit form via AJAX
+            const formData = new FormData(this);
+            
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success && result.request_id) {
+                    // Start polling for results
+                    pollForResults(result.request_id);
+                } else {
+                    // Handle immediate response
+                    document.getElementById('processingStatus').style.display = 'none';
+                    document.getElementById('generateButton').disabled = false;
+                    document.getElementById('generateButton').innerHTML = '💼 Generate Job Posting (4.00 AED)';
+                    
+                    if (result.error) {
+                        showToast(`❌ ${result.error}`, 'error');
+                    } else {
+                        displayResults(result);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('processingStatus').style.display = 'none';
+                document.getElementById('generateButton').disabled = false;
+                document.getElementById('generateButton').innerHTML = '💼 Generate Job Posting (4.00 AED)';
+                showToast('❌ Network error - please try again', 'error');
+            });
+        });
+    </script>
+</body>
+</html>
