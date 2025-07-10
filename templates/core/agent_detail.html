@@ -38,7 +38,7 @@
                 <div class="agent-icon">{{ agent.icon }}</div>
                 <div class="agent-info">
                     <h1>{{ agent.name }}</h1>
-                    <div class="agent-price">${{ agent.price }}</div>
+                    <div class="agent-price">{{ agent.price }} AED</div>
                     <div class="agent-rating">★ {{ agent.rating }} ({{ agent.review_count }} reviews)</div>
                 </div>
             </div>
@@ -47,7 +47,7 @@
             
             {% if user.is_authenticated %}
                 <div class="user-balance">
-                    Your Balance: ${{ user_balance }}
+                    Your Balance: {{ user_balance }} AED
                 </div>
                 
                 {% if can_use_agent %}
@@ -88,12 +88,12 @@
                                 </div>
                             {% endif %}
                             
-                            <button type="submit" class="btn">Use Agent (${{ agent.price }})</button>
+                            <button type="submit" class="btn">Use Agent ({{ agent.price }} AED)</button>
                         </form>
                     </div>
                 {% else %}
                     <div class="insufficient-balance">
-                        <strong>Insufficient Balance!</strong> You need ${{ agent.price }} to use this agent.
+                        <strong>Insufficient Balance!</strong> You need {{ agent.price }} AED to use this agent.
                         <a href="{% url 'wallet_topup' %}" style="color: #007bff;">Top up your wallet</a>
                     </div>
                 {% endif %}
@@ -103,7 +103,7 @@
                         <h3>Your Recent Usage</h3>
                         {% for usage in recent_usage %}
                             <div class="usage-item">
-                                <strong>${{ usage.amount }}</strong> - {{ usage.description }}
+                                <strong>{{ usage.amount }} AED</strong> - {{ usage.description }}
                                 <small>({{ usage.created_at|date:"M d, Y H:i" }})</small>
                             </div>
                         {% endfor %}

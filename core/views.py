@@ -6,143 +6,67 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.utils.decorators import method_decorator
 from django.views import View
-from agents.models import Agent
-from agents.agent_processors import AgentProcessor
+from django.db.models import Q
+from django.template.loader import get_template
+from django.template import TemplateDoesNotExist
+from agent_base.models import BaseAgent
 from wallet.stripe_handler import StripePaymentHandler
 from wallet.models import WalletTransaction
 import json
 
 
 def homepage_view(request):
-    """Homepage view showing all available agents"""
-    agents = Agent.objects.filter(is_active=True)
-    
-    # Group agents by category
-    categories = {}
-    for agent in agents:
-        category = agent.get_category_display()
-        if category not in categories:
-            categories[category] = []
-        categories[category].append(agent)
+    """Homepage view with agent system"""
+    # Get featured agents for homepage
+    featured_agents = BaseAgent.objects.filter(is_active=True).order_by('name')[:6]
     
     context = {
-        'agents': agents,
-        'categories': categories,
         'user_balance': request.user.wallet_balance if request.user.is_authenticated else 0,
+        'featured_agents': featured_agents,
     }
     
     return render(request, 'core/homepage.html', context)
 
 
-@login_required
-def agent_detail_view(request, agent_slug):
-    """Individual agent detail page"""
-    agent = get_object_or_404(Agent, slug=agent_slug, is_active=True)
+def marketplace_view(request):
+    """Professional marketplace view with agent system"""
+    # Get all agents for marketplace
+    agents = BaseAgent.objects.filter(is_active=True).order_by('category', 'name')
     
-    # Check if user has sufficient balance
-    can_use_agent = request.user.has_sufficient_balance(agent.price)
+    # Filter by category if specified
+    category = request.GET.get('category')
+    if category:
+        agents = agents.filter(category=category)
     
-    # Get recent usage by this user
-    recent_usage = WalletTransaction.objects.filter(
-        user=request.user,
-        agent_slug=agent_slug,
-        type='agent_usage'
-    )[:5]
+    # Get unique categories for filtering
+    categories = BaseAgent.objects.filter(is_active=True).values_list('category', 'category').distinct()
     
     context = {
-        'agent': agent,
-        'can_use_agent': can_use_agent,
-        'recent_usage': recent_usage,
-        'user_balance': request.user.wallet_balance,
+        'user_balance': request.user.wallet_balance if request.user.is_authenticated else 0,
+        'agents': agents,
+        'categories': categories,
+        'selected_category': category,
     }
     
-    return render(request, 'core/agent_detail.html', context)
+    return render(request, 'core/marketplace.html', context)
 
 
-@login_required
-@require_http_methods(["POST"])
-def use_agent_view(request, agent_slug):
-    """Process agent usage"""
-    agent = get_object_or_404(Agent, slug=agent_slug, is_active=True)
-    
-    # Check balance
-    if not request.user.has_sufficient_balance(agent.price):
-        return JsonResponse({
-            'success': False,
-            'error': 'Insufficient balance'
-        }, status=400)
-    
+def agent_detail_view(request, agent_slug):
+    """Agent detail view - redirect to specific agent app"""
     try:
-        # Get input data based on agent type
-        if agent_slug == 'data-analyzer':
-            file_obj = request.FILES.get('file')
-            if not file_obj:
-                return JsonResponse({'success': False, 'error': 'File required'}, status=400)
-            
-            processor = AgentProcessor(agent_slug)
-            result = processor.process_agent(file_obj=file_obj, user_id=request.user.id)
-            
-        elif agent_slug == 'five-whys':
-            problem = request.POST.get('problem')
-            if not problem:
-                return JsonResponse({'success': False, 'error': 'Problem description required'}, status=400)
-            
-            processor = AgentProcessor(agent_slug)
-            result = processor.process_agent(problem_description=problem, user_id=request.user.id)
-            
-        elif agent_slug == 'weather-reporter':
-            location = request.POST.get('location')
-            if not location:
-                return JsonResponse({'success': False, 'error': 'Location required'}, status=400)
-            
-            processor = AgentProcessor(agent_slug)
-            result = processor.process_agent(location=location)
-            
-        elif agent_slug == 'job-posting-generator':
-            job_details = request.POST.get('job_details')
-            if not job_details:
-                return JsonResponse({'success': False, 'error': 'Job details required'}, status=400)
-            
-            processor = AgentProcessor(agent_slug)
-            result = processor.process_agent(job_details=job_details, user_id=request.user.id)
-            
-        elif agent_slug == 'social-ads-generator':
-            ad_requirements = request.POST.get('ad_requirements')
-            if not ad_requirements:
-                return JsonResponse({'success': False, 'error': 'Ad requirements required'}, status=400)
-            
-            processor = AgentProcessor(agent_slug)
-            result = processor.process_agent(ad_requirements=ad_requirements, user_id=request.user.id)
-            
-        elif agent_slug == 'faq-generator':
-            content_source = request.POST.get('content_source')
-            if not content_source:
-                return JsonResponse({'success': False, 'error': 'Content source required'}, status=400)
-            
-            processor = AgentProcessor(agent_slug)
-            result = processor.process_agent(content_source=content_source, user_id=request.user.id)
-            
+        agent = BaseAgent.objects.get(slug=agent_slug, is_active=True)
+        # Redirect to the specific agent app URL
+        if agent_slug == 'weather-reporter':
+            return redirect('/agents/weather-reporter/')
         else:
-            return JsonResponse({'success': False, 'error': 'Invalid agent'}, status=400)
-        
-        # Deduct balance and record transaction
-        request.user.deduct_balance(
-            amount=agent.price,
-            description=f"Used {agent.name}",
-            agent_slug=agent_slug
-        )
-        
-        return JsonResponse({
-            'success': True,
-            'result': result,
-            'remaining_balance': float(request.user.wallet_balance)
-        })
-        
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+            # For other agents, redirect to marketplace for now
+            messages.info(request, f'Agent "{agent.name}" page not yet available.')
+            return redirect('core:marketplace')
+    except BaseAgent.DoesNotExist:
+        messages.error(request, 'Agent not found')
+        return redirect('core:marketplace')
+
+
 
 
 @login_required
@@ -174,7 +98,7 @@ def wallet_topup_view(request):
             amount = float(amount)
             if amount not in [10, 50, 100, 500]:
                 messages.error(request, 'Invalid amount selected')
-                return redirect('wallet_topup')
+                return redirect('core:wallet_topup')
             
             # Create Stripe checkout session
             stripe_handler = StripePaymentHandler()
@@ -184,7 +108,7 @@ def wallet_topup_view(request):
             
         except (ValueError, TypeError):
             messages.error(request, 'Invalid amount')
-            return redirect('wallet_topup')
+            return redirect('core:wallet_topup')
     
     return render(request, 'core/wallet_topup.html')
 
@@ -207,12 +131,17 @@ def stripe_webhook_view(request):
 
 def agents_api_view(request):
     """API endpoint for agents list"""
-    agents = Agent.objects.filter(is_active=True)
+    agents = BaseAgent.objects.filter(is_active=True)
+    
+    # Filter by category if specified
+    category = request.GET.get('category')
+    if category:
+        agents = agents.filter(category=category)
     
     agents_data = []
     for agent in agents:
         agents_data.append({
-            'id': agent.id,
+            'id': str(agent.id),
             'name': agent.name,
             'slug': agent.slug,
             'description': agent.description,
@@ -221,9 +150,10 @@ def agents_api_view(request):
             'icon': agent.icon,
             'rating': float(agent.rating),
             'review_count': agent.review_count,
+            'agent_type': agent.agent_type,
         })
     
     return JsonResponse({
         'agents': agents_data,
-        'total_count': len(agents_data)
+        'total_count': len(agents_data),
     })

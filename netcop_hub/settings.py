@@ -30,7 +30,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-thdd^re4==p$4geq^$52w
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True  # Force DEBUG=True for development
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver').split(',')
 
 
 # Application definition
@@ -44,9 +44,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'authentication',
-    'agents',
     'wallet',
     'core',
+    'agent_base',
+    'weather_reporter',
 ]
 
 MIDDLEWARE = [
@@ -140,7 +141,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
 STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET', default='')
 
-# N8N Webhooks
+# AI Assistant Webhooks
 N8N_WEBHOOK_DATA_ANALYZER = config('N8N_WEBHOOK_DATA_ANALYZER', default='')
 N8N_WEBHOOK_FIVE_WHYS = config('N8N_WEBHOOK_FIVE_WHYS', default='')
 N8N_WEBHOOK_JOB_POSTING = config('N8N_WEBHOOK_JOB_POSTING', default='')

@@ -3,83 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NetCop Hub - AI Agent Marketplace</title>
+    <title>NetCop Hub - Platform</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
         .container { max-width: 1200px; margin: 0 auto; }
         .header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .user-info { float: right; }
         .balance { background: #e8f5e8; padding: 5px 15px; border-radius: 20px; color: #2d5a2d; }
-        .agents-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .agent-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .agent-header { display: flex; align-items: center; margin-bottom: 15px; }
-        .agent-icon { font-size: 2em; margin-right: 15px; }
-        .agent-name { font-size: 1.3em; font-weight: bold; margin: 0; }
-        .agent-price { color: #007bff; font-weight: bold; }
-        .agent-rating { color: #ffa500; }
-        .category-section { margin-bottom: 30px; }
-        .category-title { font-size: 1.5em; margin-bottom: 15px; padding: 10px; background: #007bff; color: white; border-radius: 5px; }
-        .btn { padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px; }
-        .btn:hover { background: #0056b3; }
+        .content-section { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
         .auth-links { margin-top: 10px; }
         .auth-links a { margin-right: 15px; text-decoration: none; color: #007bff; }
+        .message { background: #e8f4fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #007bff; }
+        .agents-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 30px; text-align: left; }
+        .agent-card { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; }
+        .agent-card h3 { margin: 0 0 10px 0; color: #333; }
+        .agent-card .price { color: #28a745; font-weight: bold; }
+        .agent-card .category { background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-size: 12px; color: #6c757d; display: inline-block; margin-bottom: 10px; }
+        .agent-card .description { margin: 10px 0; color: #666; }
+        .use-button { background: #007bff; color: white; padding: 8px 16px; border: none; border-radius: 4px; text-decoration: none; display: inline-block; }
+        .use-button:hover { background: #0056b3; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>NetCop Hub - AI Agent Marketplace</h1>
+            <h1>NetCop Hub - Platform</h1>
             <div class="user-info">
                 {% if user.is_authenticated %}
                     <p>Welcome, {{ user.username }}!</p>
-                    <div class="balance">Balance: ${{ user_balance }}</div>
+                    <div class="balance">Balance: {{ user_balance }} AED</div>
                     <div class="auth-links">
-                        <a href="{% url 'profile' %}">Profile</a>
-                        <a href="{% url 'wallet' %}">Wallet</a>
-                        <a href="{% url 'logout' %}">Logout</a>
+                        <a href="{% url 'core:marketplace' %}">Marketplace</a>
+                        <a href="{% url 'core:wallet' %}">Wallet</a>
+                        <a href="{% url 'authentication:logout' %}">Logout</a>
                     </div>
                 {% else %}
                     <div class="auth-links">
-                        <a href="{% url 'login' %}">Login</a>
-                        <a href="{% url 'register' %}">Register</a>
+                        <a href="{% url 'core:marketplace' %}">Marketplace</a>
+                        <a href="{% url 'authentication:login' %}">Login</a>
+                        <a href="{% url 'authentication:register' %}">Register</a>
                     </div>
                 {% endif %}
             </div>
             <div style="clear: both;"></div>
         </div>
 
-        {% if categories %}
-            {% for category_name, category_agents in categories.items %}
-                <div class="category-section">
-                    <div class="category-title">{{ category_name }}</div>
-                    <div class="agents-grid">
-                        {% for agent in category_agents %}
-                            <div class="agent-card">
-                                <div class="agent-header">
-                                    <div class="agent-icon">{{ agent.icon }}</div>
-                                    <div>
-                                        <div class="agent-name">{{ agent.name }}</div>
-                                        <div class="agent-price">${{ agent.price }}</div>
-                                        <div class="agent-rating">
-                                            ★ {{ agent.rating }} ({{ agent.review_count }} reviews)
-                                        </div>
-                                    </div>
-                                </div>
-                                <p>{{ agent.description }}</p>
-                                <a href="{% url 'agent_detail' agent.slug %}" class="btn">Use Agent</a>
+        <div class="content-section">
+            <h2>Welcome to NetCop Hub</h2>
+            <p>Your platform for AI-powered digital solutions and services.</p>
+            
+            {% if featured_agents %}
+                <h3>Featured AI Agents</h3>
+                <div class="agents-grid">
+                    {% for agent in featured_agents %}
+                        <div class="agent-card">
+                            <div class="category">{{ agent.get_category_display }}</div>
+                            <h3>{{ agent.icon }} {{ agent.name }}</h3>
+                            <div class="description">{{ agent.description }}</div>
+                            <div class="price">{{ agent.price_display }}</div>
+                            <div style="margin-top: 15px;">
+                                <a href="/agents/{{ agent.slug }}/" class="use-button">Use Now</a>
                             </div>
-                        {% endfor %}
-                    </div>
+                        </div>
+                    {% endfor %}
                 </div>
-            {% endfor %}
-        {% else %}
-            <div class="agents-grid">
-                <div class="agent-card">
-                    <h3>No agents available</h3>
-                    <p>Please check back later or contact the administrator.</p>
+                
+                <div style="margin-top: 30px;">
+                    <a href="{% url 'core:marketplace' %}" class="use-button">View All Agents</a>
                 </div>
-            </div>
-        {% endif %}
+            {% else %}
+                <div class="message">
+                    <h3>🤖 No Agents Available</h3>
+                    <p>Agents are being configured. Please check back later.</p>
+                </div>
+            {% endif %}
+
+            {% if user.is_authenticated %}
+                <p style="margin-top: 30px;">Hello {{ user.username }}! Your current balance is {{ user_balance }} AED.</p>
+                <p><a href="{% url 'core:wallet' %}">Manage your wallet</a> to start using agents.</p>
+            {% else %}
+                <p style="margin-top: 30px;"><a href="{% url 'authentication:login' %}">Log in</a> to access platform features.</p>
+            {% endif %}
+        </div>
     </div>
 </body>
 </html>

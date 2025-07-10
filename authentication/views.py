@@ -16,7 +16,11 @@ def login_view(request):
         user = authenticate(request, username=email, password=password)
         if user is not None:
             login(request, user)
-            return redirect('homepage')
+            # Redirect to 'next' parameter if provided, otherwise homepage
+            next_url = request.GET.get('next') or request.POST.get('next')
+            if next_url:
+                return redirect(next_url)
+            return redirect('core:homepage')
         else:
             messages.error(request, 'Invalid email or password')
     
@@ -47,7 +51,7 @@ def register_view(request):
             )
             login(request, user)
             messages.success(request, 'Account created successfully!')
-            return redirect('homepage')
+            return redirect('core:homepage')
         except Exception as e:
             messages.error(request, 'Error creating account')
     
@@ -58,7 +62,7 @@ def logout_view(request):
     """User logout view"""
     logout(request)
     messages.success(request, 'You have been logged out successfully')
-    return redirect('homepage')
+    return redirect('core:homepage')
 
 
 @login_required

@@ -26,21 +26,21 @@
 </head>
 <body>
     <div class="container">
-        <a href="{% url 'homepage' %}" class="back-link">← Back to Homepage</a>
+        <a href="{% url 'core:homepage' %}" class="back-link">← Back to Homepage</a>
         
         <div class="wallet-header">
             <h1>Your Wallet</h1>
-            <div class="balance">${{ current_balance }}</div>
-            <a href="{% url 'wallet_topup' %}" class="btn">Top Up Wallet</a>
+            <div class="balance">{{ current_balance }} AED</div>
+            <a href="{% url 'core:wallet_topup' %}" class="btn">Top Up Wallet</a>
         </div>
         
         <div class="stats">
             <div class="stat-card">
-                <div class="stat-value">${{ total_spent }}</div>
+                <div class="stat-value">{{ total_spent }} AED</div>
                 <div>Total Spent</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">${{ total_topped_up }}</div>
+                <div class="stat-value">{{ total_topped_up }} AED</div>
                 <div>Total Topped Up</div>
             </div>
         </div>
@@ -55,7 +55,7 @@
                             <small>{{ transaction.created_at|date:"M d, Y H:i" }}</small>
                         </div>
                         <div class="transaction-amount {% if transaction.type == 'top_up' %}positive{% else %}negative{% endif %}">
-                            {% if transaction.type == 'top_up' %}+{% else %}-{% endif %}${{ transaction.amount }}
+                            {% if transaction.type == 'top_up' %}+{% else %}-{% endif %}{{ transaction.amount }} AED
                         </div>
                     </div>
                 {% endfor %}

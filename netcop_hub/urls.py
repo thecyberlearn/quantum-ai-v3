@@ -21,8 +21,9 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('core.urls')),
     path('auth/', include('authentication.urls')),
+    path('agents/weather-reporter/', include('weather_reporter.urls')),
+    path('', include('core.urls')),
 ]
 
 # Serve static files during development
