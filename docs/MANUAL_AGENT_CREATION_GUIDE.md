@@ -57,7 +57,8 @@ agent_pdf_analyzer/
 ├── migrations/
 │   └── __init__.py
 └── templates/
-    └── detail.html
+    └── agent_pdf_analyzer/
+        └── detail.html
 ```
 
 ### 1.3 Configure Apps.py
@@ -264,7 +265,7 @@ def pdf_analyzer_detail(request):
         'agent': agent,
         'user_requests': user_requests
     }
-    return render(request, 'detail.html', context)
+    return render(request, 'agent_pdf_analyzer/detail.html', context)
 ```
 
 ### 4.2 Process View
@@ -402,12 +403,12 @@ urlpatterns = [
 
 ### 6.1 Create Template Directory
 ```bash
-mkdir -p agent_pdf_analyzer/templates/
+mkdir -p agent_pdf_analyzer/templates/agent_pdf_analyzer/
 ```
 
 ### 6.2 Detail Template
 ```html
-<!-- agent_pdf_analyzer/templates/detail.html -->
+<!-- agent_pdf_analyzer/templates/agent_pdf_analyzer/detail.html -->
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -733,10 +734,10 @@ python manage.py shell
 **Fix**: Ensure template is in correct location within the agent app:
 ```bash
 # Correct location:
-agent_[name]/templates/detail.html
+agent_[name]/templates/agent_[name]/detail.html
 
 # Example:
-agent_pdf_analyzer/templates/detail.html
+agent_pdf_analyzer/templates/agent_pdf_analyzer/detail.html
 
 # NOT in global templates folder
 # Restart Django server after moving templates
@@ -746,7 +747,7 @@ agent_pdf_analyzer/templates/detail.html
 ```bash
 python manage.py shell -c "
 from django.template.loader import get_template
-template = get_template('detail.html')
+template = get_template('agent_pdf_analyzer/detail.html')
 print('✅ Template found:', template.origin.name)
 "
 ```

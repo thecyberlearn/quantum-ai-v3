@@ -269,7 +269,7 @@
                         <a href="{% url 'core:marketplace' %}" style="color: #374151; text-decoration: none; font-weight: 500;">Marketplace</a>
                         {% if user.is_authenticated %}
                             <a href="{% url 'core:wallet' %}" style="color: #374151; text-decoration: none; font-weight: 500;">Wallet</a>
-                            <span style="color: #6b7280;">{{ user.wallet_balance|floatformat:2 }} AED</span>
+                            <span style="color: #6b7280;" data-wallet-balance>{{ user.wallet_balance|floatformat:2 }} AED</span>
                         {% else %}
                             <a href="{% url 'authentication:login' %}" style="color: #3b82f6; text-decoration: none; font-weight: 600;">Login</a>
                         {% endif %}
@@ -415,7 +415,7 @@
                         <h3 class="section-title">💳 Your Wallet</h3>
                         
                         <div style="margin-bottom: clamp(16px, 4vw, 20px);">
-                            <div style="font-size: clamp(24px, 6vw, 28px); font-weight: 700; color: #1f2937;">
+                            <div style="font-size: clamp(24px, 6vw, 28px); font-weight: 700; color: #1f2937;" data-wallet-balance>
                                 {% if user.is_authenticated %}
                                     {{ user.wallet_balance|floatformat:2 }} AED
                                 {% else %}
@@ -795,8 +795,8 @@
             return;
             {% endif %}
             
-            // Check wallet balance
-            const balance = {{ user.wallet_balance|default:0 }};
+            // Check wallet balance (use current balance if updated, otherwise template value)
+            const balance = window.currentWalletBalance !== undefined ? window.currentWalletBalance : {{ user.wallet_balance|default:0 }};
             if (balance < {{ agent.price }}) {
                 showToast('Insufficient balance! You need {{ agent.price }} AED.', 'error');
                 setTimeout(() => {
@@ -835,6 +835,11 @@
                 if (data.success) {
                     showToast('Weather request submitted successfully!', 'success');
                     showProcessingStatus('Processing weather data...');
+                    
+                    // Update wallet balance if provided
+                    if (data.wallet_balance !== undefined) {
+                        updateWalletBalance(data.wallet_balance);
+                    }
                     
                     // Poll for results
                     pollForResults(data.request_id);
@@ -898,12 +903,20 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.status === 'completed') {
-                    // Success - reload page to show results
-                    showToast('Weather report generated successfully!', 'success');
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
+                    // Update wallet balance after successful completion
+                    if (data.wallet_balance !== undefined) {
+                        updateWalletBalance(data.wallet_balance);
+                    }
+                    
+                    // Display results without page reload
+                    displayWeatherResults(data);
+                    hideProcessingStatus();
+                    resetForm();
+                    showToast('Weather report completed and payment processed!', 'success');
                 } else if (data.status === 'failed') {
+                    hideProcessingStatus();
+                    resetForm();
+                    showToast('Weather request failed - no charge applied', 'error');
                     throw new Error(data.error_message || 'Weather request failed');
                 } else {
                     // Still processing - poll again
@@ -927,6 +940,201 @@
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '🌤️ Get Weather Report ({{ agent.price }} AED)';
             }
+        }
+        
+        // Update wallet balance display in real-time
+        function updateWalletBalance(newBalance) {
+            try {
+                // Update the balance check in JavaScript first
+                window.currentWalletBalance = newBalance;
+                
+                // Update all elements with data-wallet-balance attribute
+                const balanceElements = document.querySelectorAll('[data-wallet-balance]');
+                console.log(`Found ${balanceElements.length} wallet balance elements to update`);
+                
+                balanceElements.forEach((element, index) => {
+                    element.textContent = `${newBalance.toFixed(2)} AED`;
+                    console.log(`Updated element ${index + 1}: ${element.textContent}`);
+                });
+                
+                console.log(`✅ Wallet balance successfully updated to: ${newBalance.toFixed(2)} AED`);
+                
+            } catch (error) {
+                console.error('❌ Error updating wallet balance:', error);
+            }
+        }
+        
+        // Display weather results dynamically without page reload
+        function displayWeatherResults(result) {
+            // Create results HTML based on the received data
+            const resultsHtml = `
+                <div class="weather-results">
+                    <!-- Status Header -->
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                        <div style="font-size: 24px;">✅</div>
+                        <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin: 0;">
+                            Weather Report Results
+                        </h3>
+                        <div style="
+                            background: #10b981;
+                            color: white;
+                            padding: 6px 12px;
+                            border-radius: 6px;
+                            font-size: 14px;
+                            font-weight: 600;
+                            margin-left: auto;
+                        ">
+                            ✅ Complete
+                        </div>
+                    </div>
+                    
+                    <!-- Weather Content -->
+                    <div style="
+                        background: #f8fafc;
+                        border: 1px solid #e2e8f0;
+                        border-radius: 12px;
+                        padding: 24px;
+                        margin-bottom: 20px;
+                    ">
+                        <h4 style="
+                            font-size: 18px;
+                            font-weight: 600;
+                            color: #1f2937;
+                            margin-bottom: 16px;
+                        ">
+                            🌤️ Weather Information
+                        </h4>
+                        
+                        <div style="
+                            white-space: pre-line;
+                            line-height: 1.7;
+                            color: #374151;
+                            font-size: 15px;
+                        " id="weatherContent">
+                            ${result.formatted_report || result.weather_data || 'Weather data processed successfully'}
+                        </div>
+                        
+                        ${result.temperature ? `
+                            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px;">
+                                    <div style="text-align: center;">
+                                        <div style="font-size: 24px; font-weight: 700; color: #1f2937;">${result.temperature}°C</div>
+                                        <div style="font-size: 14px; color: #6b7280;">Temperature</div>
+                                    </div>
+                                    ${result.humidity ? `
+                                        <div style="text-align: center;">
+                                            <div style="font-size: 24px; font-weight: 700; color: #1f2937;">${result.humidity}%</div>
+                                            <div style="font-size: 14px; color: #6b7280;">Humidity</div>
+                                        </div>
+                                    ` : ''}
+                                    ${result.wind_speed ? `
+                                        <div style="text-align: center;">
+                                            <div style="font-size: 24px; font-weight: 700; color: #1f2937;">${result.wind_speed} m/s</div>
+                                            <div style="font-size: 14px; color: #6b7280;">Wind Speed</div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                            <h5 style="font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 12px;">
+                                📄 Processing Information
+                            </h5>
+                            <div style="font-size: 14px; color: #6b7280;">
+                                <strong>Processing Time:</strong> ${result.processing_time ? result.processing_time.toFixed(2) + 's' : 'N/A'}<br>
+                                <strong>Status:</strong> ${result.status}<br>
+                                <strong>Completed:</strong> ${new Date().toLocaleString()}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Download/Copy Actions -->
+                    <div style="
+                        margin-top: 20px;
+                        padding-top: 20px;
+                        border-top: 1px solid #e5e7eb;
+                        display: flex;
+                        gap: 12px;
+                        flex-wrap: wrap;
+                    ">
+                        <button
+                            onclick="copyWeatherReport()"
+                            class="btn btn-primary"
+                            style="flex: 1; min-width: 120px;"
+                        >
+                            📋 Copy Report
+                        </button>
+                        
+                        <button
+                            onclick="downloadWeatherReport()"
+                            class="btn"
+                            style="
+                                flex: 1;
+                                min-width: 120px;
+                                background: white;
+                                color: #374151;
+                                border: 2px solid #e5e7eb;
+                            "
+                        >
+                            💾 Download Report
+                        </button>
+                        
+                        <button
+                            onclick="getAnotherReport()"
+                            class="btn"
+                            style="
+                                flex: 1;
+                                min-width: 120px;
+                                background: #10b981;
+                                color: white;
+                                border: 2px solid #10b981;
+                            "
+                        >
+                            🌤️ Get Another Report
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Find the main grid container and insert results after it
+            const gridContainer = document.querySelector('.grid');
+            const existingResults = document.querySelector('.weather-results');
+            if (existingResults) {
+                existingResults.remove();
+            }
+            
+            // Insert results right after the main grid (below the form)
+            gridContainer.insertAdjacentHTML('afterend', resultsHtml);
+            
+            // Scroll to results smoothly
+            setTimeout(() => {
+                document.querySelector('.weather-results').scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }, 100);
+        }
+        
+        // Function to prepare form for another weather report
+        function getAnotherReport() {
+            // Clear the location input
+            document.getElementById('location').value = '';
+            
+            // Remove existing results
+            const existingResults = document.querySelector('.weather-results');
+            if (existingResults) {
+                existingResults.remove();
+            }
+            
+            // Scroll back to form
+            document.querySelector('.grid').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+            
+            // Show success message
+            showToast('🌤️ Ready for another weather report!', 'success');
         }
     </script>
 </body>

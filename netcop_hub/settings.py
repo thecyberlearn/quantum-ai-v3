@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'core',
     'agent_base',
     'weather_reporter',
+    'data_analyzer',
 ]
 
 MIDDLEWARE = [

@@ -16,7 +16,9 @@ netcop_django/
 ├── 📁 core/              # Main app (homepage, marketplace, wallet)
 ├── 📁 wallet/            # Payment and transaction system
 ├── 📁 weather_reporter/  # Example individual agent app
-│   └── templates/        # Agent-specific templates
+│   └── templates/        # Agent-specific templates (namespaced)
+│       └── weather_reporter/
+│           └── detail.html
 ├── 📁 templates/         # Global templates (core, auth)
 ├── 📁 static/            # Static assets (CSS, JS, images)
 ├── 📁 media/             # User-uploaded files
@@ -52,7 +54,8 @@ All agents communicate with external AI services via N8N webhooks:
 - Custom User model with wallet balance functionality
 - Stripe integration for payments (`wallet/stripe_handler.py`)
 - Transaction tracking via `WalletTransaction` model
-- Balance checking before agent usage
+- **IMPORTANT**: Wallet deduction happens ONLY after successful processing (not before)
+- Real-time balance updates in frontend after successful agent execution
 
 ## Essential Commands
 
@@ -134,8 +137,8 @@ Each agent requires webhook URLs in format:
 
 ## Agent Creation System (Automated)
 
-### Automated Agent Creation Command
-The project features a sophisticated automated agent creation system via the `create_agent` management command:
+### Automated Agent Creation Command (✅ FULLY FUNCTIONAL)
+The project features a sophisticated automated agent creation system via the `create_agent` management command with complete Django template generation:
 
 ```bash
 # Create webhook-based agent (N8N integration)
@@ -159,16 +162,17 @@ python manage.py create_agent "Weather Reporter" "weather-reporter" api \
 - **StandardAPIProcessor**: Handles direct API calls with flexible authentication methods
 - **WebhookFormatDetector**: Utility to test and detect webhook formats
 
-#### Template-Based Code Generation
-The system uses Django templates to generate complete agent apps:
+#### Template-Based Code Generation (✅ COMPLETE)
+The system uses Django templates in `agent_base/templates/agent_generator/` to generate complete agent apps:
 
-**Template Files:**
-- `webhook_models.py` / `api_models.py`: Models with custom fields
-- `webhook_processor.py` / `api_processor.py`: Processor classes
+**Available Template Files:**
+- `api_models.py` / `webhook_models.py`: Database models with custom fields
+- `api_processor.py` / `webhook_processor.py` / `weather_api_processor.py`: Processor classes
 - `views.py`: Django views with authentication and wallet integration
-- `urls.py`: URL routing patterns
+- `urls.py`: URL routing patterns with proper namespacing
 - `admin.py`: Django admin configuration
 - `apps.py`: Django app configuration
+- `__init__.py`: App initialization
 
 #### Supported Agent Types
 
@@ -184,26 +188,39 @@ The system uses Django templates to generate complete agent apps:
 - GET/POST request support
 - Response parsing and formatting
 
-#### Weather Reporter Example
-The system includes a complete Weather Reporter agent example:
-- **API Integration**: OpenWeatherMap API
+#### Example Agents (Production Ready)
+
+**Data Analysis Agent** (Price: 5.00 AED):
+- **N8N Integration**: PDF analysis webhook processor
+- **File Upload**: PDF-only with binary multipart upload
+- **Real-time Results**: AJAX display with wallet balance updates
+- **Features**: Summary/Detailed/Statistical analysis types
+
+**Weather Reporter Agent** (Price: 2.00 AED):
+- **API Integration**: OpenWeatherMap API with direct calls
 - **Custom Fields**: location, report_type, temperature, humidity, wind_speed
 - **Formatted Reports**: Both current and detailed weather reports
+- **Real-time Results**: Dynamic display below form
 - **Error Handling**: API failures and invalid locations
 
 ### Management Commands
 
-#### create_agent
+#### create_agent (✅ READY TO USE)
 Generates complete agent apps with:
 - Database models and migrations
-- Processor classes
-- Django views with authentication
-- URL routing
-- Admin interface
+- Processor classes (API/webhook/weather-specific)
+- Django views with authentication and wallet integration
+- URL routing with proper namespacing
+- Admin interface with list views
 - Custom field definitions based on agent type
+- Simplified template structure: `agent_name/templates/detail.html`
 
 ```bash
 python manage.py create_agent --help
+
+# Examples:
+python manage.py create_agent "PDF Analyzer" "pdf-analyzer" api --price 5.0
+python manage.py create_agent "Social Media Generator" "social-generator" webhook --price 3.0
 ```
 
 #### test_webhook
@@ -308,7 +325,7 @@ Each agent app has:
 Templates follow clean Django app structure:
 - `templates/core/`: Homepage, marketplace, wallet (global templates)
 - `templates/authentication/`: Login, registration (global templates)
-- `[agent_name]/templates/`: Individual agent templates within their respective apps (detail.html)
+- `[agent_name]/templates/[agent_name]/`: Individual agent templates within their respective apps (namespaced)
 - `docs/`: All documentation and guides
 - `tests/`: All test files
 
@@ -331,6 +348,116 @@ Templates follow clean Django app structure:
 2. Run `python manage.py populate_base_agents` to update database
 3. Pricing is enforced in `BaseAgentView.post()` method
 
+## 💰 Wallet Management Best Practices (CRITICAL)
+
+### ✅ CORRECT Wallet Deduction Pattern
+**ALWAYS deduct wallet balance ONLY after successful processing, not before!**
+
+#### View Layer (NO wallet deduction):
+```python
+# ❌ NEVER do this in views.py:
+# request.user.deduct_balance(agent.price, description, agent_slug)
+
+# ✅ CORRECT: Only check balance, create request object
+if not request.user.has_sufficient_balance(agent.price):
+    return JsonResponse({'error': 'Insufficient wallet balance'}, status=400)
+
+agent_request = MyAgentRequest.objects.create(
+    user=request.user,
+    agent=agent,
+    cost=agent.price,
+    # ... other fields
+)
+
+# Process request via processor
+processor = MyAgentProcessor()
+result = processor.process_request(request_obj=agent_request, ...)
+
+# Return response with updated wallet balance
+request.user.refresh_from_db()
+return JsonResponse({
+    'success': True,
+    'request_id': str(agent_request.id),
+    'wallet_balance': float(request.user.wallet_balance)  # Real-time balance
+})
+```
+
+#### Processor Layer (wallet deduction after success):
+```python
+def process_response(self, response_data, request_obj):
+    try:
+        # ... process response and determine success
+        success = response_data.get('status') == 'success' and bool(analysis_text)
+        
+        # Create response object
+        response_obj = MyAgentResponse.objects.create(
+            request=request_obj,
+            success=success,
+            # ... other fields
+        )
+        
+        # ✅ ONLY deduct wallet after successful processing
+        if success:
+            request_obj.user.deduct_balance(
+                request_obj.cost,
+                f"Agent Name - {description}",
+                'agent-slug'
+            )
+            print(f"Wallet deducted {request_obj.cost} AED for successful processing")
+        
+        request_obj.status = 'completed' if success else 'failed'
+        request_obj.save()
+        
+        return response_obj
+    except Exception as e:
+        # ✅ On error: NO wallet deduction, request marked as failed
+        request_obj.status = 'failed'
+        request_obj.save()
+        raise
+```
+
+#### Frontend JavaScript (real-time balance updates):
+```javascript
+// Update wallet balance after successful processing
+if (result.success && result.status === 'completed') {
+    // Update wallet balance display
+    if (result.wallet_balance !== undefined) {
+        updateWalletBalance(result.wallet_balance);
+    }
+    
+    showToast('✅ Analysis completed and payment processed!', 'success');
+} else if (result.status === 'failed') {
+    showToast('❌ Analysis failed - no charge applied', 'error');
+}
+
+function updateWalletBalance(newBalance) {
+    // Update all wallet displays in real-time
+    document.querySelectorAll('[data-wallet-balance]').forEach(element => {
+        element.textContent = `${newBalance.toFixed(2)} AED`;
+    });
+    window.currentWalletBalance = newBalance;
+}
+```
+
+### 🔥 Critical Wallet Rules
+1. **NEVER** deduct wallet in views.py before processing
+2. **ALWAYS** deduct wallet in processor ONLY after `success=True`
+3. **ALWAYS** return updated `wallet_balance` in JSON responses
+4. **ALWAYS** update frontend wallet display in real-time
+5. **ALWAYS** show clear user feedback: "payment processed" vs "no charge applied"
+
+### Wallet Flow Summary
+```
+1. User uploads/submits → NO charge yet ✅
+2. Create request object → NO charge yet ✅
+3. Start processing → NO charge yet ✅
+4. Processing succeeds → CHARGE NOW ✅
+5. Update frontend → Show new balance ✅
+6. If any step fails → NO charge at all ✅
+```
+
+This ensures users never lose money for failed processing while maintaining simple, efficient code.
+
 ## Current Architecture (Clean & Modern)
 
 The project uses a clean, modular individual agent architecture:
@@ -341,10 +468,35 @@ The project uses a clean, modular individual agent architecture:
 - **Organized project structure**: Documentation in `docs/`, tests in `tests/`, clean root directory
 - **BaseAgent catalog system**: Centralized marketplace with individual agent implementations
 - **Modular processors**: Each agent has its own processor for API/webhook integration
-- **App-specific templates**: `agent_name/templates/detail.html`
+- **App-specific templates**: `agent_name/templates/agent_name/detail.html` (namespaced to prevent conflicts)
 
 ### Best Practices
-- All new agents should follow the individual app architecture
-- Templates should be placed within the agent app, not in global templates
-- Use the `create_agent` command for automated setup, then follow the setup checklist
-- Keep root directory clean - use `docs/` and `tests/` folders for organization
+
+#### Agent Development Standards
+- **Individual App Architecture**: Each agent is a separate Django app
+- **Template Organization**: Place templates within agent app (`agent_name/templates/agent_name/`)
+- **Automated Creation**: Use `create_agent` command for initial setup
+- **Clean Structure**: Keep root directory organized with `docs/` and `tests/` folders
+
+#### Modern Agent Features (Required)
+- **Real-time Results Display**: Use AJAX to show results below form without page reload
+- **Wallet Balance Updates**: Update balance displays immediately after successful processing
+- **Data Attributes**: Add `data-wallet-balance` to all balance elements for easy targeting
+- **Continuous Workflow**: Allow multiple requests without page refresh ("Get Another" functionality)
+- **Clear User Feedback**: Show "payment processed" vs "no charge applied" messages
+
+#### Frontend JavaScript Requirements
+```javascript
+// Required functions for all agents:
+- updateWalletBalance(newBalance)  // Updates all balance displays
+- displayResults(result)          // Shows results below form  
+- pollForResults(requestId)       // Checks processing status
+- resetForm()                     // Prepares for next request
+```
+
+#### Template Requirements
+```html
+<!-- Required data attributes for wallet balance -->
+<span data-wallet-balance>{{ user.wallet_balance|floatformat:2 }} AED</span>
+<div data-wallet-balance>{{ user.wallet_balance|floatformat:2 }} AED</div>
+```

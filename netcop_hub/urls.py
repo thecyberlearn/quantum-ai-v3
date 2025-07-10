@@ -23,6 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('authentication.urls')),
     path('agents/weather-reporter/', include('weather_reporter.urls')),
+    path('agents/data-analyzer/', include('data_analyzer.urls')),
     path('', include('core.urls')),
 ]
 

@@ -91,10 +91,13 @@ Weather data provided by OpenWeatherMap"""
             # Format report
             formatted_report = self.format_weather_report(weather_data, request_obj.report_type)
             
+            # Determine success
+            success = response_data.get('success', True) and bool(weather_data.get('main'))
+            
             # Create response object
             response_obj = WeatherReporterResponse.objects.create(
                 request=request_obj,
-                success=response_data.get('success', True),
+                success=success,
                 processing_time=response_data.get('processing_time', 0),
                 weather_data=weather_data,
                 temperature=temperature,
@@ -104,8 +107,17 @@ Weather data provided by OpenWeatherMap"""
                 formatted_report=formatted_report,
             )
             
+            # Only deduct wallet balance after successful processing
+            if success:
+                request_obj.user.deduct_balance(
+                    request_obj.cost,
+                    f"Weather Reporter - {request_obj.location}",
+                    'weather-reporter'
+                )
+                print(f"{self.agent_slug}: Wallet deducted {request_obj.cost} AED for successful processing")
+            
             # Update request as completed
-            request_obj.status = 'completed'
+            request_obj.status = 'completed' if success else 'failed'
             request_obj.processed_at = timezone.now()
             request_obj.save()
             

@@ -225,4 +225,8 @@ ipython_config.py
 *.pem
 *.p12
 *.pfx
-secrets.jsonnetcop-ai-hub/
+secrets.json
+
+# NextJS frontend directory
+nextjs/
+netcop-ai-hub/

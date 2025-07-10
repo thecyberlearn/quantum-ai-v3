@@ -6,68 +6,70 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views import View
 from agent_base.models import BaseAgent
-from .models import WeatherReporterRequest, WeatherReporterResponse
-from .processor import WeatherReporterProcessor
+from .models import {{ agent_name_camel }}Request, {{ agent_name_camel }}Response
+from .processor import {{ agent_name_camel }}Processor
 import json
 
 
 @login_required
-def weather_reporter_detail(request):
-    """Detail page for Weather Reporter agent"""
+def {{ agent_slug_underscore }}_detail(request):
+    """Detail page for {{ agent_name }} agent"""
     try:
-        agent = BaseAgent.objects.get(slug='weather-reporter')
+        agent = BaseAgent.objects.get(slug='{{ agent_slug }}')
     except BaseAgent.DoesNotExist:
-        messages.error(request, 'Weather Reporter agent not found.')
+        messages.error(request, '{{ agent_name }} agent not found.')
         return redirect('core:homepage')
     
-    # Get user requests only if authenticated
-    user_requests = []
-    if request.user.is_authenticated:
-        user_requests = WeatherReporterRequest.objects.filter(user=request.user).order_by('-created_at')[:10]
+    # Get user's recent requests
+    user_requests = {{ agent_name_camel }}Request.objects.filter(
+        user=request.user
+    ).order_by('-created_at')[:10]
     
     context = {
         'agent': agent,
         'user_requests': user_requests
     }
-    return render(request, 'weather_reporter/detail.html', context)
+    return render(request, '{{ agent_slug_underscore }}/detail.html', context)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class WeatherReporterProcessView(View):
-    """Process Weather Reporter requests"""
+class {{ agent_name_camel }}ProcessView(View):
+    """Process {{ agent_name }} requests"""
     
     def post(self, request):
         if not request.user.is_authenticated:
             return JsonResponse({'error': 'Authentication required'}, status=401)
         
         try:
-            data = json.loads(request.body)
+            # Parse request data
+            {% if agent_type == 'api' and 'pdf' in agent_slug %}# Handle multipart form data for file uploads
+            data = request.POST.dict()
+            files = request.FILES
+            {% else %}data = json.loads(request.body){% endif %}
             
             # Get agent
-            agent = BaseAgent.objects.get(slug='weather-reporter')
+            agent = BaseAgent.objects.get(slug='{{ agent_slug }}')
             
             # Check wallet balance
             if not request.user.has_sufficient_balance(agent.price):
                 return JsonResponse({'error': 'Insufficient wallet balance'}, status=400)
             
             # Create request object (no wallet deduction yet - only after successful processing)
-            agent_request = WeatherReporterRequest.objects.create(
+            agent_request = {{ agent_name_camel }}Request.objects.create(
                 user=request.user,
                 agent=agent,
                 cost=agent.price,
-                location=data.get('location', ''),
-                report_type=data.get('report_type', 'current'),
-                
+                {% for field in request_creation %}{{ field.name }}=data.get('{{ field.source }}', '{{ field.default }}'),
+                {% endfor %}
             )
             
             # Process request
-            processor = WeatherReporterProcessor()
+            processor = {{ agent_name_camel }}Processor()
             result = processor.process_request(
                 request_obj=agent_request,
                 user_id=request.user.id,
-                location=data.get('location'),
-                report_type=data.get('report_type'),
-                
+                {% for param in processor_params %}{{ param.name }}=data.get('{{ param.source }}'),
+                {% endfor %}
             )
             
             # Refresh user from database to get updated wallet balance
@@ -76,21 +78,21 @@ class WeatherReporterProcessView(View):
             return JsonResponse({
                 'success': True,
                 'request_id': str(agent_request.id),
-                'message': 'Weather Reporter request processed successfully',
+                'message': '{{ agent_name }} request processed successfully',
                 'wallet_balance': float(request.user.wallet_balance)
             })
             
         except BaseAgent.DoesNotExist:
-            return JsonResponse({'error': 'Weather Reporter agent not found'}, status=404)
+            return JsonResponse({'error': '{{ agent_name }} agent not found'}, status=404)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
 
 
 @login_required
-def weather_reporter_result(request, request_id):
+def {{ agent_slug_underscore }}_result(request, request_id):
     """Get result for a specific request"""
     try:
-        agent_request = WeatherReporterRequest.objects.get(
+        agent_request = {{ agent_name_camel }}Request.objects.get(
             id=request_id,
             user=request.user
         )
@@ -103,14 +105,8 @@ def weather_reporter_result(request, request_id):
             return JsonResponse({
                 'success': response.success,
                 'status': agent_request.status,
-                'weather_data': getattr(response, 'weather_data', None),
-                'temperature': getattr(response, 'temperature', None),
-                'description': getattr(response, 'description', None),
-                'humidity': getattr(response, 'humidity', None),
-                'wind_speed': getattr(response, 'wind_speed', None),
-                'formatted_report': getattr(response, 'formatted_report', None),
-                
-                'processing_time': float(response.processing_time) if response.processing_time else None,
+                {% for field in result_fields %}'{{ field.name }}': getattr(response, '{{ field.name }}', None),
+                {% endfor %}'processing_time': float(response.processing_time) if response.processing_time else None,
                 'error_message': response.error_message,
                 'wallet_balance': float(request.user.wallet_balance)
             })
@@ -121,7 +117,7 @@ def weather_reporter_result(request, request_id):
                 'message': 'Processing in progress...'
             })
             
-    except WeatherReporterRequest.DoesNotExist:
+    except {{ agent_name_camel }}Request.DoesNotExist:
         return JsonResponse({'error': 'Request not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)

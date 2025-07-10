@@ -1,7 +1,9 @@
 # Agent Setup Checklist
 ## Steps to Complete After Running `create_agent` Command
 
-This checklist covers the **5 essential steps** needed after running the automated `create_agent` command to make your agent fully functional.
+This checklist covers the **6 essential steps** needed after running the automated `create_agent` command to make your agent fully functional.
+
+**✅ The automated system now generates all code files including models, views, processors, and admin interface!**
 
 ---
 
@@ -149,18 +151,34 @@ N8N_WEBHOOK_PDF_ANALYZER=https://your-n8n-instance.com/webhook/pdf-analyzer
 
 ---
 
-## ✅ **Step 6: Verify Template Structure**
+## ✅ **Step 6: Create Agent Template**
 
-**Check that your agent's templates are in the correct location:**
+**The automated system creates the code structure, but you need to create the template:**
+
 ```bash
-# Your agent templates should be in:
-agent_[name]/templates/detail.html
-
-# Example for PDF Analyzer:
-agent_pdf_analyzer/templates/detail.html
+# Create the template directory and file:
+mkdir -p [agent_name]/templates/
 ```
 
-**If the template is missing or in wrong location, you'll get a `TemplateDoesNotExist` error.**
+**Copy and customize from the weather reporter template:**
+```bash
+# Copy the weather reporter template as a starting point:
+cp weather_reporter/templates/detail.html [agent_name]/templates/detail.html
+
+# Then customize the template for your specific agent
+```
+
+**Template location should be:**
+```bash
+# Your agent templates should be in:
+agent_[name]/templates/agent_[name]/detail.html
+
+# Example for PDF Analyzer:
+agent_pdf_analyzer/templates/agent_pdf_analyzer/detail.html
+
+# Example for Data Analyzer:
+data_analyzer/templates/data_analyzer/detail.html
+```
 
 ---
 
@@ -254,16 +272,17 @@ api_key_env = 'DOCPARSER_API_KEY'  # Must match .env file
 
 ## 📝 **Quick Checklist Summary**
 
-After running `create_agent`, complete these 5 steps:
+After running `create_agent`, complete these 6 steps:
 
 - [ ] **Settings:** Add agent to `INSTALLED_APPS`
 - [ ] **URLs:** Add URL pattern to `netcop_hub/urls.py`
 - [ ] **Database:** Run `makemigrations` and `migrate`
-- [ ] **Marketplace:** Create `BaseAgent` entry
+- [ ] **Marketplace:** Create `BaseAgent` entry (done automatically)
 - [ ] **Environment:** Add API keys to `.env`
+- [ ] **Template:** Create and customize `detail.html` template
 - [ ] **Test:** Verify agent works end-to-end
 
-**Total time:** ~5-10 minutes
+**Total time:** ~10-15 minutes
 
 ---
 
