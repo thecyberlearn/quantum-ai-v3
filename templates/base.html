@@ -1,0 +1,181 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NetCop Hub - AI Platform{% endblock %}</title>
+    
+    <!-- Base Styles -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-container">
+            <div class="header-left">
+                <a href="{% url 'core:homepage' %}" class="logo-section">
+                    <img src="{% static 'img/logo.png' %}" alt="NetCop Hub" class="logo-img">
+                </a>
+                <nav class="header-nav">
+                    <a href="{% url 'core:homepage' %}" class="nav-link {% if request.resolver_match.url_name == 'homepage' %}active{% endif %}">Home</a>
+                    <a href="{% url 'core:marketplace' %}" class="nav-link {% if request.resolver_match.url_name == 'marketplace' %}active{% endif %}">AI Marketplace</a>
+                </nav>
+            </div>
+            <div class="user-info">
+                {% if user.is_authenticated %}
+                    <p class="user-welcome">Welcome, {{ user.username }}!</p>
+                    <a href="{% url 'core:wallet' %}" class="balance" data-wallet-balance>💰 {{ user.wallet_balance|floatformat:2 }} AED</a>
+                    <div class="auth-links">
+                        <a href="{% url 'core:wallet' %}">Wallet</a>
+                        <a href="{% url 'authentication:logout' %}">Logout</a>
+                    </div>
+                {% else %}
+                    <div class="auth-links">
+                        <a href="{% url 'authentication:login' %}">Login</a>
+                        <a href="{% url 'authentication:register' %}">Register</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-container">
+        {% block content %}{% endblock %}
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer" id="footer">
+        <div class="footer-container">
+            <!-- Main Footer Content -->
+            <div class="footer-main">
+                <!-- Company Info -->
+                <div class="footer-company">
+                    <div class="footer-logo">
+                        <img src="{% static 'img/logo.png' %}" alt="NetCop Hub" class="footer-logo-img">
+                    </div>
+                    <p class="footer-description">
+                        Leading cybersecurity consultancy providing comprehensive security solutions and AI-powered automation.
+                    </p>
+                    
+                    <div class="footer-contact">
+                        <a href="mailto:contact@netcopconsultancy.com" class="footer-contact-item">
+                            📧 contact@netcopconsultancy.com
+                        </a>
+                        <span class="footer-contact-item">
+                            📍 Dubai, UAE
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Navigation Sections -->
+                <div class="footer-nav">
+                    <!-- Services -->
+                    <div class="footer-nav-section">
+                        <h4 class="footer-nav-title">Services</h4>
+                        <div class="footer-nav-links">
+                            <a href="#services" class="footer-nav-link">Cybersecurity Consulting</a>
+                            <a href="#services" class="footer-nav-link">Risk Assessment</a>
+                            <a href="#services" class="footer-nav-link">Compliance Audits</a>
+                            <a href="#services" class="footer-nav-link">Security Training</a>
+                        </div>
+                    </div>
+
+                    <!-- Company -->
+                    <div class="footer-nav-section">
+                        <h4 class="footer-nav-title">Company</h4>
+                        <div class="footer-nav-links">
+                            <a href="#company-profile" class="footer-nav-link">About Us</a>
+                            <a href="#founder" class="footer-nav-link">Leadership</a>
+                            <a href="#contact" class="footer-nav-link">Contact Us</a>
+                            <a href="{% url 'core:marketplace' %}" class="footer-nav-link">AI Marketplace</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Section -->
+            <div class="footer-bottom">
+                <p class="footer-copyright">
+                    © 2025 Netcop Consultancy. All rights reserved.
+                </p>
+                <div class="footer-legal">
+                    <button class="footer-legal-link" onclick="showPrivacyModal()">
+                        Privacy Policy
+                    </button>
+                    <a href="#terms" class="footer-legal-link">Terms of Service</a>
+                    <a href="#security" class="footer-legal-link">Security</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Privacy Policy Modal -->
+    <div class="modal-overlay" id="privacy-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Privacy Policy</h2>
+                <button class="modal-close" onclick="hidePrivacyModal()">&times;</button>
+            </div>
+            <div class="modal-text">
+                <p style="margin-bottom: 16px;">
+                    <strong>NetCop Consultancy LLC FZ</strong> is committed to protecting your privacy and ensuring the security of your personal information.
+                </p>
+                <p style="margin-bottom: 16px;">
+                    <strong>Information We Collect:</strong><br>
+                    We collect information you provide directly to us, such as when you create an account, use our AI services, or contact us for support.
+                </p>
+                <p style="margin-bottom: 16px;">
+                    <strong>How We Use Your Information:</strong><br>
+                    We use the information we collect to provide, maintain, and improve our services, process transactions, and communicate with you.
+                </p>
+                <p style="margin-bottom: 16px;">
+                    <strong>Data Security:</strong><br>
+                    We implement appropriate technical and organizational security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.
+                </p>
+                <p style="margin-bottom: 16px;">
+                    <strong>Contact Us:</strong><br>
+                    If you have any questions about this Privacy Policy, please contact us at contact@netcopconsultancy.com
+                </p>
+                <p style="margin: 0; font-size: 12px; color: #9ca3af;">
+                    Last updated: January 2025
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Privacy modal functions
+        function showPrivacyModal() {
+            const modal = document.getElementById('privacy-modal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hidePrivacyModal() {
+            const modal = document.getElementById('privacy-modal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('privacy-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hidePrivacyModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                hidePrivacyModal();
+            }
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
