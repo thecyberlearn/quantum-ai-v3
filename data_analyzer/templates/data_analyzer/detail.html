@@ -577,14 +577,31 @@
             return;
         }
         
+        // Check user authentication
+        {% if not user.is_authenticated %}
+        window.location.href = "{% url 'authentication:login' %}";
+        return;
+        {% endif %}
+        
+        // Check wallet balance
+        const balance = {{ user.wallet_balance|default:0 }};
+        if (balance < 5.00) {
+            showToast('Insufficient balance! You need 5.00 AED.', 'error');
+            setTimeout(() => {
+                window.location.href = "{% url 'core:wallet' %}";
+            }, 2000);
+            return;
+        }
+        
         const analysisType = document.querySelector('input[name="analysisType"]:checked').value;
         
         // Show processing status
         document.getElementById('processingStatus').style.display = 'block';
         document.getElementById('processButton').disabled = true;
         document.getElementById('processButton').innerHTML = '⏳ Processing...';
+        document.getElementById('analysisResults').style.display = 'none';
         
-        // Simulate analysis steps
+        // Processing steps for user feedback
         const steps = [
             'Reading file structure...',
             'Extracting data patterns...',
@@ -600,142 +617,120 @@
                 currentStep++;
             } else {
                 clearInterval(stepInterval);
-                completeAnalysis(analysisType);
             }
+        }, 1000);
+
+        // Submit form data to backend
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('analysis_type', analysisType);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        fetch('/agents/data-analyzer/process/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(result => {
+            clearInterval(stepInterval);
+            if (result.success && result.request_id) {
+                // Start polling for results
+                pollForResults(result.request_id);
+            } else {
+                // Handle immediate response
+                document.getElementById('processingStatus').style.display = 'none';
+                document.getElementById('processButton').disabled = false;
+                document.getElementById('processButton').innerHTML = '📊 Analyze Data (5.00 AED)';
+                
+                if (result.error) {
+                    showToast(`❌ ${result.error}`, 'error');
+                } else {
+                    displayResults(result);
+                }
+            }
+        })
+        .catch(error => {
+            clearInterval(stepInterval);
+            console.error('Error:', error);
+            document.getElementById('processingStatus').style.display = 'none';
+            document.getElementById('processButton').disabled = false;
+            document.getElementById('processButton').innerHTML = '📊 Analyze Data (5.00 AED)';
+            showToast('❌ Network error - please try again', 'error');
+        });
+    }
+    
+    // Display analysis results
+    function displayResults(result) {
+        const resultsContainer = document.getElementById('analysisResults');
+        const contentContainer = document.getElementById('analysisContent');
+        
+        if (result.success && result.status === 'completed') {
+            // Use the analysis content from backend
+            const content = result.report_text || result.analysis_results || result.insights_summary || 'Data analysis completed successfully!';
+            contentContainer.textContent = content;
+            resultsContainer.style.display = 'block';
+            
+            // Update wallet balance if provided
+            if (result.wallet_balance !== undefined) {
+                updateWalletBalance(result.wallet_balance);
+            }
+            
+            showToast('✅ Data analysis completed and payment processed!', 'success');
+        } else {
+            showToast('❌ Failed to analyze data - no charge applied', 'error');
+        }
+    }
+
+    // Poll for results
+    function pollForResults(requestId) {
+        let pollCount = 0;
+        const maxPolls = 60; // 60 seconds maximum for data analysis
+        
+        const pollInterval = setInterval(() => {
+            pollCount++;
+            
+            fetch(`/agents/data-analyzer/result/${requestId}/`)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'completed' || result.status === 'failed') {
+                        clearInterval(pollInterval);
+                        document.getElementById('processingStatus').style.display = 'none';
+                        document.getElementById('processButton').disabled = false;
+                        document.getElementById('processButton').innerHTML = '📊 Analyze Data (5.00 AED)';
+                        
+                        displayResults(result);
+                    } else if (pollCount >= maxPolls) {
+                        clearInterval(pollInterval);
+                        document.getElementById('processingStatus').style.display = 'none';
+                        document.getElementById('processButton').disabled = false;
+                        document.getElementById('processButton').innerHTML = '📊 Analyze Data (5.00 AED)';
+                        showToast('❌ Processing timeout - please try again', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error polling results:', error);
+                    if (pollCount >= maxPolls) {
+                        clearInterval(pollInterval);
+                        document.getElementById('processingStatus').style.display = 'none';
+                        document.getElementById('processButton').disabled = false;
+                        document.getElementById('processButton').innerHTML = '📊 Analyze Data (5.00 AED)';
+                        showToast('❌ Network error - please try again', 'error');
+                    }
+                });
         }, 1000);
     }
     
-    function completeAnalysis(analysisType) {
-        // Generate sample analysis report
-        const analysisReport = generateSampleAnalysis(analysisType);
-        
-        // Display results
-        document.getElementById('analysisContent').textContent = analysisReport;
-        document.getElementById('processingStatus').style.display = 'none';
-        document.getElementById('analysisResults').style.display = 'block';
-        
-        // Reset button
-        document.getElementById('processButton').disabled = false;
-        document.getElementById('processButton').innerHTML = '📊 Analyze Data (5.00 AED)';
-        
-        // Update wallet balance (demo)
-        const currentBalance = parseFloat('{{ user.wallet_balance|floatformat:2 }}');
-        updateWalletBalance(currentBalance - 5.00);
-        
-        showToast('Data analysis complete! 5.00 AED used.', 'success');
-    }
-    
-    function generateSampleAnalysis(type) {
-        const fileName = selectedFile.name;
-        const baseReport = `📊 Data Analysis Report - ${fileName}
-
-File Information:
-- Name: ${fileName}
-- Size: ${formatFileSize(selectedFile.size)}
-- Type: ${selectedFile.type || 'Unknown'}
-- Processed: ${new Date().toLocaleString()}
-
-`;
-        
-        if (type === 'summary') {
-            return baseReport + `Summary Analysis Results:
-
-Key Findings:
-• Data contains 1,247 records across 8 columns
-• 94% data completeness rate
-• 3 potential outliers identified
-• Strong correlation (0.83) between variables A and B
-• Trending pattern shows 15% increase over time period
-
-Recommendations:
-• Clean missing data in columns 3 and 7
-• Investigate outlier values for data quality
-• Consider seasonal adjustments for trend analysis
-
-Generated by NetCop AI Data Analyzer Agent`;
-        }
-        
-        if (type === 'detailed') {
-            return baseReport + `Detailed Analysis Results:
-
-Data Quality Assessment:
-• Missing Values: 6% (73 records)
-• Duplicate Records: 2% (25 records)
-• Outliers Detected: 3 records beyond 3σ threshold
-• Data Types: 5 numeric, 2 categorical, 1 datetime
-
-Statistical Summary:
-• Mean: 45.67 ± 12.34
-• Median: 43.21
-• Mode: 42.00
-• Range: 15.5 - 89.3
-• Skewness: 0.23 (slight right skew)
-• Kurtosis: -0.45 (platykurtic distribution)
-
-Correlation Analysis:
-• Variable A ↔ Variable B: 0.83 (strong positive)
-• Variable C ↔ Variable D: -0.67 (moderate negative)
-• Variable E ↔ Variable F: 0.12 (weak positive)
-
-Trend Analysis:
-• Linear trend: y = 2.3x + 18.5 (R² = 0.76)
-• Seasonal component detected (quarterly pattern)
-• 15% overall growth trend identified
-
-Generated by NetCop AI Data Analyzer Agent`;
-        }
-        
-        if (type === 'statistical') {
-            return baseReport + `Advanced Statistical Analysis:
-
-Descriptive Statistics:
-• Count: 1,247 observations
-• Mean: 45.67 ± 12.34 (95% CI: 44.98 - 46.36)
-• Median: 43.21
-• Standard Deviation: 12.34
-• Variance: 152.48
-• Coefficient of Variation: 27.02%
-
-Distribution Analysis:
-• Normality Test (Shapiro-Wilk): W = 0.987, p = 0.043
-• Distribution appears approximately normal with slight skew
-• Outliers: 3 values > 3σ (flagged for review)
-
-Hypothesis Testing:
-• T-test vs. baseline: t = 3.45, p = 0.0006 (significant)
-• ANOVA across groups: F = 12.67, p < 0.001 (significant)
-• Chi-square test: χ² = 23.45, p = 0.012 (significant)
-
-Regression Analysis:
-• R-squared: 0.762 (76.2% variance explained)
-• Adjusted R-squared: 0.758
-• F-statistic: 234.67, p < 0.001
-• Durbin-Watson: 1.98 (no autocorrelation)
-
-Model Coefficients:
-• Intercept: 18.5 ± 2.1 (p < 0.001)
-• Slope: 2.3 ± 0.3 (p < 0.001)
-• Residual Standard Error: 4.67
-
-Time Series Analysis:
-• Trend: Increasing (slope = 0.023/month)
-• Seasonality: Quarterly pattern detected
-• Autocorrelation: Significant at lags 1, 4, 12
-• Forecast accuracy: MAPE = 8.3%
-
-Generated by NetCop AI Data Analyzer Agent`;
-        }
-        
-        return baseReport + 'Analysis complete.';
-    }
     
     function updateWalletBalance(newBalance) {
-        document.getElementById('walletBalance').textContent = newBalance.toFixed(2) + ' AED';
-        // Update header balance if exists
-        const headerBalance = document.querySelector('[data-wallet-balance]');
-        if (headerBalance) {
-            headerBalance.textContent = `💰 ${newBalance.toFixed(2)} AED`;
-        }
+        // Update wallet balance display
+        const balanceElements = document.querySelectorAll('[data-wallet-balance]');
+        balanceElements.forEach(element => {
+            element.textContent = `${newBalance.toFixed(2)} AED`;
+        });
+        window.currentWalletBalance = newBalance;
     }
     
     function copyAnalysisReport() {
