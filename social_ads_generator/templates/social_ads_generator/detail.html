@@ -1,941 +1,660 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Social Ads Generator Agent - NetCop AI Hub</title>
-    <style>
-        * {
-            box-sizing: border-box;
+
+{% block title %}Social Ads Generator Agent - NetCop AI Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .social-ads-page {
+        background: linear-gradient(135deg, #f6f8ff 0%, #e8f0fe 50%, #f0f7ff 100%);
+        min-height: calc(100vh - 80px);
+        padding: clamp(20px, 5vw, 40px);
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+    }
+    
+    .social-ads-container {
+        max-width: 1280px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 24px;
+        align-items: start;
+    }
+    
+    .card {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(20px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        margin-bottom: 24px;
+    }
+    
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 16px;
+    }
+    
+    .section-container {
+        margin-bottom: 24px;
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+    }
+    
+    .content-info {
+        background: #eff6ff;
+        border-color: #dbeafe;
+    }
+    
+    .platform-info {
+        background: #fdf4ff;
+        border-color: #fae8ff;
+    }
+    
+    .section-subtitle {
+        font-size: 14px;
+        font-weight: 600;
+        color: #6b7280;
+        margin-bottom: 16px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .form-input, .form-textarea {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 16px;
+        transition: border-color 0.2s ease;
+        min-height: 44px;
+        margin-bottom: 16px;
+        font-family: inherit;
+        background: #f9fafb;
+    }
+    
+    .form-textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+    
+    .form-input:focus, .form-textarea:focus {
+        outline: none;
+        border-color: #ec4899;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+    }
+    
+    .processing-status {
+        padding: 20px;
+        background: rgba(236, 72, 153, 0.1);
+        border: 2px solid #ec4899;
+        border-radius: 12px;
+        color: #be185d;
+        font-weight: 600;
+        text-align: center;
+        margin-bottom: 24px;
+        display: none;
+    }
+    
+    .processing-status .status-icon {
+        font-size: 32px;
+        margin-bottom: 12px;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    .results-card {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(20px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        margin-top: 24px;
+        display: none;
+    }
+    
+    .results-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .results-content {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 20px;
+        white-space: pre-line;
+        line-height: 1.7;
+        color: #374151;
+        font-size: 15px;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .btn {
+        padding: 16px 32px;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 16px;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: transform 0.1s ease;
+        text-decoration: none;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+        color: white;
+        flex: 1;
+        min-width: 120px;
+    }
+    
+    .btn-secondary {
+        background: white;
+        color: #374151;
+        border: 2px solid #e5e7eb;
+        flex: 1;
+        min-width: 120px;
+    }
+    
+    .btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+    }
+    
+    .btn:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .wallet-section {
+        position: sticky;
+        top: 20px;
+    }
+    
+    .wallet-balance {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 8px;
+    }
+    
+    .balance-label {
+        font-size: 16px;
+        color: #6b7280;
+        margin-bottom: 20px;
+    }
+    
+    .process-btn {
+        width: 100%;
+        margin-bottom: 12px;
+    }
+    
+    .insufficient-balance {
+        background: #fef2f2;
+        border: 1px solid #fca5a5;
+        color: #dc2626;
+        padding: 12px;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+    
+    .usage-info {
+        padding: 16px;
+        background: rgba(236, 72, 153, 0.1);
+        border-radius: 12px;
+        border: 1px solid rgba(236, 72, 153, 0.2);
+    }
+    
+    .usage-info h4 {
+        margin: 0 0 8px 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #be185d;
+    }
+    
+    .usage-info ul {
+        margin: 0;
+        font-size: 12px;
+        color: #374151;
+        line-height: 1.4;
+        list-style: none;
+        padding-left: 0;
+    }
+    
+    .usage-info li {
+        margin: 4px 0;
+        padding-left: 16px;
+        position: relative;
+    }
+    
+    .usage-info li::before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        color: #ec4899;
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 768px) {
+        .social-ads-container {
+            grid-template-columns: 1fr;
         }
         
-        html, body {
-            margin: 0;
-            padding: 0;
-            font-family: system-ui, -apple-system, sans-serif;
-            overflow-x: hidden;
-        }
-        
-        /* Responsive utilities */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 clamp(16px, 4vw, 24px);
-        }
-        
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(350px, 100%), 1fr));
-            gap: clamp(16px, 4vw, 24px);
-            align-items: start;
-        }
-        
-        .card {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: clamp(12px, 3vw, 16px);
-            padding: clamp(16px, 4vw, 24px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(20px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-            margin-bottom: clamp(16px, 4vw, 24px);
-        }
-        
-        .form-group {
-            margin-bottom: clamp(12px, 3vw, 16px);
-        }
-        
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: clamp(6px, 2vw, 8px);
-            font-size: clamp(14px, 3.5vw, 16px);
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: clamp(12px, 3vw, 16px) clamp(16px, 4vw, 20px);
-            border: 2px solid #e5e7eb;
-            border-radius: clamp(8px, 2vw, 12px);
-            font-size: clamp(14px, 3.5vw, 16px);
-            transition: border-color 0.2s ease;
-            min-height: 48px;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: #ec4899;
-        }
-        
-        .form-control.textarea {
-            min-height: 120px;
-            resize: vertical;
+        .action-buttons {
+            flex-direction: column;
         }
         
         .btn {
-            padding: clamp(12px, 3vw, 16px) clamp(20px, 5vw, 32px);
-            border: none;
-            border-radius: clamp(8px, 2vw, 12px);
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: clamp(14px, 3.5vw, 16px);
-            min-height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            width: 100%;
         }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(236, 72, 153, 0.4);
-        }
-        
-        .btn-primary:disabled {
-            background: #9ca3af;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .platform-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(120px, 100%), 1fr));
-            gap: clamp(8px, 2vw, 12px);
-        }
-        
-        .platform-option {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            padding: clamp(12px, 3vw, 16px);
-            border: 2px solid #e5e7eb;
-            border-radius: clamp(8px, 2vw, 12px);
-            cursor: pointer;
-            background: white;
-            transition: all 0.2s ease;
-            min-height: 80px;
-            text-align: center;
-        }
-        
-        .platform-option:hover {
-            border-color: #ec4899;
-        }
-        
-        .platform-option.selected {
-            border-color: #ec4899;
-            background: #fdf2f8;
-        }
-        
-        .platform-option input[type="radio"] {
-            display: none;
-        }
-        
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
-        
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: 0.4s;
-            border-radius: 34px;
-        }
-        
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: 0.4s;
-            border-radius: 50%;
-        }
-        
-        input:checked + .slider {
-            background-color: #ec4899;
-        }
-        
-        input:checked + .slider:before {
-            transform: translateX(26px);
-        }
-        
-        .processing-status {
-            padding: clamp(16px, 4vw, 20px);
-            background: #fdf2f8;
-            border: 1px solid #ec4899;
-            border-radius: clamp(8px, 2vw, 12px);
-            color: #be185d;
-            font-weight: 600;
-            text-align: center;
-            margin-bottom: clamp(16px, 4vw, 24px);
-            display: none;
-        }
-        
-        .ad-results {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 16px;
-            padding: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(20px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-            margin-top: 24px;
-            display: none;
-        }
-        
-        .help-text {
-            font-size: clamp(12px, 3vw, 14px);
-            color: #6b7280;
-            margin-top: 8px;
-        }
-        
-        .section-title {
-            font-size: clamp(16px, 4vw, 18px);
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: clamp(12px, 3vw, 16px);
-        }
-        
-        .error-message {
-            background: #fef2f2;
-            border: 1px solid #fca5a5;
-            color: #dc2626;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-        }
-        
-        .success-message {
-            background: #f0fdf4;
-            border: 1px solid #86efac;
-            color: #166534;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-        }
-        
-        /* Mobile optimizations */
-        @media (max-width: 768px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .platform-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .platform-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div style="
-        min-height: 100vh;
-        background: linear-gradient(135deg, #f6f8ff 0%, #e8f0fe 50%, #f0f7ff 100%);
-        padding: clamp(20px, 5vw, 40px) 0;
-    ">
-        <!-- Header -->
-        <nav style="
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(20px);
-            padding: 16px 0;
-            margin-bottom: 24px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        ">
-            <div class="container">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <a href="{% url 'core:homepage' %}" style="
-                            font-size: 24px;
-                            font-weight: 700;
-                            color: #ec4899;
-                            text-decoration: none;
-                        ">
-                            🚀 NetCop AI Hub
-                        </a>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <a href="{% url 'core:marketplace' %}" style="color: #374151; text-decoration: none; font-weight: 500;">Marketplace</a>
-                        {% if user.is_authenticated %}
-                            <a href="{% url 'authentication:profile' %}" style="color: #374151; text-decoration: none; font-weight: 500;">Profile</a>
-                            <span style="color: #6b7280;" data-wallet-balance>{{ user.wallet_balance|floatformat:2 }} AED</span>
-                        {% else %}
-                            <a href="{% url 'authentication:login' %}" style="color: #ec4899; text-decoration: none; font-weight: 600;">Login</a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </nav>
-        
-        <div class="container">
-            <!-- Page Title -->
-            <div style="text-align: center; margin-bottom: clamp(24px, 6vw, 40px);">
-                <h1 style="
-                    font-size: clamp(28px, 7vw, 36px);
-                    font-weight: 700;
-                    color: #1f2937;
-                    margin: 0 0 clamp(12px, 3vw, 16px) 0;
-                ">
-                    📱 Social Ads Generator Agent
-                </h1>
-                <p style="
-                    font-size: clamp(16px, 4vw, 18px);
-                    color: #6b7280;
-                    margin: 0;
-                    max-width: 600px;
-                    margin: 0 auto;
-                ">
-                    Create compelling social media advertisements with platform-optimized copy, audience targeting suggestions, and A/B test variants.
-                </p>
-                <div style="
-                    background: rgba(236, 72, 153, 0.1);
-                    color: #be185d;
-                    padding: 8px 16px;
-                    border-radius: 20px;
-                    display: inline-block;
-                    margin-top: 12px;
-                    font-size: clamp(14px, 3.5vw, 16px);
-                    font-weight: 600;
-                ">
-                    💰 Cost: 7.00 AED
-                </div>
-            </div>
-            
-            <!-- Messages -->
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="{% if message.tags == 'error' %}error-message{% else %}success-message{% endif %}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-            
-            <!-- Main Content -->
-            <div class="grid">
-                <!-- Social Ads Form -->
-                <div>
-                    <form method="POST" id="socialAdsForm">
-                        {% csrf_token %}
-                        
-                        <!-- Product/Service Description -->
-                        <div class="card">
-                            <h3 class="section-title">📝 Describe Your Product/Service</h3>
-                            
-                            <div class="form-group">
-                                <label for="description">What are you advertising? *</label>
-                                <textarea
-                                    name="description"
-                                    id="description"
-                                    class="form-control textarea"
-                                    placeholder="Describe your product, service, or campaign. Include key features, benefits, target audience, and any special offers..."
-                                    required
-                                ></textarea>
-                                <div class="help-text">
-                                    Be specific about features, benefits, and target audience for better results.
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Social Platform Selection -->
-                        <div class="card">
-                            <h3 class="section-title">📱 Target Platform</h3>
-                            
-                            <div class="platform-grid">
-                                <label class="platform-option selected" onclick="selectPlatform('facebook')">
-                                    <input type="radio" name="social_platform" value="facebook" checked />
-                                    <div style="font-size: 28px;">📘</div>
-                                    <div style="font-weight: 600; font-size: 14px;">Facebook</div>
-                                </label>
-                                
-                                <label class="platform-option" onclick="selectPlatform('instagram')">
-                                    <input type="radio" name="social_platform" value="instagram" />
-                                    <div style="font-size: 28px;">📷</div>
-                                    <div style="font-weight: 600; font-size: 14px;">Instagram</div>
-                                </label>
-                                
-                                <label class="platform-option" onclick="selectPlatform('twitter')">
-                                    <input type="radio" name="social_platform" value="twitter" />
-                                    <div style="font-size: 28px;">🐦</div>
-                                    <div style="font-weight: 600; font-size: 14px;">Twitter</div>
-                                </label>
-                                
-                                <label class="platform-option" onclick="selectPlatform('linkedin')">
-                                    <input type="radio" name="social_platform" value="linkedin" />
-                                    <div style="font-size: 28px;">💼</div>
-                                    <div style="font-weight: 600; font-size: 14px;">LinkedIn</div>
-                                </label>
-                                
-                                <label class="platform-option" onclick="selectPlatform('tiktok')">
-                                    <input type="radio" name="social_platform" value="tiktok" />
-                                    <div style="font-size: 28px;">🎵</div>
-                                    <div style="font-weight: 600; font-size: 14px;">TikTok</div>
-                                </label>
-                                
-                                <label class="platform-option" onclick="selectPlatform('youtube')">
-                                    <input type="radio" name="social_platform" value="youtube" />
-                                    <div style="font-size: 28px;">📺</div>
-                                    <div style="font-weight: 600; font-size: 14px;">YouTube</div>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <!-- Additional Options -->
-                        <div class="card">
-                            <h3 class="section-title">⚙️ Additional Options</h3>
-                            
-                            <!-- Include Emojis -->
-                            <div class="form-group">
-                                <label style="display: flex; align-items: center; justify-content: space-between;">
-                                    <span>Include Emojis in Ad Copy</span>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" name="include_emoji">
-                                        <span class="slider"></span>
-                                    </label>
-                                </label>
-                                <div class="help-text">
-                                    Emojis can increase engagement but may not be suitable for all brands.
-                                </div>
-                            </div>
-                            
-                            <!-- Language -->
-                            <div class="form-group">
-                                <label for="language">Language *</label>
-                                <select name="language" id="language" class="form-control" required>
-                                    <option value="English">English</option>
-                                    <option value="Arabic">Arabic (العربية)</option>
-                                    <option value="Spanish">Spanish (Español)</option>
-                                    <option value="French">French (Français)</option>
-                                    <option value="German">German (Deutsch)</option>
-                                    <option value="Chinese">Chinese (中文)</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <!-- Processing Status -->
-                        <div class="processing-status" id="processingStatus">
-                            <div style="font-size: clamp(16px, 4vw, 18px); margin-bottom: 8px;">
-                                ⏳ Processing...
-                            </div>
-                            <div style="font-size: clamp(14px, 3.5vw, 16px);">
-                                Creating your social media ad...
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                
-                <!-- Sidebar -->
-                <div>
-                    <!-- Wallet Balance Card -->
-                    <div class="card">
-                        <h3 class="section-title">💳 Your Wallet</h3>
-                        
-                        <div style="margin-bottom: clamp(16px, 4vw, 20px);">
-                            <div style="font-size: clamp(24px, 6vw, 28px); font-weight: 700; color: #1f2937;" data-wallet-balance>
-                                {% if user.is_authenticated %}
-                                    {{ user.wallet_balance|floatformat:2 }} AED
-                                {% else %}
-                                    0.00 AED
-                                {% endif %}
-                            </div>
-                            <div style="font-size: clamp(14px, 3.5vw, 16px); color: #6b7280;">
-                                Available Balance
-                            </div>
-                        </div>
-                        
-                        {% if user.is_authenticated %}
-                            {% if user.wallet_balance >= 7.00 %}
-                                <button
-                                    type="submit"
-                                    form="socialAdsForm"
-                                    class="btn btn-primary"
-                                    style="width: 100%; margin-bottom: 12px;"
-                                    id="generateButton"
-                                >
-                                    📱 Generate Ad (7.00 AED)
-                                </button>
-                            {% else %}
-                                <div style="
-                                    background: #fef2f2;
-                                    border: 1px solid #fca5a5;
-                                    color: #dc2626;
-                                    padding: 12px;
-                                    border-radius: 8px;
-                                    text-align: center;
-                                    font-size: clamp(14px, 3.5vw, 16px);
-                                    margin-bottom: 12px;
-                                ">
-                                    Insufficient balance! You need 7.00 AED.
-                                </div>
-                                <a href="{% url 'core:wallet' %}" class="btn btn-primary" style="width: 100%; text-decoration: none;">
-                                    💰 Top Up Wallet
-                                </a>
-                            {% endif %}
-                        {% else %}
-                            <a href="{% url 'authentication:login' %}" class="btn btn-primary" style="width: 100%; text-decoration: none;">
-                                🔑 Login to Continue
-                            </a>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- Usage Info -->
-                    <div style="
-                        padding: 16px;
-                        background: rgba(236, 72, 153, 0.1);
-                        border-radius: 12px;
-                        border: 1px solid rgba(236, 72, 153, 0.2);
-                    ">
-                        <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: #be185d;">
-                            💡 How it works
-                        </h4>
-                        <ul style="margin: 0; font-size: 12px; color: #374151; line-height: 1.4; list-style: none; padding-left: 0;">
-                            <li style="margin: 4px 0; padding-left: 16px; position: relative;">
-                                <span style="position: absolute; left: 0; color: #ec4899;">•</span>
-                                Describe your product/service
-                            </li>
-                            <li style="margin: 4px 0; padding-left: 16px; position: relative;">
-                                <span style="position: absolute; left: 0; color: #ec4899;">•</span>
-                                Choose target platform
-                            </li>
-                            <li style="margin: 4px 0; padding-left: 16px; position: relative;">
-                                <span style="position: absolute; left: 0; color: #ec4899;">•</span>
-                                Get optimized ad copy
-                            </li>
-                            <li style="margin: 4px 0; padding-left: 16px; position: relative;">
-                                <span style="position: absolute; left: 0; color: #ec4899;">•</span>
-                                Includes A/B test variants
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Ad Results -->
-            <div class="ad-results" id="adResults">
-                <!-- Status Header -->
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                    <div style="font-size: 24px;">✅</div>
-                    <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin: 0;">
-                        Social Media Ad Copy
-                    </h3>
-                    <div style="
-                        background: #ec4899;
-                        color: white;
-                        padding: 6px 12px;
-                        border-radius: 6px;
-                        font-size: 14px;
-                        font-weight: 600;
-                        margin-left: auto;
-                    ">
-                        ✅ Complete
-                    </div>
-                </div>
-                
-                <!-- Platform Header -->
-                <div style="
-                    background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
-                    color: white;
-                    padding: 16px 20px;
-                    border-radius: 12px;
-                    text-align: center;
-                    margin-bottom: 20px;
-                " id="platformHeader">
-                    <h4 style="font-size: 18px; font-weight: 600; margin: 0;">
-                        📱 Optimized for <span id="platformName">Platform</span>
-                    </h4>
-                </div>
-                
-                <!-- Ad Copy Content -->
-                <div style="
-                    background: #f8fafc;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 12px;
-                    padding: 24px;
-                    margin-bottom: 20px;
-                ">
-                    <h4 style="
-                        font-size: 18px;
-                        font-weight: 600;
-                        color: #1f2937;
-                        margin-bottom: 16px;
-                    ">
-                        📝 Generated Ad Copy
-                    </h4>
-                    
-                    <div style="
-                        white-space: pre-line;
-                        line-height: 1.7;
-                        color: #374151;
-                        font-size: 15px;
-                    " id="adCopyContent">
-                        <!-- Content will be populated here -->
-                    </div>
-                    
-                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;" id="hashtagsSection" style="display: none;">
-                        <h5 style="font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 12px;">
-                            #️⃣ Suggested Hashtags
-                        </h5>
-                        <div style="font-size: 14px; color: #ec4899; font-weight: 500;" id="hashtagsContent">
-                            <!-- Hashtags will be populated here -->
-                        </div>
-                    </div>
-                    
-                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-                        <div style="font-size: 12px; color: #9ca3af;" id="generatedAt">
-                            Generated: Just now
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Download/Copy Actions -->
-                <div style="
-                    margin-top: 20px;
-                    padding-top: 20px;
-                    border-top: 1px solid #e5e7eb;
-                    display: flex;
-                    gap: 12px;
-                    flex-wrap: wrap;
-                ">
-                    <button
-                        onclick="copyAdCopy()"
-                        class="btn btn-primary"
-                        style="flex: 1; min-width: 120px;"
-                    >
-                        📋 Copy Ad Copy
-                    </button>
-                    
-                    <button
-                        onclick="downloadAdCopy()"
-                        class="btn"
-                        style="
-                            flex: 1;
-                            min-width: 120px;
-                            background: white;
-                            color: #374151;
-                            border: 2px solid #e5e7eb;
-                        "
-                    >
-                        💾 Download Ad
-                    </button>
+    }
+</style>
+{% endblock %}
 
-                    <button
-                        onclick="resetForm()"
-                        class="btn"
-                        style="
-                            flex: 1;
-                            min-width: 120px;
-                            background: #ec4899;
-                            color: white;
-                        "
-                    >
-                        🔄 Create Another
-                    </button>
+{% block content %}
+<div class="social-ads-page">
+    <div class="social-ads-container">
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="{% if message.tags == 'error' %}error-message{% else %}success-message{% endif %}" style="grid-column: 1 / -1;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        <!-- Main Content -->
+        <div>
+            <div class="card">
+                <h3 class="section-title">📢 Social Ads Generator</h3>
+                
+                <form method="POST" id="socialAdsForm">
+                    {% csrf_token %}
+                    
+                    <!-- Content Information Section -->
+                    <div class="section-container content-info">
+                        <h4 class="section-subtitle">📝 Content Information</h4>
+                        
+                        <label class="form-label">Describe what you'd like to generate *</label>
+                        <textarea name="description" id="description" class="form-textarea" placeholder="Describe the product, service, or campaign you want to create an ad for. Include key features, target audience, and any specific messaging you want to emphasize." required></textarea>
+                        
+                        <label class="form-label">Language</label>
+                        <select name="language" id="language" class="form-input">
+                            <option value="English">English</option>
+                            <option value="Arabic">Arabic (العربية)</option>
+                            <option value="Spanish">Spanish (Español)</option>
+                            <option value="French">French (Français)</option>
+                            <option value="German">German (Deutsch)</option>
+                            <option value="Chinese">Chinese (中文)</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Platform & Formatting Section -->
+                    <div class="section-container platform-info">
+                        <h4 class="section-subtitle">📱 Platform & Formatting</h4>
+                        
+                        <label class="form-label">For Social Media Platform *</label>
+                        <select name="social_platform" id="social_platform" class="form-input" required>
+                            <option value="">Select a platform...</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="linkedin">LinkedIn</option>
+                            <option value="twitter">X (Twitter)</option>
+                            <option value="tiktok">TikTok</option>
+                            <option value="youtube">YouTube</option>
+                        </select>
+                        
+                        <label class="form-label">Include Emoji *</label>
+                        <select name="include_emoji" id="include_emoji" class="form-input" required>
+                            <option value="">Select an option...</option>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Processing Status -->
+            <div id="processingStatus" class="processing-status">
+                <div class="status-icon">📢</div>
+                <div style="font-weight: 600; color: #be185d;">Creating Social Ads...</div>
+                <div style="font-size: 14px; color: #a21caf; margin-top: 8px;" id="statusText">Generating engaging ad content...</div>
+            </div>
+            
+            <!-- Results -->
+            <div id="adResults" class="results-card">
+                <div class="results-header">
+                    <div style="font-size: 24px;">✅</div>
+                    <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin: 0;">Generated Social Ads</h3>
+                    <div style="background: #ec4899; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-left: auto;">✅ Complete</div>
+                </div>
+                
+                <div class="results-content" id="adContent">
+                    <!-- Ad content will be displayed here -->
+                </div>
+                
+                <div class="action-buttons">
+                    <button onclick="copySocialAds()" class="btn btn-primary">📋 Copy Ads</button>
+                    <button onclick="downloadSocialAds()" class="btn btn-secondary">💾 Download Ads</button>
+                    <button onclick="resetForm()" class="btn" style="background: #ec4899; color: white;">🔄 Create Another</button>
                 </div>
             </div>
         </div>
         
-        <!-- Footer -->
-        <footer style="
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(20px);
-            padding: 24px 0;
-            margin-top: 48px;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            text-align: center;
-            color: #6b7280;
-        ">
-            <div class="container">
-                <p style="margin: 0; font-size: 14px;">
-                    © 2024 NetCop AI Hub. Powered by AI agents.
-                </p>
+        <!-- Wallet Sidebar -->
+        <div class="wallet-section">
+            <div class="card">
+                <h3 class="section-title">💳 Your Wallet</h3>
+                
+                <div class="wallet-balance" data-wallet-balance>
+                    {% if user.is_authenticated %}
+                        {{ user.wallet_balance|floatformat:2 }} AED
+                    {% else %}
+                        0.00 AED
+                    {% endif %}
+                </div>
+                <div class="balance-label">Available Balance</div>
+                
+                {% if user.is_authenticated %}
+                    {% if user.wallet_balance >= 7.00 %}
+                        <button type="submit" form="socialAdsForm" class="btn btn-primary process-btn" id="processButton">
+                            📢 Generate Social Ads (7.00 AED)
+                        </button>
+                    {% else %}
+                        <div class="insufficient-balance">
+                            Insufficient balance! You need 7.00 AED.
+                        </div>
+                        <a href="{% url 'core:wallet' %}" class="btn btn-primary process-btn" style="text-decoration: none;">
+                            💰 Top Up Wallet
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'authentication:login' %}" class="btn btn-primary process-btn" style="text-decoration: none;">
+                        🔑 Login to Continue
+                    </a>
+                {% endif %}
             </div>
-        </footer>
+            
+            <div class="usage-info">
+                <h4>💡 How it works</h4>
+                <ul>
+                    <li>Describe your product/service</li>
+                    <li>Select target platforms</li>
+                    <li>Choose campaign objective & tone</li>
+                    <li>Get platform-optimized ad copy</li>
+                </ul>
+            </div>
+        </div>
     </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation
+    function isFormValid() {
+        const description = document.getElementById('description').value.trim();
+        const socialPlatform = document.getElementById('social_platform').value;
+        const includeEmoji = document.getElementById('include_emoji').value;
+        
+        return description && socialPlatform && includeEmoji;
+    }
     
-    <script>
-        // Platform selection
-        function selectPlatform(platform) {
-            document.querySelectorAll('.platform-option').forEach(option => {
-                option.classList.remove('selected');
-            });
-            
-            event.currentTarget.classList.add('selected');
-            document.querySelector(`input[value="${platform}"]`).checked = true;
-        }
-        
-        // Copy ad copy to clipboard
-        function copyAdCopy() {
-            const adText = generateAdText();
-            navigator.clipboard.writeText(adText).then(() => {
-                showToast('📋 Ad copy copied to clipboard!', 'success');
-            }).catch(() => {
-                showToast('Failed to copy ad copy', 'error');
-            });
-        }
-        
-        // Download ad copy as text file
-        function downloadAdCopy() {
-            const adText = generateAdText();
-            const blob = new Blob([adText], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `social-ad-copy-${Date.now()}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
-            showToast('💾 Ad copy downloaded!', 'success');
-        }
-        
-        // Generate ad text for copy/download
-        function generateAdText() {
-            const adContent = document.getElementById('adCopyContent');
-            const hashtags = document.getElementById('hashtagsContent');
-            const platform = document.getElementById('platformName');
-            
-            if (adContent) {
-                let adText = `Social Media Ad Copy\n`;
-                adText += `Platform: ${platform.textContent}\n`;
-                adText += `Generated: ${new Date().toLocaleString()}\n\n`;
-                
-                adText += `Ad Copy:\n`;
-                adText += `${adContent.textContent}\n\n`;
-                
-                if (hashtags && hashtags.textContent.trim()) {
-                    adText += `Hashtags:\n${hashtags.textContent}\n\n`;
-                }
-                
-                adText += `Generated by NetCop AI Social Ads Generator Agent`;
-                
-                return adText;
-            }
-            return 'No ad copy available';
-        }
-
-        // Reset form for creating another ad
-        function resetForm() {
-            document.getElementById('socialAdsForm').reset();
-            document.getElementById('adResults').style.display = 'none';
-            document.getElementById('processingStatus').style.display = 'none';
-            document.getElementById('generateButton').disabled = false;
-            document.getElementById('generateButton').innerHTML = '📱 Generate Ad (7.00 AED)';
-            
-            // Reset platform selection to Facebook
-            document.querySelectorAll('.platform-option').forEach(option => {
-                option.classList.remove('selected');
-            });
-            document.querySelector('label[onclick="selectPlatform(\'facebook\')"]').classList.add('selected');
-            document.querySelector('input[value="facebook"]').checked = true;
-            
-            showToast('Form reset! Ready for another ad.', 'success');
-        }
-        
-        // Simple toast notification
-        function showToast(message, type = 'info') {
-            const toast = document.createElement('div');
-            toast.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 12px 20px;
-                border-radius: 8px;
-                color: white;
-                font-weight: 600;
-                z-index: 1000;
-                ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
-            `;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
-        }
-
-        // Update wallet balance display
-        function updateWalletBalance(newBalance) {
-            const balanceElements = document.querySelectorAll('[data-wallet-balance]');
-            balanceElements.forEach(element => {
-                element.textContent = `${newBalance.toFixed(2)} AED`;
-            });
-            window.currentWalletBalance = newBalance;
-        }
-
-        // Display ad results
-        function displayResults(result) {
-            const resultsContainer = document.getElementById('adResults');
-            const contentContainer = document.getElementById('adCopyContent');
-            const platformName = document.getElementById('platformName');
-            const hashtagsSection = document.getElementById('hashtagsSection');
-            const hashtagsContent = document.getElementById('hashtagsContent');
-            
-            if (result.success && result.status === 'completed') {
-                contentContainer.textContent = result.content || result.ad_copy || result.output_text || 'Ad copy generated successfully!';
-                
-                // Update platform name
-                const selectedPlatform = document.querySelector('input[name="social_platform"]:checked').value;
-                platformName.textContent = selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1);
-                
-                // Show hashtags if available
-                if (result.hashtags && result.hashtags.trim()) {
-                    hashtagsContent.textContent = result.hashtags;
-                    hashtagsSection.style.display = 'block';
-                } else {
-                    hashtagsSection.style.display = 'none';
-                }
-                
-                resultsContainer.style.display = 'block';
-                
-                // Update wallet balance if provided
-                if (result.wallet_balance !== undefined) {
-                    updateWalletBalance(result.wallet_balance);
-                }
-                
-                showToast('✅ Social ad created and payment processed!', 'success');
-            } else {
-                showToast('❌ Failed to generate ad - no charge applied', 'error');
-            }
-        }
-
-        // Poll for results
-        function pollForResults(requestId) {
-            let pollCount = 0;
-            const maxPolls = 30; // 30 seconds maximum
-            
-            const pollInterval = setInterval(() => {
-                pollCount++;
-                
-                fetch(`/agents/social-ads-generator/status/${requestId}/`)
-                    .then(response => response.json())
-                    .then(result => {
-                        if (result.status === 'completed' || result.status === 'failed') {
-                            clearInterval(pollInterval);
-                            document.getElementById('processingStatus').style.display = 'none';
-                            document.getElementById('generateButton').disabled = false;
-                            document.getElementById('generateButton').innerHTML = '📱 Generate Ad (7.00 AED)';
-                            
-                            displayResults(result);
-                        } else if (pollCount >= maxPolls) {
-                            clearInterval(pollInterval);
-                            document.getElementById('processingStatus').style.display = 'none';
-                            document.getElementById('generateButton').disabled = false;
-                            document.getElementById('generateButton').innerHTML = '📱 Generate Ad (7.00 AED)';
-                            showToast('❌ Processing timeout - please try again', 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error polling results:', error);
-                        if (pollCount >= maxPolls) {
-                            clearInterval(pollInterval);
-                            document.getElementById('processingStatus').style.display = 'none';
-                            document.getElementById('generateButton').disabled = false;
-                            document.getElementById('generateButton').innerHTML = '📱 Generate Ad (7.00 AED)';
-                            showToast('❌ Network error - please try again', 'error');
-                        }
-                    });
-            }, 1000);
-        }
-        
-        // Handle form submission
-        document.getElementById('socialAdsForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const description = document.getElementById('description').value.trim();
-            const platform = document.querySelector('input[name="social_platform"]:checked');
-            
-            if (!description) {
-                showToast('Please describe your product/service', 'error');
-                return;
-            }
-            
-            if (!platform) {
-                showToast('Please select a social media platform', 'error');
-                return;
-            }
-            
-            // Check user authentication
-            {% if not user.is_authenticated %}
-            window.location.href = "{% url 'authentication:login' %}";
-            return;
-            {% endif %}
-            
-            // Check wallet balance
-            const balance = {{ user.wallet_balance|default:0 }};
-            if (balance < 7.00) {
-                showToast('Insufficient balance! You need 7.00 AED.', 'error');
-                setTimeout(() => {
-                    window.location.href = "{% url 'core:wallet' %}";
-                }, 2000);
-                return;
-            }
-
-            // Show processing status
-            document.getElementById('processingStatus').style.display = 'block';
-            document.getElementById('generateButton').disabled = true;
-            document.getElementById('generateButton').innerHTML = '⏳ Processing...';
-            document.getElementById('adResults').style.display = 'none';
-
-            // Submit form via AJAX
-            const formData = new FormData(this);
-            
-            fetch(window.location.href, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success && result.request_id) {
-                    // Start polling for results
-                    pollForResults(result.request_id);
-                } else {
-                    // Handle immediate response
-                    document.getElementById('processingStatus').style.display = 'none';
-                    document.getElementById('generateButton').disabled = false;
-                    document.getElementById('generateButton').innerHTML = '📱 Generate Ad (7.00 AED)';
-                    
-                    if (result.error) {
-                        showToast(`❌ ${result.error}`, 'error');
-                    } else {
-                        displayResults(result);
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('processingStatus').style.display = 'none';
-                document.getElementById('generateButton').disabled = false;
-                document.getElementById('generateButton').innerHTML = '📱 Generate Ad (7.00 AED)';
-                showToast('❌ Network error - please try again', 'error');
-            });
+    // Copy social ads to clipboard
+    function copySocialAds() {
+        const adText = generateAdText();
+        navigator.clipboard.writeText(adText).then(() => {
+            showToast('📋 Social ads copied to clipboard!', 'success');
+        }).catch(() => {
+            showToast('Failed to copy ads', 'error');
         });
-    </script>
-</body>
-</html>
+    }
+    
+    // Download social ads as text file
+    function downloadSocialAds() {
+        const adText = generateAdText();
+        const blob = new Blob([adText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'social-ads-' + Date.now() + '.txt';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('💾 Social ads downloaded!', 'success');
+    }
+    
+    // Generate ad text for copy/download
+    function generateAdText() {
+        const content = document.querySelector('#adContent');
+        if (content) {
+            return content.textContent || content.innerText || '';
+        }
+        return 'No ad content available';
+    }
+
+    // Reset form for creating another ad
+    function resetForm() {
+        document.getElementById('socialAdsForm').reset();
+        document.getElementById('adResults').style.display = 'none';
+        document.getElementById('processingStatus').style.display = 'none';
+        document.getElementById('processButton').disabled = false;
+        document.getElementById('processButton').innerHTML = '📢 Generate Social Ads (7.00 AED)';
+        showToast('Form reset! Ready for another ad campaign.', 'success');
+    }
+    
+    // Simple toast notification
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
+        `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+
+    // Update wallet balance display
+    function updateWalletBalance(newBalance) {
+        const balanceElements = document.querySelectorAll('[data-wallet-balance]');
+        balanceElements.forEach(element => {
+            element.textContent = `${newBalance.toFixed(2)} AED`;
+        });
+        window.currentWalletBalance = newBalance;
+    }
+
+    // Display social ads results
+    function displayResults(result) {
+        const resultsContainer = document.getElementById('adResults');
+        const contentContainer = document.getElementById('adContent');
+        
+        if (result.success && result.status === 'completed') {
+            contentContainer.textContent = result.content || result.ad_copy_content || result.output_text || 'Social ads generated successfully!';
+            resultsContainer.style.display = 'block';
+            
+            // Update wallet balance if provided
+            if (result.wallet_balance !== undefined) {
+                updateWalletBalance(result.wallet_balance);
+            }
+            
+            showToast('✅ Social ads created and payment processed!', 'success');
+        } else {
+            showToast('❌ Failed to generate ads - no charge applied', 'error');
+        }
+    }
+
+    // Poll for results
+    function pollForResults(requestId) {
+        let pollCount = 0;
+        const maxPolls = 30; // 30 seconds maximum
+        
+        const pollInterval = setInterval(() => {
+            pollCount++;
+            
+            fetch(`/agents/social-ads-generator/status/${requestId}/`)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'completed' || result.status === 'failed') {
+                        clearInterval(pollInterval);
+                        document.getElementById('processingStatus').style.display = 'none';
+                        document.getElementById('processButton').disabled = false;
+                        document.getElementById('processButton').innerHTML = '📢 Generate Social Ads (7.00 AED)';
+                        
+                        displayResults(result);
+                    } else if (pollCount >= maxPolls) {
+                        clearInterval(pollInterval);
+                        document.getElementById('processingStatus').style.display = 'none';
+                        document.getElementById('processButton').disabled = false;
+                        document.getElementById('processButton').innerHTML = '📢 Generate Social Ads (7.00 AED)';
+                        showToast('❌ Processing timeout - please try again', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error polling results:', error);
+                    if (pollCount >= maxPolls) {
+                        clearInterval(pollInterval);
+                        document.getElementById('processingStatus').style.display = 'none';
+                        document.getElementById('processButton').disabled = false;
+                        document.getElementById('processButton').innerHTML = '📢 Generate Social Ads (7.00 AED)';
+                        showToast('❌ Network error - please try again', 'error');
+                    }
+                });
+        }, 1000);
+    }
+    
+    // Handle form submission
+    document.getElementById('socialAdsForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!isFormValid()) {
+            showToast('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        // Check user authentication
+        {% if not user.is_authenticated %}
+        window.location.href = "{% url 'authentication:login' %}";
+        return;
+        {% endif %}
+        
+        // Check wallet balance
+        const balance = {{ user.wallet_balance|default:0 }};
+        if (balance < 7.00) {
+            showToast('Insufficient balance! You need 7.00 AED.', 'error');
+            setTimeout(() => {
+                window.location.href = "{% url 'core:wallet' %}";
+            }, 2000);
+            return;
+        }
+
+        // Show processing status with steps
+        document.getElementById('processingStatus').style.display = 'block';
+        document.getElementById('processButton').disabled = true;
+        document.getElementById('processButton').innerHTML = '⏳ Processing...';
+        document.getElementById('adResults').style.display = 'none';
+        
+        const steps = [
+            'Analyzing product information...',
+            'Understanding target platforms...',
+            'Crafting engaging headlines...',
+            'Writing compelling copy...',
+            'Optimizing for each platform...'
+        ];
+        
+        let currentStep = 0;
+        const stepInterval = setInterval(() => {
+            if (currentStep < steps.length) {
+                document.getElementById('statusText').textContent = steps[currentStep];
+                currentStep++;
+            } else {
+                clearInterval(stepInterval);
+            }
+        }, 800);
+
+        // Submit form via AJAX
+        const formData = new FormData(this);
+        
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(result => {
+            clearInterval(stepInterval);
+            if (result.success && result.request_id) {
+                // Start polling for results
+                pollForResults(result.request_id);
+            } else {
+                // Handle immediate response
+                document.getElementById('processingStatus').style.display = 'none';
+                document.getElementById('processButton').disabled = false;
+                document.getElementById('processButton').innerHTML = '📢 Generate Social Ads (7.00 AED)';
+                
+                if (result.error) {
+                    showToast(`❌ ${result.error}`, 'error');
+                } else {
+                    displayResults(result);
+                }
+            }
+        })
+        .catch(error => {
+            clearInterval(stepInterval);
+            console.error('Error:', error);
+            document.getElementById('processingStatus').style.display = 'none';
+            document.getElementById('processButton').disabled = false;
+            document.getElementById('processButton').innerHTML = '📢 Generate Social Ads (7.00 AED)';
+            showToast('❌ Network error - please try again', 'error');
+        });
+    });
+</script>
+{% endblock %}
