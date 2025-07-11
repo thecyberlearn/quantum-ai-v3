@@ -14,6 +14,7 @@ class Command(BaseCommand):
         # Create superuser if it doesn't exist
         if not User.objects.filter(is_superuser=True).exists():
             User.objects.create_superuser(
+                username='admin',
                 email='admin@netcop.ai',
                 password='admin123',
                 first_name='Admin',
