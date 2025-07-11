@@ -161,7 +161,7 @@ N8N_WEBHOOK_SOCIAL_ADS = config('N8N_WEBHOOK_SOCIAL_ADS', default='')
 OPENWEATHER_API_KEY = config('OPENWEATHER_API_KEY', default='')
 
 # Security settings
-CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='').split(',')
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in config('CSRF_TRUSTED_ORIGINS', default='').split(',') if origin.strip()]
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Default primary key field type
