@@ -634,7 +634,7 @@
         // Submit form via AJAX
         const formData = new FormData(this);
         
-        fetch(window.location.href, {
+        fetch('/agents/weather-reporter/process/', {
             method: 'POST',
             body: formData,
             headers: {
@@ -644,20 +644,17 @@
         .then(response => response.json())
         .then(result => {
             clearInterval(stepInterval);
-            if (result.success && result.request_id) {
-                // Start polling for results
-                pollForResults(result.request_id);
+            // Handle immediate response (API-based agent)
+            document.getElementById('processingStatus').style.display = 'none';
+            document.getElementById('processButton').disabled = false;
+            document.getElementById('processButton').innerHTML = '🌤️ Get Weather Report (2.00 AED)';
+            
+            if (result.error) {
+                showToast(`❌ ${result.error}`, 'error');
+            } else if (result.success) {
+                displayResults(result);
             } else {
-                // Handle immediate response
-                document.getElementById('processingStatus').style.display = 'none';
-                document.getElementById('processButton').disabled = false;
-                document.getElementById('processButton').innerHTML = '🌤️ Get Weather Report (2.00 AED)';
-                
-                if (result.error) {
-                    showToast(`❌ ${result.error}`, 'error');
-                } else {
-                    displayResults(result);
-                }
+                showToast('❌ Failed to generate weather report', 'error');
             }
         })
         .catch(error => {
