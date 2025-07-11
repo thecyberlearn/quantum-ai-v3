@@ -87,16 +87,12 @@ WSGI_APPLICATION = 'netcop_hub.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-if config('RAILWAY_ENVIRONMENT', default=''):
+import dj_database_url
+
+# Use DATABASE_URL if available (Railway, Heroku, etc.)
+if config('DATABASE_URL', default=''):
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('PGDATABASE', default=''),
-            'USER': config('PGUSER', default=''),
-            'PASSWORD': config('PGPASSWORD', default=''),
-            'HOST': config('PGHOST', default=''),
-            'PORT': config('PGPORT', default=''),
-        }
+        'default': dj_database_url.parse(config('DATABASE_URL'))
     }
 else:
     DATABASES = {
