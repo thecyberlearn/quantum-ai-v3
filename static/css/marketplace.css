@@ -271,8 +271,8 @@ body {
 
 .use-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
-    background: var(--primary-dark);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+    filter: brightness(1.1);
 }
 
 .use-button:active {

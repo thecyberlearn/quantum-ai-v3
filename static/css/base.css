@@ -16,6 +16,7 @@
     /* Neutral Colors */
     --text-primary: #1f2937;
     --text-secondary: #6b7280;
+    --text-light: #6b7280;
     --text-muted: #9ca3af;
     --border-light: #e5e7eb;    /* For subtle dividers */
     --border-medium: #9ca3af;   /* For form elements and visible borders */
@@ -29,6 +30,20 @@
     --gradient-primary: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
     --gradient-success: linear-gradient(135deg, var(--success-green) 0%, var(--success-dark) 100%);
     --gradient-hero: linear-gradient(135deg, #f6f8ff 0%, #e8f0fe 50%, #f0f7ff 100%);
+    
+    /* Section Gradients */
+    --primary-gradient: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
+    --company-gradient: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    --visual-gradient: linear-gradient(135deg, var(--primary-blue) 0%, #6366f1 100%);
+    --services-gradient: linear-gradient(135deg, #fefefe 0%, #f0f9ff 100%);
+    --clients-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    --founder-gradient: linear-gradient(135deg, var(--primary-blue) 0%, #4f46e5 100%);
+    --contact-gradient: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    --text-gradient: linear-gradient(135deg, var(--primary-blue) 0%, #6366f1 100%);
+    
+    /* Badge Colors */
+    --badge-purple: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    --badge-orange: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
     
     /* Professional Avatar Gradients (Limited Set) */
     --gradient-blue: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
