@@ -87,7 +87,7 @@ WSGI_APPLICATION = 'netcop_hub.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-if config('DATABASE_URL', default=''):
+if config('RAILWAY_ENVIRONMENT', default=''):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
