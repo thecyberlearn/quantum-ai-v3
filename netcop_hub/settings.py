@@ -87,16 +87,24 @@ WSGI_APPLICATION = 'netcop_hub.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql' if config('DATABASE_URL', default='') else 'django.db.backends.sqlite3',
-        'NAME': config('PGDATABASE', default=BASE_DIR / 'db.sqlite3'),
-        'USER': config('PGUSER', default=''),
-        'PASSWORD': config('PGPASSWORD', default=''),
-        'HOST': config('PGHOST', default=''),
-        'PORT': config('PGPORT', default=''),
+if config('DATABASE_URL', default=''):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('PGDATABASE', default=''),
+            'USER': config('PGUSER', default=''),
+            'PASSWORD': config('PGPASSWORD', default=''),
+            'HOST': config('PGHOST', default=''),
+            'PORT': config('PGPORT', default=''),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
