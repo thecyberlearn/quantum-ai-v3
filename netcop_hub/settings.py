@@ -28,7 +28,7 @@ sys.path.insert(0, str(BASE_DIR / 'apps'))
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-thdd^re4==p$4geq^$52w7%egd0xxrj#fpgk1c+$xt-jrr5d7%')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True  # Force DEBUG=True for development
+DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver').split(',')
 
@@ -89,8 +89,12 @@ WSGI_APPLICATION = 'netcop_hub.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql' if config('DATABASE_URL', default='') else 'django.db.backends.sqlite3',
+        'NAME': config('PGDATABASE', default=BASE_DIR / 'db.sqlite3'),
+        'USER': config('PGUSER', default=''),
+        'PASSWORD': config('PGPASSWORD', default=''),
+        'HOST': config('PGHOST', default=''),
+        'PORT': config('PGPORT', default=''),
     }
 }
 
