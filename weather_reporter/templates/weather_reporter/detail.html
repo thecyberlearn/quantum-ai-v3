@@ -6,7 +6,7 @@
 {% block extra_css %}
 <style>
     .weather-page {
-        background: linear-gradient(135deg, #f6f8ff 0%, #e8f0fe 50%, #f0f7ff 100%);
+        background: var(--gradient-hero);
         min-height: calc(100vh - 80px);
         padding: clamp(20px, 5vw, 40px);
         width: 100vw;
@@ -35,33 +35,33 @@
     .section-title {
         font-size: 18px;
         font-weight: 600;
-        color: #1f2937;
+        color: var(--text-primary);
         margin-bottom: 16px;
     }
     
     .form-input {
         width: 100%;
         padding: 12px 16px;
-        border: 2px solid #e5e7eb;
+        border: 2px solid var(--border-medium);
         border-radius: 12px;
         font-size: 16px;
         transition: border-color 0.2s ease;
         min-height: 48px;
         margin-bottom: 16px;
         font-family: inherit;
-        background: #f9fafb;
+        background: var(--background-light);
     }
     
     .form-input:focus {
         outline: none;
-        border-color: #3b82f6;
+        border-color: var(--primary-blue);
         background: white;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
     
     .help-text {
         font-size: 12px;
-        color: #6b7280;
+        color: var(--text-secondary);
         margin-top: 6px;
     }
     
@@ -76,7 +76,7 @@
         align-items: center;
         gap: 12px;
         padding: 16px;
-        border: 2px solid #e5e7eb;
+        border: 2px solid var(--border-light);
         border-radius: 12px;
         cursor: pointer;
         background: white;
@@ -85,8 +85,8 @@
     }
     
     .radio-option.selected {
-        border-color: #3b82f6;
-        background: #eff6ff;
+        border-color: var(--primary-blue);
+        background: rgba(59, 130, 246, 0.1);
     }
     
     .radio-option input[type="radio"] {
@@ -98,9 +98,9 @@
     .processing-status {
         padding: 20px;
         background: rgba(59, 130, 246, 0.1);
-        border: 2px solid #3b82f6;
+        border: 2px solid var(--primary-blue);
         border-radius: 12px;
-        color: #1d4ed8;
+        color: var(--primary-dark);
         font-weight: 600;
         text-align: center;
         margin-bottom: 24px;
@@ -135,18 +135,18 @@
         gap: 12px;
         margin-bottom: 20px;
         padding-bottom: 16px;
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid var(--border-light);
     }
     
     .results-content {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        background: var(--background-page);
+        border: 1px solid var(--border-light);
         border-radius: 12px;
         padding: 24px;
         margin-bottom: 20px;
         white-space: pre-line;
         line-height: 1.7;
-        color: #374151;
+        color: var(--text-primary);
         font-size: 15px;
     }
     
@@ -174,16 +174,16 @@
     }
     
     .btn-primary {
-        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        background: var(--gradient-primary);
         color: white;
         flex: 1;
         min-width: 120px;
     }
     
     .btn-secondary {
-        background: white;
-        color: #374151;
-        border: 2px solid #e5e7eb;
+        background: var(--background-subtle);
+        color: var(--text-primary);
+        border: 2px solid var(--border-medium);
         flex: 1;
         min-width: 120px;
     }
@@ -193,9 +193,11 @@
     }
     
     .btn:disabled {
-        background: #9ca3af;
+        background: var(--border-strong);
+        color: white;
         cursor: not-allowed;
         transform: none;
+        opacity: 0.6;
     }
     
     .wallet-section {
@@ -206,13 +208,13 @@
     .wallet-balance {
         font-size: 28px;
         font-weight: 700;
-        color: #1f2937;
+        color: var(--text-primary);
         margin-bottom: 8px;
     }
     
     .balance-label {
         font-size: 16px;
-        color: #6b7280;
+        color: var(--text-secondary);
         margin-bottom: 20px;
     }
     
@@ -222,9 +224,9 @@
     }
     
     .insufficient-balance {
-        background: #fef2f2;
-        border: 1px solid #fca5a5;
-        color: #dc2626;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: var(--error-red);
         padding: 12px;
         border-radius: 8px;
         text-align: center;
@@ -243,13 +245,13 @@
         margin: 0 0 8px 0;
         font-size: 14px;
         font-weight: 600;
-        color: #1d4ed8;
+        color: var(--primary-dark);
     }
     
     .usage-info ul {
         margin: 0;
         font-size: 12px;
-        color: #374151;
+        color: var(--text-primary);
         line-height: 1.4;
         list-style: none;
         padding-left: 0;
@@ -265,7 +267,7 @@
         content: "•";
         position: absolute;
         left: 0;
-        color: #3b82f6;
+        color: var(--primary-blue);
     }
     
     /* Mobile optimizations */
@@ -307,21 +309,21 @@
                     
                     <!-- Location Input -->
                     <div style="margin-bottom: 24px;">
-                        <label for="location" style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #374151;">📍 Enter Location *</label>
+                        <label for="location" style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: var(--text-primary);">📍 Enter Location *</label>
                         <input type="text" name="location" id="location" class="form-input" placeholder="Enter city name, address, or coordinates..." required>
                         <div class="help-text">Examples: "New York", "London, UK", "Tokyo, Japan", "37.7749,-122.4194"</div>
                     </div>
                     
                     <!-- Report Type Selection -->
                     <div>
-                        <label style="display: block; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: #374151;">📊 Report Type *</label>
+                        <label style="display: block; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: var(--text-primary);">📊 Report Type *</label>
                         <div class="radio-grid">
                             <label class="radio-option selected" onclick="selectReportType('current')">
                                 <input type="radio" name="report_type" value="current" checked>
                                 <div style="font-size: 20px;">🌡️</div>
                                 <div>
                                     <div style="font-weight: 600; margin-bottom: 4px; font-size: 16px;">Current Weather</div>
-                                    <div style="font-size: 14px; color: #6b7280;">Real-time conditions</div>
+                                    <div style="font-size: 14px; color: var(--text-secondary);">Real-time conditions</div>
                                 </div>
                             </label>
                             
@@ -330,7 +332,7 @@
                                 <div style="font-size: 20px;">📅</div>
                                 <div>
                                     <div style="font-weight: 600; margin-bottom: 4px; font-size: 16px;">5-Day Forecast</div>
-                                    <div style="font-size: 14px; color: #6b7280;">Extended weather outlook</div>
+                                    <div style="font-size: 14px; color: var(--text-secondary);">Extended weather outlook</div>
                                 </div>
                             </label>
                             
@@ -339,7 +341,7 @@
                                 <div style="font-size: 20px;">📋</div>
                                 <div>
                                     <div style="font-weight: 600; margin-bottom: 4px; font-size: 16px;">Detailed Report</div>
-                                    <div style="font-size: 14px; color: #6b7280;">Current + forecast combined</div>
+                                    <div style="font-size: 14px; color: var(--text-secondary);">Current + forecast combined</div>
                                 </div>
                             </label>
                         </div>
@@ -350,16 +352,16 @@
             <!-- Processing Status -->
             <div id="processingStatus" class="processing-status">
                 <div class="status-icon">⏳</div>
-                <div style="font-weight: 600; color: #1d4ed8;">Getting Weather Data...</div>
-                <div style="font-size: 14px; color: #2563eb; margin-top: 8px;" id="statusText">Fetching latest weather information for your location</div>
+                <div style="font-weight: 600; color: var(--primary-dark);">Getting Weather Data...</div>
+                <div style="font-size: 14px; color: var(--primary-blue); margin-top: 8px;" id="statusText">Fetching latest weather information for your location</div>
             </div>
             
             <!-- Results -->
             <div id="weatherResults" class="results-card">
                 <div class="results-header">
                     <div style="font-size: 24px;">✅</div>
-                    <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin: 0;">Weather Report</h3>
-                    <div style="background: #3b82f6; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-left: auto;">✅ Complete</div>
+                    <h3 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">Weather Report</h3>
+                    <div style="background: var(--primary-blue); color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-left: auto;">✅ Complete</div>
                 </div>
                 
                 <div class="results-content" id="weatherContent">
@@ -369,7 +371,7 @@
                 <div class="action-buttons">
                     <button onclick="copyWeatherReport()" class="btn btn-primary">📋 Copy Report</button>
                     <button onclick="downloadWeatherReport()" class="btn btn-secondary">💾 Download Report</button>
-                    <button onclick="resetForm()" class="btn" style="background: #3b82f6; color: white;">🔄 Get Another</button>
+                    <button onclick="resetForm()" class="btn" style="background: var(--primary-blue); color: white;">🔄 Get Another</button>
                 </div>
             </div>
         </div>
@@ -504,7 +506,7 @@
             color: white;
             font-weight: 600;
             z-index: 1000;
-            ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
+            ${type === 'success' ? 'background: var(--success-green);' : 'background: var(--error-red);'}
         `;
         toast.textContent = message;
         document.body.appendChild(toast);

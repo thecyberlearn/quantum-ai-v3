@@ -51,6 +51,22 @@ def marketplace_view(request):
     return render(request, 'core/marketplace.html', context)
 
 
+def pricing_view(request):
+    """Pricing page for non-logged-in users"""
+    # If user is already logged in, redirect to wallet top-up
+    if request.user.is_authenticated:
+        return redirect('core:wallet_topup')
+    
+    # Get sample agents to show pricing context
+    sample_agents = BaseAgent.objects.filter(is_active=True).order_by('name')[:4]
+    
+    context = {
+        'sample_agents': sample_agents,
+    }
+    
+    return render(request, 'core/pricing.html', context)
+
+
 def agent_detail_view(request, agent_slug):
     """Agent detail view - redirect to specific agent app"""
     try:

@@ -1,113 +1,193 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Marketplace - NetCop Hub{% endblock %}
+{% block title %}AI Marketplace - NetCop AI Hub{% endblock %}
 
 {% block extra_css %}
-<style>
-    .marketplace-header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .marketplace-user-info { float: right; }
-    .marketplace-balance { background: #e8f5e8; padding: 5px 15px; border-radius: 20px; color: #2d5a2d; }
-    .marketplace-content-section { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
-    .marketplace-auth-links { margin-top: 10px; }
-    .marketplace-auth-links a { margin-right: 15px; text-decoration: none; color: #007bff; }
-    .marketplace-message { background: #e8f4fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #007bff; }
-</style>
+    <link rel="stylesheet" href="{% static 'css/marketplace.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="marketplace-header">
-    <h1>Marketplace - NetCop Hub</h1>
-    <div class="marketplace-user-info">
-        {% if user.is_authenticated %}
-            <p>Welcome, {{ user.username }}!</p>
-            <div class="marketplace-balance">Balance: {{ user_balance }} AED</div>
-            <div class="marketplace-auth-links">
-                <a href="{% url 'core:homepage' %}">Homepage</a>
-                <a href="{% url 'core:wallet' %}">Wallet</a>
-                <a href="{% url 'authentication:logout' %}">Logout</a>
+<style>
+/* Override main-container for marketplace full-width sections */
+.main-container {
+    max-width: none;
+    padding: 0;
+}
+</style>
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-container">
+        <h1 class="hero-title">
+            <span class="gradient-text">AI Assistants</span><br>
+            <span>Ready to Use</span>
+        </h1>
+
+        <!-- Search -->
+        <div class="search-container">
+            <div class="search-wrapper">
+                <input type="text" placeholder="Search AI assistants..." class="search-input" id="search-input">
+                <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Category Filters -->
+        <div class="category-filters">
+            <a href="{% url 'core:marketplace' %}" class="category-button {% if not selected_category %}active{% endif %}" data-category="all">
+                <span class="category-emoji">🤖</span> All Assistants
+            </a>
+            {% if categories %}
+                {% for category_value, category_display in categories %}
+                    <a href="{% url 'core:marketplace' %}?category={{ category_value }}" 
+                       class="category-button {% if selected_category == category_value %}active{% endif %}" 
+                       data-category="{{ category_value }}">
+                        <span class="category-emoji">
+                            {% if category_value == 'customer-service' %}💬
+                            {% elif category_value == 'analytics' %}📊
+                            {% elif category_value == 'content' %}📝
+                            {% elif category_value == 'email' %}📧
+                            {% elif category_value == 'utilities' %}🔧
+                            {% elif category_value == 'sales' %}💰
+                            {% elif category_value == 'marketing' %}📈
+                            {% else %}🤖
+                            {% endif %}
+                        </span> {{ category_display|title }}
+                    </a>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Assistants Grid Section -->
+<section class="assistants-section">
+    <div class="assistants-container">
+        {% if agents %}
+            <div class="assistants-grid" id="assistants-grid">
+                {% for agent in agents %}
+                    <div class="agent-card" data-category="{{ agent.category }}">
+                        <div class="agent-header">
+                            <div class="agent-avatar {% cycle 'gradient-blue' 'gradient-green' 'gradient-slate' 'gradient-neutral' %}">
+                                {% if agent.icon %}{{ agent.icon }}{% else %}{{ agent.name|first|upper }}{% endif %}
+                            </div>
+                            <div class="agent-info">
+                                <h3 class="agent-name">{{ agent.name }}</h3>
+                                <div class="agent-rating">
+                                    <span class="rating-star">⭐</span>
+                                    <span class="rating-text">{% if agent.rating %}{{ agent.rating }}{% else %}4.8{% endif %} ({% if agent.review_count %}{{ agent.review_count }}{% else %}{{ agent.name|length|add:100 }}{% endif %} reviews)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="agent-description">{{ agent.description }}</p>
+                        <div class="agent-tags">
+                            <span class="agent-tag category-{{ agent.category }}">{{ agent.category|title }}</span>
+                        </div>
+                        <div class="agent-footer">
+                            <div class="agent-price">
+                                <span class="price-icon">💰</span>
+                                <span class="price-text">{{ agent.price }} AED</span>
+                            </div>
+                            {% if user.is_authenticated %}
+                                <a href="{% url 'core:agent_detail' agent.slug %}" class="use-button">Use Now</a>
+                            {% else %}
+                                <a href="{% url 'authentication:login' %}?next={% url 'core:agent_detail' agent.slug %}" class="use-button">Login to Use</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
             </div>
         {% else %}
-            <div class="marketplace-auth-links">
-                <a href="{% url 'core:homepage' %}">Homepage</a>
-                <a href="{% url 'authentication:login' %}">Login</a>
-                <a href="{% url 'authentication:register' %}">Register</a>
+            <!-- Empty State -->
+            <div class="empty-state" id="empty-state">
+                <div class="state-icon">🔍</div>
+                <p class="state-text">No assistants found{% if selected_category %} in the {{ selected_category }} category{% endif %}. Check back later!</p>
             </div>
         {% endif %}
     </div>
-    <div style="clear: both;"></div>
-</div>
+</section>
 
-<div class="marketplace-content-section">
-    <h2>Marketplace</h2>
-    <p>Browse and discover AI-powered agents for your tasks.</p>
-    
-    {% if user.is_authenticated %}
-        <p>Welcome {{ user.username }}! Your current balance is {{ user_balance }} AED.</p>
-        <p><a href="{% url 'core:wallet' %}">Manage your wallet</a> or <a href="{% url 'core:homepage' %}">return to homepage</a>.</p>
-    {% else %}
-        <p><a href="{% url 'authentication:login' %}">Log in</a> to use AI agents.</p>
-    {% endif %}
+{% endblock %}
 
-    <!-- Category Filter -->
-    {% if categories %}
-    <div style="margin: 20px 0; text-align: left;">
-        <h3>Filter by Category:</h3>
-        <a href="{% url 'core:marketplace' %}" style="margin-right: 10px; {% if not selected_category %}font-weight: bold;{% endif %}">All</a>
-        {% for category_value, category_display in categories %}
-            <a href="{% url 'core:marketplace' %}?category={{ category_value }}" 
-               style="margin-right: 10px; text-decoration: none; {% if selected_category == category_value %}font-weight: bold;{% endif %}">
-                {{ category_display|title }}
-            </a>
-        {% endfor %}
-    </div>
-    {% endif %}
+{% block extra_js %}
+<script>
+// Search and Filter Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-input');
+    const categoryButtons = document.querySelectorAll('.category-button');
+    const agentCards = document.querySelectorAll('.agent-card');
+    const emptyState = document.getElementById('empty-state');
+    const assistantsGrid = document.getElementById('assistants-grid');
 
-    <!-- Agents Grid -->
-    {% if agents %}
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 30px;">
-        {% for agent in agents %}
-        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; background: #f9f9f9; text-align: left;">
-            <h3 style="margin: 0 0 10px 0; color: #333;">
-                {% if agent.icon %}{{ agent.icon }}{% endif %} {{ agent.name }}
-            </h3>
-            <p style="color: #666; margin: 10px 0;">{{ agent.description }}</p>
-            <div style="margin: 15px 0;">
-                <span style="background: #e8f4fd; color: #0066cc; padding: 3px 8px; border-radius: 12px; font-size: 12px;">
-                    {{ agent.category|title }}
-                </span>
-                <span style="background: #f0f8ff; color: #2d5a2d; padding: 3px 8px; border-radius: 12px; font-size: 12px; margin-left: 5px;">
-                    {{ agent.agent_type|title }}
-                </span>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
-                <div>
-                    <strong style="color: #2d5a2d;">{{ agent.price }} AED</strong>
-                    {% if agent.rating %}
-                    <div style="font-size: 12px; color: #666;">
-                        ⭐ {{ agent.rating }} ({{ agent.review_count }} reviews)
-                    </div>
-                    {% endif %}
-                </div>
-                {% if user.is_authenticated %}
-                    <a href="{% url 'core:agent_detail' agent.slug %}" 
-                       style="background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 14px;">
-                        Use Agent
-                    </a>
-                {% else %}
-                    <a href="{% url 'authentication:login' %}?next={% url 'core:agent_detail' agent.slug %}" 
-                       style="background: #28a745; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 14px;">
-                        Login to Use
-                    </a>
-                {% endif %}
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-        <div class="marketplace-message">
-            <h3>🤖 No Agents Available</h3>
-            <p>No agents are currently available{% if selected_category %} in the {{ selected_category }} category{% endif %}. Check back later!</p>
-        </div>
-    {% endif %}
-</div>
+    let currentCategory = '{% if selected_category %}{{ selected_category }}{% else %}all{% endif %}';
+    let currentSearch = '';
+
+    // Search functionality
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            currentSearch = this.value.toLowerCase();
+            filterAgents();
+        });
+    }
+
+    // Category filter functionality (for JavaScript filtering, not navigation)
+    categoryButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            // Only prevent default if it's not a navigation link
+            if (this.dataset.category) {
+                e.preventDefault();
+                
+                // Remove active class from all buttons
+                categoryButtons.forEach(btn => btn.classList.remove('active'));
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                currentCategory = this.dataset.category;
+                filterAgents();
+            }
+        });
+    });
+
+    // Filter agents based on search and category
+    function filterAgents() {
+        if (!agentCards.length) return;
+        
+        let visibleCount = 0;
+
+        agentCards.forEach(card => {
+            const category = card.dataset.category;
+            const name = card.querySelector('.agent-name').textContent.toLowerCase();
+            const description = card.querySelector('.agent-description').textContent.toLowerCase();
+
+            const matchesCategory = currentCategory === 'all' || category === currentCategory;
+            const matchesSearch = currentSearch === '' || 
+                                name.includes(currentSearch) || 
+                                description.includes(currentSearch);
+
+            if (matchesCategory && matchesSearch) {
+                card.style.display = 'flex';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Show/hide empty state
+        if (emptyState && assistantsGrid) {
+            if (visibleCount === 0) {
+                emptyState.style.display = 'block';
+                assistantsGrid.style.display = 'none';
+            } else {
+                emptyState.style.display = 'none';
+                assistantsGrid.style.display = 'grid';
+            }
+        }
+    }
+
+    // Initialize filter on page load
+    filterAgents();
+});
+</script>
 {% endblock %}

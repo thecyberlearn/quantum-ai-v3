@@ -230,3 +230,4 @@ secrets.json
 # NextJS frontend directory
 nextjs/
 netcop-ai-hub/
+temp/

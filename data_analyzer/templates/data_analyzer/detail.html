@@ -18,7 +18,7 @@
     
     /* Page background */
     .data-analyzer-page {
-        background: linear-gradient(135deg, #f6f8ff 0%, #e8f0fe 50%, #f0f7ff 100%);
+        background: var(--gradient-hero);
         min-height: calc(100vh - 80px);
         padding: clamp(20px, 5vw, 40px);
         width: 100vw;
@@ -53,7 +53,7 @@
     .section-title {
         font-size: clamp(16px, 4vw, 18px);
         font-weight: 600;
-        color: #1f2937;
+        color: var(--text-primary);
         margin-bottom: clamp(12px, 3vw, 16px);
     }
     
@@ -61,7 +61,7 @@
     .form-input {
         width: 100%;
         padding: clamp(12px, 3vw, 16px) clamp(16px, 4vw, 20px);
-        border: 2px solid #e5e7eb;
+        border: 2px solid var(--border-medium);
         border-radius: clamp(8px, 2vw, 12px);
         font-size: clamp(14px, 3.5vw, 16px);
         transition: border-color 0.2s ease;
@@ -71,39 +71,39 @@
     
     .form-input:focus {
         outline: none;
-        border-color: #10b981;
+        border-color: var(--success-green);
     }
     
     .help-text {
         font-size: clamp(12px, 3vw, 14px);
-        color: #6b7280;
+        color: var(--text-secondary);
     }
     
     /* File upload zone */
     .file-upload-zone {
-        border: 2px dashed #d1d5db;
+        border: 2px dashed var(--border-medium);
         border-radius: clamp(12px, 3vw, 16px);
         padding: clamp(24px, 6vw, 40px);
         text-align: center;
         transition: all 0.3s ease;
-        background: #f9fafb;
+        background: var(--background-light);
         cursor: pointer;
         margin-bottom: clamp(12px, 3vw, 16px);
     }
     
     .file-upload-zone.dragover {
-        border-color: #10b981;
-        background: #f0fdf4;
+        border-color: var(--success-green);
+        background: rgba(16, 185, 129, 0.1);
     }
     
     .file-upload-zone:hover {
-        border-color: #10b981;
-        background: #f0fdf4;
+        border-color: var(--success-green);
+        background: rgba(16, 185, 129, 0.1);
     }
     
     .file-preview {
-        background: #f0fdf4;
-        border: 1px solid #86efac;
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.5);
         border-radius: 8px;
         padding: 12px;
         margin-top: 12px;
@@ -124,7 +124,7 @@
         align-items: center;
         gap: clamp(8px, 2vw, 12px);
         padding: clamp(12px, 3vw, 16px);
-        border: 2px solid #e5e7eb;
+        border: 2px solid var(--border-light);
         border-radius: clamp(8px, 2vw, 12px);
         cursor: pointer;
         background: white;
@@ -133,8 +133,8 @@
     }
     
     .radio-option.selected {
-        border-color: #10b981;
-        background: #f0fdf4;
+        border-color: var(--success-green);
+        background: rgba(16, 185, 129, 0.1);
     }
     
     .radio-option input[type="radio"] {
@@ -144,10 +144,10 @@
     /* Processing status */
     .processing-status {
         padding: clamp(16px, 4vw, 20px);
-        background: #f0fdf4;
-        border: 1px solid #10b981;
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid var(--success-green);
         border-radius: clamp(8px, 2vw, 12px);
-        color: #047857;
+        color: var(--success-dark);
         font-weight: 600;
         text-align: center;
         margin-bottom: clamp(16px, 4vw, 24px);
@@ -172,14 +172,14 @@
     }
     
     .results-content {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        background: var(--background-page);
+        border: 1px solid var(--border-light);
         border-radius: 12px;
         padding: 24px;
         margin-bottom: 20px;
         white-space: pre-line;
         line-height: 1.7;
-        color: #374151;
+        color: var(--text-primary);
         font-size: 15px;
     }
     
@@ -208,16 +208,16 @@
     }
     
     .btn-primary {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        background: var(--gradient-success);
         color: white;
         flex: 1;
         min-width: 120px;
     }
     
     .btn-secondary {
-        background: white;
-        color: #374151;
-        border: 2px solid #e5e7eb;
+        background: var(--background-subtle);
+        color: var(--text-primary);
+        border: 2px solid var(--border-medium);
         flex: 1;
         min-width: 120px;
     }
@@ -227,9 +227,11 @@
     }
     
     .btn:disabled {
-        background: #9ca3af;
+        background: var(--border-strong);
+        color: white;
         cursor: not-allowed;
         transform: none;
+        opacity: 0.6;
     }
     
     /* Wallet sidebar */
@@ -241,13 +243,13 @@
     .wallet-balance {
         font-size: clamp(24px, 6vw, 28px);
         font-weight: 700;
-        color: #1f2937;
+        color: var(--text-primary);
         margin-bottom: 8px;
     }
     
     .balance-label {
         font-size: clamp(14px, 3.5vw, 16px);
-        color: #6b7280;
+        color: var(--text-secondary);
         margin-bottom: clamp(16px, 4vw, 20px);
     }
     
@@ -267,13 +269,13 @@
         margin: 0 0 8px 0;
         font-size: 14px;
         font-weight: 600;
-        color: #047857;
+        color: var(--success-dark);
     }
     
     .usage-info ul {
         margin: 0;
         font-size: 12px;
-        color: #374151;
+        color: var(--text-primary);
         line-height: 1.4;
         list-style: none;
         padding-left: 0;
@@ -289,7 +291,7 @@
         content: "•";
         position: absolute;
         left: 0;
-        color: #10b981;
+        color: var(--success-green);
     }
     
     /* Responsive */
@@ -322,10 +324,10 @@
                     
                     <div class="file-upload-zone" id="fileUploadZone" onclick="document.getElementById('fileInput').click()">
                         <div style="font-size: clamp(32px, 8vw, 48px); margin-bottom: 12px;">📊</div>
-                        <div style="font-size: clamp(16px, 4vw, 18px); font-weight: 600; color: #374151; margin-bottom: 8px;">
+                        <div style="font-size: clamp(16px, 4vw, 18px); font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">
                             Choose or drag your data file here
                         </div>
-                        <div style="font-size: clamp(14px, 3.5vw, 16px); color: #6b7280;">
+                        <div style="font-size: clamp(14px, 3.5vw, 16px); color: var(--text-secondary);">
                             Supports PDF, CSV, Excel files (up to 10MB)
                         </div>
                     </div>
@@ -340,11 +342,11 @@
                     <div id="filePreview" class="file-preview" style="display: none;">
                         <div style="font-size: 24px;">📄</div>
                         <div style="flex: 1;">
-                            <div style="font-weight: 600; color: #1f2937;" id="fileName"></div>
-                            <div style="font-size: 14px; color: #6b7280;" id="fileSize"></div>
+                            <div style="font-weight: 600; color: var(--text-primary);" id="fileName"></div>
+                            <div style="font-size: 14px; color: var(--text-secondary);" id="fileSize"></div>
                         </div>
                         <button type="button" onclick="removeFile()" style="
-                            background: #ef4444;
+                            background: var(--error-red);
                             color: white;
                             border: none;
                             border-radius: 4px;
@@ -369,7 +371,7 @@
                                 <div style="font-weight: 600; margin-bottom: clamp(2px, 1vw, 4px); font-size: clamp(14px, 3.5vw, 16px);">
                                     Summary Analysis
                                 </div>
-                                <div style="font-size: clamp(12px, 3vw, 14px); color: #6b7280;">
+                                <div style="font-size: clamp(12px, 3vw, 14px); color: var(--text-secondary);">
                                     Quick overview and key insights
                                 </div>
                             </div>
@@ -382,7 +384,7 @@
                                 <div style="font-weight: 600; margin-bottom: clamp(2px, 1vw, 4px); font-size: clamp(14px, 3.5vw, 16px);">
                                     Detailed Analysis
                                 </div>
-                                <div style="font-size: clamp(12px, 3vw, 14px); color: #6b7280;">
+                                <div style="font-size: clamp(12px, 3vw, 14px); color: var(--text-secondary);">
                                     Comprehensive statistical analysis
                                 </div>
                             </div>
@@ -395,7 +397,7 @@
                                 <div style="font-weight: 600; margin-bottom: clamp(2px, 1vw, 4px); font-size: clamp(14px, 3.5vw, 16px);">
                                     Statistical Analysis
                                 </div>
-                                <div style="font-size: clamp(12px, 3vw, 14px); color: #6b7280;">
+                                <div style="font-size: clamp(12px, 3vw, 14px); color: var(--text-secondary);">
                                     Advanced statistics and trends
                                 </div>
                             </div>
@@ -417,11 +419,11 @@
                 <div id="analysisResults" class="results-card" style="display: none;">
                     <div class="results-header">
                         <div style="font-size: 24px;">✅</div>
-                        <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin: 0;">
+                        <h3 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">
                             Data Analysis Results
                         </h3>
                         <div style="
-                            background: #10b981;
+                            background: var(--success-green);
                             color: white;
                             padding: 6px 12px;
                             border-radius: 6px;
@@ -765,7 +767,7 @@
             color: white;
             font-weight: 600;
             z-index: 1000;
-            ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
+            ${type === 'success' ? 'background: var(--success-green);' : 'background: var(--error-red);'}
         `;
         toast.textContent = message;
         document.body.appendChild(toast);

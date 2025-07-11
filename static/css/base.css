@@ -1,9 +1,47 @@
 /* Base Styles for NetCop Hub */
+
+/* Unified Color System */
+:root {
+    /* Primary Colors */
+    --primary-blue: #3b82f6;
+    --primary-dark: #1d4ed8;
+    --primary-light: #60a5fa;
+    
+    /* Secondary Colors */
+    --success-green: #10b981;
+    --success-dark: #059669;
+    --warning-orange: #f59e0b;
+    --error-red: #ef4444;
+    
+    /* Neutral Colors */
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --border-light: #e5e7eb;    /* For subtle dividers */
+    --border-medium: #9ca3af;   /* For form elements and visible borders */
+    --border-strong: #6b7280;   /* For interactive elements that need clear definition */
+    --background-page: #f8fafc;
+    --background-card: #ffffff;
+    --background-light: #f9fafb;
+    --background-subtle: #f3f4f6;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
+    --gradient-success: linear-gradient(135deg, var(--success-green) 0%, var(--success-dark) 100%);
+    --gradient-hero: linear-gradient(135deg, #f6f8ff 0%, #e8f0fe 50%, #f0f7ff 100%);
+    
+    /* Professional Avatar Gradients (Limited Set) */
+    --gradient-blue: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
+    --gradient-green: linear-gradient(135deg, var(--success-green) 0%, var(--success-dark) 100%);
+    --gradient-slate: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    --gradient-neutral: linear-gradient(135deg, #6b7280 0%, #374151 100%);
+}
+
 body { 
     font-family: 'Inter', Arial, sans-serif; 
     margin: 0; 
     padding: 0; 
-    background-color: #f8fafc; 
+    background-color: var(--background-page); 
     overflow-x: hidden;
     box-sizing: border-box;
 }
@@ -13,8 +51,8 @@ body {
 }
 
 .header {
-    background: white;
-    border-bottom: 1px solid #e5e7eb;
+    background: var(--background-card);
+    border-bottom: 1px solid var(--border-light);
     width: 100%;
 }
 
@@ -53,7 +91,7 @@ body {
 
 .nav-link {
     text-decoration: none;
-    color: #6b7280;
+    color: var(--text-secondary);
     font-weight: 500;
     font-size: 16px;
     padding: 8px 12px;
@@ -63,12 +101,12 @@ body {
 }
 
 .nav-link:hover {
-    color: #3b82f6;
+    color: var(--primary-blue);
     background: rgba(59, 130, 246, 0.05);
 }
 
 .nav-link.active {
-    color: #3b82f6;
+    color: var(--primary-blue);
     background: rgba(59, 130, 246, 0.1);
     font-weight: 600;
 }
@@ -80,13 +118,13 @@ body {
 }
 
 .user-welcome {
-    color: #374151;
+    color: var(--text-primary);
     font-weight: 500;
     margin: 0;
 }
 
 .balance {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: var(--gradient-success);
     color: white;
     padding: 8px 16px;
     border-radius: 20px;
@@ -108,7 +146,7 @@ body {
 
 .auth-links a {
     text-decoration: none;
-    color: #6b7280;
+    color: var(--text-secondary);
     font-weight: 500;
     padding: 8px 12px;
     border-radius: 6px;
@@ -116,8 +154,22 @@ body {
 }
 
 .auth-links a:hover {
-    color: #3b82f6;
+    color: var(--primary-blue);
     background: rgba(59, 130, 246, 0.05);
+}
+
+/* More specific selector for auth links active state */
+.header .auth-links a.active {
+    color: var(--primary-blue) !important;
+    background: rgba(59, 130, 246, 0.1) !important;
+    font-weight: 600 !important;
+}
+
+/* Fallback with higher specificity */
+.header-container .auth-links a.active {
+    color: var(--primary-blue) !important;
+    background: rgba(59, 130, 246, 0.1) !important;
+    font-weight: 600 !important;
 }
 
 .main-container {
@@ -138,7 +190,7 @@ body {
 }
 
 .footer-container {
-    max-width: 1280px;
+    max-width: 1200px;
     margin: 0 auto;
     width: 100%;
     box-sizing: border-box;
@@ -181,7 +233,7 @@ body {
 }
 
 .footer-description {
-    color: #9ca3af;
+    color: var(--text-muted);
     font-size: clamp(12px, 3vw, 14px);
     line-height: 1.6;
     margin: 0 0 clamp(8px, 2vw, 12px) 0;
@@ -232,7 +284,7 @@ body {
 }
 
 .footer-nav-link {
-    color: #9ca3af;
+    color: var(--text-muted);
     text-decoration: none;
     font-size: clamp(10px, 2.5vw, 12px);
     transition: all 0.2s ease;
@@ -256,7 +308,7 @@ body {
 }
 
 .footer-copyright {
-    color: #6b7280;
+    color: var(--text-secondary);
     margin: 0;
     font-size: clamp(10px, 2.5vw, 12px);
 }
@@ -269,7 +321,7 @@ body {
 }
 
 .footer-legal-link {
-    color: #9ca3af;
+    color: var(--text-muted);
     text-decoration: none;
     font-size: clamp(10px, 2.5vw, 12px);
     transition: color 0.2s ease;
@@ -332,7 +384,7 @@ body {
 .modal-title {
     font-size: clamp(18px, 4.5vw, 24px);
     font-weight: 600;
-    color: #1f2937;
+    color: var(--text-primary);
     margin: 0;
 }
 
@@ -347,11 +399,11 @@ body {
 }
 
 .modal-close:hover {
-    color: #1f2937;
+    color: var(--text-primary);
 }
 
 .modal-text {
-    color: #6b7280;
+    color: var(--text-secondary);
     line-height: 1.6;
     font-size: clamp(14px, 3.5vw, 16px);
 }

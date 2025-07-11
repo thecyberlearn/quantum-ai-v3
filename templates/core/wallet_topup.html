@@ -1,97 +1,366 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Top Up Wallet - NetCop Hub</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
-        .container { max-width: 600px; margin: 0 auto; }
-        .topup-form { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .amount-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin: 20px 0; }
-        .amount-option { padding: 20px; border: 2px solid #ddd; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.3s; }
-        .amount-option:hover { border-color: #007bff; background: #f8f9fa; }
-        .amount-option.selected { border-color: #007bff; background: #e7f3ff; }
-        .amount-value { font-size: 1.5em; font-weight: bold; color: #007bff; }
-        .btn { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; margin-top: 20px; }
-        .btn:hover { background: #0056b3; }
-        .btn:disabled { background: #ccc; cursor: not-allowed; }
-        .back-link { display: inline-block; margin-bottom: 20px; color: #007bff; text-decoration: none; }
-        .back-link:hover { text-decoration: underline; }
-        .messages { margin-bottom: 20px; }
-        .message { padding: 10px; border-radius: 4px; margin-bottom: 10px; }
-        .message.error { background: #ffe6e6; color: #cc0000; }
-        .message.success { background: #e6ffe6; color: #006600; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <a href="{% url 'core:wallet' %}" class="back-link">← Back to Wallet</a>
-        
-        <div class="topup-form">
-            <h1>Top Up Your Wallet</h1>
-            
-            {% if messages %}
-                <div class="messages">
-                    {% for message in messages %}
-                        <div class="message {{ message.tags }}">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-            
-            <form method="post" id="topup-form">
-                {% csrf_token %}
-                <p>Select an amount to add to your wallet:</p>
-                
-                <div class="amount-options">
-                    <div class="amount-option" data-amount="10">
-                        <div class="amount-value">10 AED</div>
-                        <div>Basic</div>
-                    </div>
-                    <div class="amount-option" data-amount="50">
-                        <div class="amount-value">50 AED</div>
-                        <div>Popular</div>
-                    </div>
-                    <div class="amount-option" data-amount="100">
-                        <div class="amount-value">100 AED</div>
-                        <div>Best Value</div>
-                    </div>
-                    <div class="amount-option" data-amount="500">
-                        <div class="amount-value">500 AED</div>
-                        <div>Premium</div>
-                    </div>
-                </div>
-                
-                <input type="hidden" name="amount" id="selected-amount" value="">
-                <button type="submit" class="btn" id="topup-btn" disabled>Select an amount</button>
-            </form>
-        </div>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Top Up Wallet - NetCop Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Override main-container for full-width sections */
+    .main-container {
+        max-width: none;
+        padding: 0;
+        margin-top: 0;
+    }
+    
+    /* Top-up page styles */
+    .topup-page {
+        background: var(--gradient-hero);
+        min-height: calc(100vh - 80px);
+        padding: clamp(20px, 5vw, 40px);
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+    }
+    
+    /* Hero section */
+    .topup-hero {
+        background: var(--gradient-primary);
+        color: white;
+        padding: clamp(20px, 4vw, 24px) 0;
+        text-align: center;
+        margin-bottom: clamp(16px, 4vw, 20px);
+        border-radius: clamp(12px, 3vw, 16px);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .topup-hero h1 {
+        font-size: clamp(20px, 5vw, 24px);
+        margin: 0 0 8px 0;
+        font-weight: 700;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .topup-hero .subtitle {
+        font-size: clamp(14px, 3.5vw, 16px);
+        opacity: 0.9;
+        margin: 0;
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* Back to wallet link */
+    .back-to-wallet {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--primary-blue);
+        text-decoration: none;
+        font-weight: 500;
+        margin-bottom: 16px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        background: rgba(59, 130, 246, 0.05);
+    }
+    
+    .back-to-wallet:hover {
+        background: rgba(59, 130, 246, 0.1);
+        transform: translateX(-2px);
+    }
+    
+    /* Main form container */
+    .topup-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: clamp(12px, 3vw, 16px);
+        padding: clamp(24px, 6vw, 32px);
+        border: 1px solid rgba(59, 130, 246, 0.1);
+        backdrop-filter: blur(20px);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.1);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    /* Messages */
+    .messages {
+        margin-bottom: clamp(16px, 4vw, 20px);
+    }
+    
+    .message {
+        padding: 12px 16px;
+        border-radius: clamp(8px, 2vw, 12px);
+        margin-bottom: 8px;
+        font-weight: 500;
+        font-size: clamp(14px, 3.5vw, 16px);
+    }
+    
+    .message.success {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success-dark);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    
+    .message.error {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--error-red);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    
+    /* Form header */
+    .form-header {
+        text-align: center;
+        margin-bottom: clamp(24px, 6vw, 32px);
+    }
+    
+    .form-title {
+        font-size: clamp(18px, 4.5vw, 22px);
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0 0 8px 0;
+    }
+    
+    .form-subtitle {
+        font-size: clamp(14px, 3.5vw, 16px);
+        color: var(--text-secondary);
+        margin: 0;
+    }
+    
+    /* Amount options grid */
+    .amount-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr));
+        gap: clamp(12px, 3vw, 16px);
+        margin-bottom: clamp(24px, 6vw, 32px);
+    }
+    
+    .amount-option {
+        background: white;
+        border: 2px solid var(--border-light);
+        border-radius: clamp(8px, 2vw, 12px);
+        padding: clamp(16px, 4vw, 20px);
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .amount-option:hover {
+        border-color: var(--primary-blue);
+        background: rgba(59, 130, 246, 0.02);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
+    
+    .amount-option.selected {
+        border-color: var(--primary-blue);
+        background: rgba(59, 130, 246, 0.05);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    }
+    
+    .amount-option.selected::before {
+        content: '✓';
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: var(--primary-blue);
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .amount-value {
+        font-size: clamp(18px, 4.5vw, 22px);
+        font-weight: 700;
+        color: var(--primary-blue);
+        margin-bottom: 4px;
+    }
+    
+    .amount-label {
+        font-size: clamp(12px, 3vw, 14px);
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+    
+    .amount-option.popular {
+        border-color: var(--success-green);
+        position: relative;
+    }
+    
+    .amount-option.popular::after {
+        content: '🔥 Popular';
+        position: absolute;
+        top: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--success-green);
+        color: white;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 8px;
+    }
+    
+    .amount-option.popular .amount-value {
+        color: var(--success-green);
+    }
+    
+    /* Submit button */
+    .topup-btn {
+        width: 100%;
+        background: var(--gradient-primary);
+        color: white;
+        border: none;
+        padding: clamp(16px, 4vw, 20px);
+        border-radius: clamp(8px, 2vw, 12px);
+        font-size: clamp(16px, 4vw, 18px);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .topup-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        background: var(--primary-dark);
+    }
+    
+    .topup-btn:disabled {
+        background: var(--text-muted);
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+    
+    /* Security notice */
+    .security-notice {
+        background: rgba(16, 185, 129, 0.05);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        border-radius: clamp(8px, 2vw, 12px);
+        padding: clamp(12px, 3vw, 16px);
+        margin-top: clamp(16px, 4vw, 20px);
+        text-align: center;
+    }
+    
+    .security-notice .icon {
+        font-size: 20px;
+        margin-bottom: 4px;
+    }
+    
+    .security-notice .text {
+        font-size: clamp(12px, 3vw, 14px);
+        color: var(--success-green);
+        font-weight: 500;
+        margin: 0;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+        .amount-options {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="topup-page">
+    <a href="{% url 'core:wallet' %}" class="back-to-wallet">
+        ← Back to Wallet
+    </a>
+    
+    <!-- Hero Section -->
+    <div class="topup-hero">
+        <h1>💳 Top Up Your Wallet</h1>
+        <p class="subtitle">Add funds to continue using AI agents</p>
     </div>
     
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const amountOptions = document.querySelectorAll('.amount-option');
-            const selectedAmountInput = document.getElementById('selected-amount');
-            const topupBtn = document.getElementById('topup-btn');
+    <!-- Main Container -->
+    <div class="topup-container">
+        <!-- Messages -->
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <!-- Form Header -->
+        <div class="form-header">
+            <h2 class="form-title">Select Top-Up Amount</h2>
+            <p class="form-subtitle">Choose how much you'd like to add to your wallet</p>
+        </div>
+        
+        <!-- Top-up Form -->
+        <form method="post" id="topup-form">
+            {% csrf_token %}
             
-            amountOptions.forEach(option => {
-                option.addEventListener('click', function() {
-                    // Remove selected class from all options
-                    amountOptions.forEach(opt => opt.classList.remove('selected'));
-                    
-                    // Add selected class to clicked option
-                    this.classList.add('selected');
-                    
-                    // Set the selected amount
-                    const amount = this.getAttribute('data-amount');
-                    selectedAmountInput.value = amount;
-                    
-                    // Enable submit button
-                    topupBtn.disabled = false;
-                    topupBtn.textContent = `Top Up ${amount} AED`;
-                });
+            <!-- Amount Options -->
+            <div class="amount-options">
+                <div class="amount-option" data-amount="10">
+                    <div class="amount-value">10 AED</div>
+                    <div class="amount-label">Basic</div>
+                </div>
+                <div class="amount-option popular" data-amount="50">
+                    <div class="amount-value">50 AED</div>
+                    <div class="amount-label">Popular</div>
+                </div>
+                <div class="amount-option" data-amount="100">
+                    <div class="amount-value">100 AED</div>
+                    <div class="amount-label">Best Value</div>
+                </div>
+            </div>
+            
+            <input type="hidden" name="amount" id="selected-amount" value="">
+            <button type="submit" class="topup-btn" id="topup-btn" disabled>
+                💰 Select an amount
+            </button>
+        </form>
+        
+        <!-- Security Notice -->
+        <div class="security-notice">
+            <div class="icon">🔒</div>
+            <p class="text">Secure payment processing • Your data is protected</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const amountOptions = document.querySelectorAll('.amount-option');
+        const selectedAmountInput = document.getElementById('selected-amount');
+        const topupBtn = document.getElementById('topup-btn');
+        
+        amountOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                // Remove selected class from all options
+                amountOptions.forEach(opt => opt.classList.remove('selected'));
+                
+                // Add selected class to clicked option
+                this.classList.add('selected');
+                
+                // Set the selected amount
+                const amount = this.getAttribute('data-amount');
+                selectedAmountInput.value = amount;
+                
+                // Enable submit button and update text
+                topupBtn.disabled = false;
+                topupBtn.innerHTML = `💳 Top Up ${amount} AED`;
             });
         });
-    </script>
-</body>
-</html>
+    });
+</script>
+{% endblock %}

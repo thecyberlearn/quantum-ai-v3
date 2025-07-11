@@ -6,7 +6,7 @@
 {% block extra_css %}
 <style>
     .job-posting-page {
-        background: linear-gradient(135deg, #f6f8ff 0%, #e8f0fe 50%, #f0f7ff 100%);
+        background: var(--gradient-hero);
         min-height: calc(100vh - 80px);
         padding: clamp(20px, 5vw, 40px);
         width: 100vw;
@@ -35,9 +35,9 @@
     .section-title {
         font-size: 18px;
         font-weight: 600;
-        color: #1f2937;
+        color: var(--text-primary);
         margin-bottom: 16px;
-        border-bottom: 2px solid #f3f4f6;
+        border-bottom: 2px solid var(--border-light);
         padding-bottom: 8px;
     }
     
@@ -45,25 +45,25 @@
         margin-bottom: 24px;
         padding: 16px;
         border-radius: 12px;
-        border: 1px solid #e5e7eb;
+        border: 1px solid var(--border-light);
     }
     
     .basic-info {
-        background: #f9fafb;
+        background: var(--background-light);
     }
     
     .requirements {
-        background: #eff6ff;
+        background: rgba(59, 130, 246, 0.1);
     }
     
     .additional {
-        background: #f0fdf4;
+        background: rgba(16, 185, 129, 0.1);
     }
     
     .section-subtitle {
         font-size: 14px;
         font-weight: 600;
-        color: #6b7280;
+        color: var(--text-secondary);
         margin-bottom: 16px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -72,14 +72,14 @@
     .form-input, .form-textarea {
         width: 100%;
         padding: 12px 16px;
-        border: 2px solid #e5e7eb;
+        border: 2px solid var(--border-medium);
         border-radius: 12px;
         font-size: 16px;
         transition: border-color 0.2s ease;
         min-height: 44px;
         margin-bottom: 16px;
         font-family: inherit;
-        background: #f9fafb;
+        background: var(--background-light);
     }
     
     .form-textarea {
@@ -89,7 +89,7 @@
     
     .form-input:focus, .form-textarea:focus {
         outline: none;
-        border-color: #f59e0b;
+        border-color: var(--warning-orange);
         background: white;
         box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
     }
@@ -99,15 +99,15 @@
         margin-bottom: 8px;
         font-size: 14px;
         font-weight: 600;
-        color: #374151;
+        color: var(--text-primary);
     }
     
     .processing-status {
         padding: 20px;
         background: rgba(245, 158, 11, 0.1);
-        border: 2px solid #f59e0b;
+        border: 2px solid var(--warning-orange);
         border-radius: 12px;
-        color: #d97706;
+        color: var(--warning-orange);
         font-weight: 600;
         text-align: center;
         margin-bottom: 24px;
@@ -142,18 +142,18 @@
         gap: 12px;
         margin-bottom: 20px;
         padding-bottom: 16px;
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid var(--border-light);
     }
     
     .results-content {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        background: var(--background-page);
+        border: 1px solid var(--border-light);
         border-radius: 12px;
         padding: 24px;
         margin-bottom: 20px;
         white-space: pre-line;
         line-height: 1.7;
-        color: #374151;
+        color: var(--text-primary);
         font-size: 15px;
     }
     
@@ -181,16 +181,16 @@
     }
     
     .btn-primary {
-        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        background: var(--warning-orange);
         color: white;
         flex: 1;
         min-width: 120px;
     }
     
     .btn-secondary {
-        background: white;
-        color: #374151;
-        border: 2px solid #e5e7eb;
+        background: var(--background-subtle);
+        color: var(--text-primary);
+        border: 2px solid var(--border-medium);
         flex: 1;
         min-width: 120px;
     }
@@ -200,7 +200,7 @@
     }
     
     .btn:disabled {
-        background: #9ca3af;
+        background: var(--text-muted);
         cursor: not-allowed;
         transform: none;
     }
@@ -213,13 +213,13 @@
     .wallet-balance {
         font-size: 28px;
         font-weight: 700;
-        color: #1f2937;
+        color: var(--text-primary);
         margin-bottom: 8px;
     }
     
     .balance-label {
         font-size: 16px;
-        color: #6b7280;
+        color: var(--text-secondary);
         margin-bottom: 20px;
     }
     
@@ -229,9 +229,9 @@
     }
     
     .insufficient-balance {
-        background: #fef2f2;
-        border: 1px solid #fca5a5;
-        color: #dc2626;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: var(--error-red);
         padding: 12px;
         border-radius: 8px;
         text-align: center;
@@ -250,13 +250,13 @@
         margin: 0 0 8px 0;
         font-size: 14px;
         font-weight: 600;
-        color: #d97706;
+        color: var(--warning-orange);
     }
     
     .usage-info ul {
         margin: 0;
         font-size: 12px;
-        color: #374151;
+        color: var(--text-primary);
         line-height: 1.4;
         list-style: none;
         padding-left: 0;
@@ -272,7 +272,7 @@
         content: "•";
         position: absolute;
         left: 0;
-        color: #f59e0b;
+        color: var(--warning-orange);
     }
     
     /* Mobile optimizations */
@@ -380,16 +380,16 @@
             <!-- Processing Status -->
             <div id="processingStatus" class="processing-status">
                 <div class="status-icon">💼</div>
-                <div style="font-weight: 600; color: #d97706;">Creating Job Posting...</div>
-                <div style="font-size: 14px; color: #92400e; margin-top: 8px;" id="statusText">Crafting professional job description...</div>
+                <div style="font-weight: 600; color: var(--warning-orange);">Creating Job Posting...</div>
+                <div style="font-size: 14px; color: var(--warning-orange); margin-top: 8px;" id="statusText">Crafting professional job description...</div>
             </div>
             
             <!-- Results -->
             <div id="jobResults" class="results-card">
                 <div class="results-header">
                     <div style="font-size: 24px;">✅</div>
-                    <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin: 0;">Generated Job Posting</h3>
-                    <div style="background: #f59e0b; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-left: auto;">✅ Complete</div>
+                    <h3 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">Generated Job Posting</h3>
+                    <div style="background: var(--warning-orange); color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-left: auto;">✅ Complete</div>
                 </div>
                 
                 <div class="results-content" id="jobContent">
@@ -399,7 +399,7 @@
                 <div class="action-buttons">
                     <button onclick="copyJobPosting()" class="btn btn-primary">📋 Copy Job Posting</button>
                     <button onclick="downloadJobPosting()" class="btn btn-secondary">💾 Download Posting</button>
-                    <button onclick="resetForm()" class="btn" style="background: #f59e0b; color: white;">🔄 Create Another</button>
+                    <button onclick="resetForm()" class="btn" style="background: var(--warning-orange); color: white;">🔄 Create Another</button>
                 </div>
             </div>
         </div>
@@ -520,7 +520,7 @@
             color: white;
             font-weight: 600;
             z-index: 1000;
-            ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
+            ${type === 'success' ? 'background: var(--success-green);' : 'background: var(--error-red);'}
         `;
         toast.textContent = message;
         document.body.appendChild(toast);

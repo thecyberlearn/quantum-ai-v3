@@ -6,7 +6,7 @@
 {% block extra_css %}
 <style>
     .social-ads-page {
-        background: linear-gradient(135deg, #f6f8ff 0%, #e8f0fe 50%, #f0f7ff 100%);
+        background: var(--gradient-hero);
         min-height: calc(100vh - 80px);
         padding: clamp(20px, 5vw, 40px);
         width: 100vw;
@@ -35,7 +35,7 @@
     .section-title {
         font-size: 18px;
         font-weight: 600;
-        color: #1f2937;
+        color: var(--text-primary);
         margin-bottom: 16px;
     }
     
@@ -43,23 +43,23 @@
         margin-bottom: 24px;
         padding: 16px;
         border-radius: 12px;
-        border: 1px solid #e5e7eb;
+        border: 1px solid var(--border-light);
     }
     
     .content-info {
-        background: #eff6ff;
-        border-color: #dbeafe;
+        background: rgba(59, 130, 246, 0.1);
+        border-color: rgba(59, 130, 246, 0.3);
     }
     
     .platform-info {
-        background: #fdf4ff;
-        border-color: #fae8ff;
+        background: rgba(139, 92, 246, 0.1);
+        border-color: rgba(139, 92, 246, 0.3);
     }
     
     .section-subtitle {
         font-size: 14px;
         font-weight: 600;
-        color: #6b7280;
+        color: var(--text-secondary);
         margin-bottom: 16px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -68,14 +68,14 @@
     .form-input, .form-textarea {
         width: 100%;
         padding: 12px 16px;
-        border: 2px solid #e5e7eb;
+        border: 2px solid var(--border-medium);
         border-radius: 12px;
         font-size: 16px;
         transition: border-color 0.2s ease;
         min-height: 44px;
         margin-bottom: 16px;
         font-family: inherit;
-        background: #f9fafb;
+        background: var(--background-light);
     }
     
     .form-textarea {
@@ -85,7 +85,7 @@
     
     .form-input:focus, .form-textarea:focus {
         outline: none;
-        border-color: #ec4899;
+        border-color: rgba(236, 72, 153, 1);
         background: white;
         box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
     }
@@ -95,15 +95,15 @@
         margin-bottom: 8px;
         font-size: 14px;
         font-weight: 600;
-        color: #374151;
+        color: var(--text-primary);
     }
     
     .processing-status {
         padding: 20px;
         background: rgba(236, 72, 153, 0.1);
-        border: 2px solid #ec4899;
+        border: 2px solid rgba(236, 72, 153, 1);
         border-radius: 12px;
-        color: #be185d;
+        color: rgba(190, 24, 93, 1);
         font-weight: 600;
         text-align: center;
         margin-bottom: 24px;
@@ -138,18 +138,18 @@
         gap: 12px;
         margin-bottom: 20px;
         padding-bottom: 16px;
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid var(--border-light);
     }
     
     .results-content {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        background: var(--background-page);
+        border: 1px solid var(--border-light);
         border-radius: 12px;
         padding: 24px;
         margin-bottom: 20px;
         white-space: pre-line;
         line-height: 1.7;
-        color: #374151;
+        color: var(--text-primary);
         font-size: 15px;
     }
     
@@ -177,16 +177,16 @@
     }
     
     .btn-primary {
-        background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+        background: rgba(236, 72, 153, 1);
         color: white;
         flex: 1;
         min-width: 120px;
     }
     
     .btn-secondary {
-        background: white;
-        color: #374151;
-        border: 2px solid #e5e7eb;
+        background: var(--background-subtle);
+        color: var(--text-primary);
+        border: 2px solid var(--border-medium);
         flex: 1;
         min-width: 120px;
     }
@@ -196,9 +196,11 @@
     }
     
     .btn:disabled {
-        background: #9ca3af;
+        background: var(--border-strong);
+        color: white;
         cursor: not-allowed;
         transform: none;
+        opacity: 0.6;
     }
     
     .wallet-section {
@@ -209,13 +211,13 @@
     .wallet-balance {
         font-size: 28px;
         font-weight: 700;
-        color: #1f2937;
+        color: var(--text-primary);
         margin-bottom: 8px;
     }
     
     .balance-label {
         font-size: 16px;
-        color: #6b7280;
+        color: var(--text-secondary);
         margin-bottom: 20px;
     }
     
@@ -225,9 +227,9 @@
     }
     
     .insufficient-balance {
-        background: #fef2f2;
-        border: 1px solid #fca5a5;
-        color: #dc2626;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: var(--error-red);
         padding: 12px;
         border-radius: 8px;
         text-align: center;
@@ -246,13 +248,13 @@
         margin: 0 0 8px 0;
         font-size: 14px;
         font-weight: 600;
-        color: #be185d;
+        color: rgba(190, 24, 93, 1);
     }
     
     .usage-info ul {
         margin: 0;
         font-size: 12px;
-        color: #374151;
+        color: var(--text-primary);
         line-height: 1.4;
         list-style: none;
         padding-left: 0;
@@ -268,7 +270,7 @@
         content: "•";
         position: absolute;
         left: 0;
-        color: #ec4899;
+        color: rgba(236, 72, 153, 1);
     }
     
     /* Mobile optimizations */
@@ -354,16 +356,16 @@
             <!-- Processing Status -->
             <div id="processingStatus" class="processing-status">
                 <div class="status-icon">📢</div>
-                <div style="font-weight: 600; color: #be185d;">Creating Social Ads...</div>
-                <div style="font-size: 14px; color: #a21caf; margin-top: 8px;" id="statusText">Generating engaging ad content...</div>
+                <div style="font-weight: 600; color: rgba(190, 24, 93, 1);">Creating Social Ads...</div>
+                <div style="font-size: 14px; color: rgba(162, 28, 175, 1); margin-top: 8px;" id="statusText">Generating engaging ad content...</div>
             </div>
             
             <!-- Results -->
             <div id="adResults" class="results-card">
                 <div class="results-header">
                     <div style="font-size: 24px;">✅</div>
-                    <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin: 0;">Generated Social Ads</h3>
-                    <div style="background: #ec4899; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-left: auto;">✅ Complete</div>
+                    <h3 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">Generated Social Ads</h3>
+                    <div style="background: rgba(236, 72, 153, 1); color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-left: auto;">✅ Complete</div>
                 </div>
                 
                 <div class="results-content" id="adContent">
@@ -373,7 +375,7 @@
                 <div class="action-buttons">
                     <button onclick="copySocialAds()" class="btn btn-primary">📋 Copy Ads</button>
                     <button onclick="downloadSocialAds()" class="btn btn-secondary">💾 Download Ads</button>
-                    <button onclick="resetForm()" class="btn" style="background: #ec4899; color: white;">🔄 Create Another</button>
+                    <button onclick="resetForm()" class="btn" style="background: rgba(236, 72, 153, 1); color: white;">🔄 Create Another</button>
                 </div>
             </div>
         </div>
@@ -491,7 +493,7 @@
             color: white;
             font-weight: 600;
             z-index: 1000;
-            ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
+            ${type === 'success' ? 'background: var(--success-green);' : 'background: var(--error-red);'}
         `;
         toast.textContent = message;
         document.body.appendChild(toast);

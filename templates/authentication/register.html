@@ -1,70 +1,493 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - NetCop Hub</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
-        .container { max-width: 400px; margin: 50px auto; }
-        .register-form { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        .btn { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1em; }
-        .btn:hover { background: #0056b3; }
-        .messages { margin-bottom: 20px; }
-        .message { padding: 10px; border-radius: 4px; margin-bottom: 10px; }
-        .message.error { background: #ffe6e6; color: #cc0000; }
-        .message.success { background: #e6ffe6; color: #006600; }
-        .auth-links { text-align: center; margin-top: 20px; }
-        .auth-links a { color: #007bff; text-decoration: none; }
-        .auth-links a:hover { text-decoration: underline; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="register-form">
-            <h2>Register for NetCop Hub</h2>
-            
-            {% if messages %}
-                <div class="messages">
-                    {% for message in messages %}
-                        <div class="message {{ message.tags }}">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-            
-            <form method="post">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label for="username">Username:</label>
-                    <input type="text" id="username" name="username" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="password1">Password:</label>
-                    <input type="password" id="password1" name="password1" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="password2">Confirm Password:</label>
-                    <input type="password" id="password2" name="password2" required>
-                </div>
-                
-                <button type="submit" class="btn">Register</button>
-            </form>
-            
-            <div class="auth-links">
-                <p>Already have an account? <a href="{% url 'authentication:login' %}">Login here</a></p>
-                <p><a href="{% url 'core:homepage' %}">Back to Homepage</a></p>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Account{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Override main-container for full-width sections */
+    .main-container {
+        max-width: none;
+        padding: 0;
+    }
+    
+    /* Register page background */
+    .register-page {
+        min-height: calc(100vh - 80px); /* Account for header height */
+        background: linear-gradient(135deg, #f0f7ff 0%, #e0f7fa 50%, #f6f8ff 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: clamp(20px, 5vw, 40px);
+    }
+    
+    /* Register container */
+    .register-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: clamp(16px, 4vw, 24px);
+        padding: clamp(32px, 8vw, 48px);
+        box-shadow: 0 20px 60px rgba(30, 64, 175, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(20px);
+        width: 100%;
+        max-width: 520px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    /* Decorative elements */
+    .register-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+        border-top-right-radius: clamp(16px, 4vw, 24px);
+        border-bottom-left-radius: clamp(16px, 4vw, 24px);
+        opacity: 0.8;
+    }
+    
+    .register-container::after {
+        content: '🚀';
+        position: absolute;
+        top: 24px;
+        right: 24px;
+        font-size: 24px;
+        z-index: 1;
+    }
+    
+    /* Header section */
+    .register-header {
+        text-align: center;
+        margin-bottom: clamp(24px, 6vw, 32px);
+        position: relative;
+        z-index: 2;
+    }
+    
+    .register-title {
+        font-size: clamp(24px, 6vw, 32px);
+        font-weight: 700;
+        color: #059669;
+        margin: 0 0 8px 0;
+    }
+    
+    .register-subtitle {
+        font-size: clamp(14px, 3.5vw, 16px);
+        color: #6b7280;
+        margin: 0;
+    }
+    
+    /* Form styles */
+    .register-form {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+        gap: clamp(12px, 3vw, 16px);
+        margin-bottom: clamp(16px, 4vw, 20px);
+    }
+    
+    .form-group {
+        margin-bottom: clamp(16px, 4vw, 20px);
+    }
+    
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        font-size: clamp(14px, 3.5vw, 16px);
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: clamp(14px, 4vw, 18px) clamp(16px, 4vw, 20px);
+        border: 2px solid var(--border-medium);
+        border-radius: clamp(8px, 2vw, 12px);
+        font-size: clamp(14px, 3.5vw, 16px);
+        transition: all 0.3s ease;
+        background: white;
+        min-height: 48px;
+        box-sizing: border-box;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #34d399;
+        box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.1);
+    }
+    
+    /* Password strength indicator */
+    .password-strength {
+        margin-top: 8px;
+        font-size: clamp(12px, 3vw, 14px);
+        color: #6b7280;
+    }
+    
+    .strength-indicator {
+        display: flex;
+        gap: 4px;
+        margin-top: 4px;
+    }
+    
+    .strength-bar {
+        flex: 1;
+        height: 4px;
+        border-radius: 2px;
+        background: #e5e7eb;
+        transition: background-color 0.2s ease;
+    }
+    
+    .strength-bar.weak { background-color: #ef4444; }
+    .strength-bar.medium { background-color: #f59e0b; }
+    .strength-bar.strong { background-color: #10b981; }
+    
+    /* Register button */
+    .register-btn {
+        width: 100%;
+        background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: clamp(16px, 4vw, 20px);
+        border-radius: clamp(8px, 2vw, 12px);
+        font-size: clamp(16px, 4vw, 18px);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-height: 56px;
+        margin-bottom: clamp(20px, 5vw, 24px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .register-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(5, 150, 105, 0.3);
+        background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+    }
+    
+    .register-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+    }
+    
+    /* Messages */
+    .messages {
+        margin-bottom: clamp(16px, 4vw, 20px);
+    }
+    
+    .message {
+        padding: 12px 16px;
+        border-radius: clamp(8px, 2vw, 12px);
+        margin-bottom: 8px;
+        font-weight: 500;
+        font-size: clamp(14px, 3.5vw, 16px);
+    }
+    
+    .message.success {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+    
+    .message.error {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+    }
+    
+    .message.info {
+        background: #dbeafe;
+        color: #1e40af;
+        border: 1px solid #93c5fd;
+    }
+    
+    /* Auth links - scoped to register page */
+    .register-page .register-container .auth-links {
+        text-align: center;
+        padding-top: clamp(16px, 4vw, 20px);
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .register-page .register-container .auth-links p {
+        margin: 8px 0;
+        color: #6b7280;
+        font-size: clamp(14px, 3.5vw, 16px);
+    }
+    
+    .register-page .register-container .auth-links a {
+        color: #059669;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.2s ease;
+    }
+    
+    .register-page .register-container .auth-links a:hover {
+        color: #34d399;
+        text-decoration: underline;
+    }
+    
+    /* Benefits section */
+    .register-benefits {
+        background: rgba(52, 211, 153, 0.05);
+        border-radius: clamp(12px, 3vw, 16px);
+        padding: clamp(16px, 4vw, 20px);
+        margin-top: clamp(20px, 5vw, 24px);
+        border: 1px solid rgba(52, 211, 153, 0.2);
+    }
+    
+    .benefits-title {
+        font-size: clamp(14px, 3.5vw, 16px);
+        font-weight: 600;
+        color: #059669;
+        margin: 0 0 12px 0;
+        text-align: center;
+    }
+    
+    .benefits-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .benefits-list li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 8px 0;
+        color: #374151;
+        font-size: clamp(13px, 3vw, 14px);
+    }
+    
+    .benefits-list li::before {
+        content: '🎯';
+        font-size: 14px;
+    }
+    
+    /* Help text */
+    .help-text {
+        font-size: clamp(12px, 3vw, 14px);
+        color: #6b7280;
+        margin-top: 4px;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+        .register-page {
+            padding: 16px;
+        }
+        
+        .register-container {
+            padding: 24px;
+        }
+        
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="register-page">
+    <div class="register-container">
+        <!-- Header -->
+        <div class="register-header">
+            <h1 class="register-title">Create Your Account</h1>
+            <p class="register-subtitle">Create your account and start using powerful AI agents</p>
+        </div>
+        
+        <!-- Messages -->
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">{{ message }}</div>
+                {% endfor %}
             </div>
+        {% endif %}
+        
+        <!-- Register Form -->
+        <form method="post" class="register-form" id="registerForm">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="username" class="form-label">Username</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        class="form-input"
+                        placeholder="Choose a username"
+                        required
+                        autocomplete="username"
+                    >
+                    <div class="help-text">This will be your unique identifier</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        class="form-input"
+                        placeholder="Enter your email address"
+                        required
+                        autocomplete="email"
+                    >
+                    <div class="help-text">We'll use this for important updates</div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password1" class="form-label">Password</label>
+                <input 
+                    type="password" 
+                    id="password1" 
+                    name="password1" 
+                    class="form-input"
+                    placeholder="Create a strong password"
+                    required
+                    autocomplete="new-password"
+                >
+                <div class="password-strength">
+                    <div>Password strength:</div>
+                    <div class="strength-indicator">
+                        <div class="strength-bar" id="strength-1"></div>
+                        <div class="strength-bar" id="strength-2"></div>
+                        <div class="strength-bar" id="strength-3"></div>
+                        <div class="strength-bar" id="strength-4"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password2" class="form-label">Confirm Password</label>
+                <input 
+                    type="password" 
+                    id="password2" 
+                    name="password2" 
+                    class="form-input"
+                    placeholder="Confirm your password"
+                    required
+                    autocomplete="new-password"
+                >
+                <div class="help-text" id="password-match"></div>
+            </div>
+            
+            <button type="submit" class="register-btn" id="registerBtn">
+                🚀 Create My Account
+            </button>
+        </form>
+        
+        <!-- Auth Links -->
+        <div class="auth-links">
+            <p>Already have an account? <a href="{% url 'authentication:login' %}">Sign in here</a></p>
+        </div>
+        
+        <!-- Benefits Preview -->
+        <div class="register-benefits">
+            <h3 class="benefits-title">🎯 What you'll get</h3>
+            <ul class="benefits-list">
+                <li>Instant access to 4+ powerful AI agents</li>
+                <li>Professional data analysis and insights</li>
+                <li>Content generation for job postings & ads</li>
+                <li>Real-time weather reports and more</li>
+                <li>Secure wallet system for pay-per-use</li>
+            </ul>
         </div>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const usernameField = document.getElementById('username');
+        const password1Field = document.getElementById('password1');
+        const password2Field = document.getElementById('password2');
+        const registerForm = document.getElementById('registerForm');
+        const registerBtn = document.getElementById('registerBtn');
+        const passwordMatch = document.getElementById('password-match');
+        
+        // Focus on username field when page loads
+        if (usernameField) {
+            usernameField.focus();
+        }
+        
+        // Password strength checker
+        if (password1Field) {
+            password1Field.addEventListener('input', function() {
+                const password = this.value;
+                const strength = calculatePasswordStrength(password);
+                updateStrengthIndicator(strength);
+            });
+        }
+        
+        // Password confirmation checker
+        if (password2Field) {
+            password2Field.addEventListener('input', function() {
+                const password1 = password1Field.value;
+                const password2 = this.value;
+                
+                if (password2.length === 0) {
+                    passwordMatch.textContent = '';
+                    passwordMatch.style.color = '';
+                } else if (password1 === password2) {
+                    passwordMatch.textContent = '✅ Passwords match';
+                    passwordMatch.style.color = '#059669';
+                } else {
+                    passwordMatch.textContent = '❌ Passwords do not match';
+                    passwordMatch.style.color = '#dc2626';
+                }
+            });
+        }
+        
+        // Form submission
+        if (registerForm && registerBtn) {
+            registerForm.addEventListener('submit', function() {
+                registerBtn.innerHTML = '⏳ Creating your account...';
+                registerBtn.disabled = true;
+            });
+        }
+        
+        function calculatePasswordStrength(password) {
+            let strength = 0;
+            
+            if (password.length >= 8) strength++;
+            if (password.match(/[a-z]/)) strength++;
+            if (password.match(/[A-Z]/)) strength++;
+            if (password.match(/[0-9]/)) strength++;
+            if (password.match(/[^a-zA-Z0-9]/)) strength++;
+            
+            return Math.min(strength, 4);
+        }
+        
+        function updateStrengthIndicator(strength) {
+            const bars = document.querySelectorAll('.strength-bar');
+            
+            bars.forEach((bar, index) => {
+                bar.className = 'strength-bar';
+                
+                if (index < strength) {
+                    if (strength <= 2) {
+                        bar.classList.add('weak');
+                    } else if (strength <= 3) {
+                        bar.classList.add('medium');
+                    } else {
+                        bar.classList.add('strong');
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
