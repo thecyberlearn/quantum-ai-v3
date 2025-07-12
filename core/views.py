@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.utils.decorators import method_decorator
@@ -13,6 +13,7 @@ from agent_base.models import BaseAgent
 from wallet.stripe_handler import StripePaymentHandler
 from wallet.models import WalletTransaction
 import json
+import datetime
 
 
 def homepage_view(request):
@@ -219,6 +220,49 @@ def wallet_demo_check_balance(request):
         'recent_transactions': recent_transactions,
         'timestamp': request.user.updated_at.isoformat() if hasattr(request.user, 'updated_at') else None
     })
+
+
+# Simple webhook test page
+def webhook_test_view(request):
+    """Simple HTML page for webhook testing"""
+    return render(request, 'core/webhook_test.html')
+
+
+# Store webhook logs in memory for the test page
+webhook_logs = []
+
+@csrf_exempt
+def simple_webhook_test(request):
+    """Ultra simple webhook endpoint for testing"""
+    timestamp = datetime.datetime.now().strftime("%H:%M:%S")
+    
+    log_entry = {
+        'timestamp': timestamp,
+        'method': request.method,
+        'headers': dict(request.META),
+        'body': request.body.decode('utf-8') if request.body else '',
+        'content_type': request.content_type,
+        'query_params': dict(request.GET),
+    }
+    
+    # Store in memory (keep only last 50 logs)
+    webhook_logs.append(log_entry)
+    if len(webhook_logs) > 50:
+        webhook_logs.pop(0)
+    
+    # Also print to console
+    print(f"🧪 SIMPLE WEBHOOK [{timestamp}] Method: {request.method}")
+    print(f"🧪 SIMPLE WEBHOOK [{timestamp}] Content-Type: {request.content_type}")
+    print(f"🧪 SIMPLE WEBHOOK [{timestamp}] Body length: {len(request.body)} bytes")
+    print(f"🧪 SIMPLE WEBHOOK [{timestamp}] Headers: {dict(request.META)}")
+    
+    # Return simple success response
+    return HttpResponse("WEBHOOK RECEIVED OK", content_type="text/plain")
+
+
+def get_webhook_logs(request):
+    """Get webhook logs for the test page"""
+    return JsonResponse({'logs': webhook_logs})
 
 
 @csrf_exempt
