@@ -228,6 +228,11 @@ def webhook_test_view(request):
     return render(request, 'core/webhook_test.html')
 
 
+def stripe_webhook_test_view(request):
+    """Stripe-specific webhook testing page"""
+    return render(request, 'core/stripe_webhook_test.html')
+
+
 # Store webhook logs in memory for the test page
 webhook_logs = []
 
@@ -272,9 +277,33 @@ def get_webhook_logs(request):
 
 @csrf_exempt
 def stripe_webhook_view(request):
-    """Handle Stripe webhook events"""
-    print(f"🎯 Stripe webhook received! Method: {request.method}")
-    print(f"🎯 Headers: {dict(request.META)}")
+    """Handle Stripe webhook events with comprehensive logging"""
+    timestamp = datetime.datetime.now().strftime("%H:%M:%S")
+    
+    # Log everything for debugging
+    print(f"🎯 [{timestamp}] Stripe webhook received!")
+    print(f"🎯 Method: {request.method}")
+    print(f"🎯 Content-Type: {request.content_type}")
+    print(f"🎯 Remote IP: {request.META.get('REMOTE_ADDR', 'unknown')}")
+    print(f"🎯 User Agent: {request.META.get('HTTP_USER_AGENT', 'unknown')}")
+    print(f"🎯 Full headers: {dict(request.META)}")
+    
+    # Store in webhook logs for the test page
+    webhook_log_entry = {
+        'timestamp': timestamp,
+        'method': request.method,
+        'headers': dict(request.META),
+        'body': request.body.decode('utf-8') if request.body else '',
+        'content_type': request.content_type,
+        'source': 'stripe_webhook',
+        'ip_address': request.META.get('REMOTE_ADDR', 'unknown'),
+        'user_agent': request.META.get('HTTP_USER_AGENT', 'unknown')
+    }
+    
+    # Add to webhook logs
+    webhook_logs.append(webhook_log_entry)
+    if len(webhook_logs) > 50:
+        webhook_logs.pop(0)
     
     if request.method != 'POST':
         print(f"❌ Invalid method: {request.method}")
@@ -284,8 +313,14 @@ def stripe_webhook_view(request):
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
     
     print(f"📦 Payload length: {len(payload)} bytes")
+    print(f"📦 Payload preview: {payload[:200]}...")
     print(f"🔐 Signature header: {sig_header is not None}")
     print(f"🔐 Full signature header: {sig_header}")
+    
+    # Always return success first to see if Stripe is reaching us
+    if not sig_header:
+        print(f"⚠️ No Stripe signature - might be a test request")
+        return JsonResponse({'status': 'received', 'message': 'No signature verification'})
     
     stripe_handler = StripePaymentHandler()
     result = stripe_handler.handle_webhook(payload, sig_header)
