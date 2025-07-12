@@ -112,6 +112,8 @@ class StripePaymentHandler:
             amount = session['amount_total'] / 100  # Convert from cents
             
             print(f"👤 User ID: {user_id}, Amount: {amount} AED")
+            print(f"📋 Session data: client_reference_id={session.get('client_reference_id')}")
+            print(f"📋 Session metadata: {session.get('metadata', {})}")
             
             if user_id:
                 try:
