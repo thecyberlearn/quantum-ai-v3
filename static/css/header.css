@@ -1,21 +1,29 @@
 /* Header Styles for NetCop Hub */
 .header {
     background: white;
-    padding: 12px 24px;
+    padding: 12px 0;
     border-radius: 0;
     margin-bottom: 0;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-bottom: 1px solid #e5e7eb;
+    position: relative;
+}
+
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    border-bottom: 1px solid #e5e7eb;
 }
 
 .header-left {
     display: flex;
     align-items: center;
     gap: 40px;
+    flex: 1;
 }
 
 .logo-section {
@@ -93,6 +101,7 @@
     align-items: center;
     gap: 15px;
     flex-wrap: wrap;
+    flex-shrink: 0;
 }
 
 .user-welcome {
@@ -149,41 +158,110 @@
     background: rgba(239, 68, 68, 0.05);
 }
 
+/* Mobile Navigation Toggle */
+.mobile-nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 8px;
+    margin-left: auto;
+}
+
+.mobile-nav-toggle:hover {
+    color: #3b82f6;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
-    .header {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
+    .header-container {
+        padding: 0 16px;
     }
     
     .header-left {
-        justify-content: center;
+        justify-content: space-between;
+        gap: 16px;
     }
     
-    .logo-subtitle {
-        display: none;
+    .logo-section {
+        flex-shrink: 0;
+    }
+    
+    .mobile-nav-toggle {
+        display: block;
     }
     
     .header-nav {
-        flex-wrap: wrap;
-        justify-content: center;
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        flex-direction: column;
+        gap: 8px;
+        padding: 16px 24px;
+        border-top: 1px solid #e5e7eb;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+    }
+    
+    .header-nav.mobile-open {
+        display: flex;
+    }
+    
+    .nav-link {
+        padding: 12px 16px;
+        text-align: center;
+        border-radius: 8px;
+        background: rgba(59, 130, 246, 0.05);
+        margin: 2px 0;
     }
     
     .user-info {
         justify-content: center;
+        gap: 12px;
+        width: 100%;
+        padding-top: 8px;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .user-welcome {
+        font-size: 14px;
+        white-space: nowrap;
+    }
+    
+    .balance {
+        font-size: 13px;
+        padding: 6px 12px;
     }
     
     .auth-links {
         flex-wrap: wrap;
         justify-content: center;
+        gap: 8px;
+    }
+    
+    .auth-links a {
+        padding: 8px 16px;
+        border-radius: 8px;
+        background: rgba(107, 114, 128, 0.05);
+        font-size: 14px;
     }
 }
 
 @media (max-width: 480px) {
+    .header-container {
+        padding: 0 12px;
+        gap: 12px;
+    }
+    
     .header-left {
-        flex-direction: column;
-        gap: 10px;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
     }
     
     .logo-img {
@@ -192,15 +270,32 @@
     }
     
     .logo-title {
-        font-size: 18px;
+        font-size: 16px;
     }
     
-    .header-nav {
-        gap: 10px;
+    .user-info {
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
     }
     
-    .nav-link {
-        padding: 6px 10px;
-        font-size: 14px;
+    .user-welcome {
+        font-size: 13px;
+        text-align: center;
+    }
+    
+    .balance {
+        font-size: 12px;
+        padding: 5px 10px;
+        border-radius: 16px;
+    }
+    
+    .auth-links {
+        gap: 6px;
+    }
+    
+    .auth-links a {
+        padding: 6px 12px;
+        font-size: 13px;
     }
 }

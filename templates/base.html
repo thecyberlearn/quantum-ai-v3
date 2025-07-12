@@ -8,6 +8,7 @@
     
     <!-- Base Styles -->
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/header.css' %}">
     
     {% block extra_css %}{% endblock %}
 </head>
@@ -19,11 +20,14 @@
                 <a href="{% url 'core:homepage' %}" class="logo-section">
                     <img src="{% static 'img/logo.png' %}" alt="NetCop Hub" class="logo-img">
                 </a>
-                <nav class="header-nav">
+                <nav class="header-nav" id="header-nav">
                     <a href="{% url 'core:homepage' %}" class="nav-link {% if request.resolver_match.url_name == 'homepage' %}active{% endif %}">Home</a>
                     <a href="{% url 'core:marketplace' %}" class="nav-link {% if request.resolver_match.url_name == 'marketplace' %}active{% endif %}">AI Marketplace</a>
                     <a href="{% url 'core:pricing' %}" class="nav-link {% if request.resolver_match.url_name == 'pricing' %}active{% endif %}">Pricing</a>
                 </nav>
+                <button class="mobile-nav-toggle" onclick="toggleMobileNav()" aria-label="Toggle navigation">
+                    ☰
+                </button>
             </div>
             <div class="user-info">
                 {% if user.is_authenticated %}
@@ -149,6 +153,29 @@
     </div>
     
     <script>
+        // Mobile navigation toggle
+        function toggleMobileNav() {
+            const nav = document.getElementById('header-nav');
+            nav.classList.toggle('mobile-open');
+        }
+
+        // Close mobile nav when clicking outside or on a link
+        document.addEventListener('click', function(e) {
+            const nav = document.getElementById('header-nav');
+            const toggle = document.querySelector('.mobile-nav-toggle');
+            
+            if (!nav.contains(e.target) && !toggle.contains(e.target)) {
+                nav.classList.remove('mobile-open');
+            }
+        });
+
+        // Close mobile nav when clicking on nav links
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function() {
+                document.getElementById('header-nav').classList.remove('mobile-open');
+            });
+        });
+
         // Privacy modal functions
         function showPrivacyModal() {
             const modal = document.getElementById('privacy-modal');
