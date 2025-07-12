@@ -203,9 +203,15 @@ def wallet_demo_check_balance(request):
     request.user.refresh_from_db()
     
     # Get latest transactions
-    recent_transactions = list(request.user.wallet_transactions.all()[:5].values(
-        'amount', 'type', 'description', 'created_at', 'stripe_session_id'
-    ))
+    recent_transactions = []
+    for transaction in request.user.wallet_transactions.all()[:5]:
+        recent_transactions.append({
+            'amount': float(transaction.amount),
+            'type': transaction.type,
+            'description': transaction.description,
+            'created_at': transaction.created_at.isoformat(),
+            'stripe_session_id': transaction.stripe_session_id
+        })
     
     return JsonResponse({
         'balance': float(request.user.wallet_balance),
