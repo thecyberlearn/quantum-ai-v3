@@ -40,33 +40,53 @@ class Command(BaseCommand):
         
         # Database backend
         from django.conf import settings
+        from django.db import connection
         db_config = settings.DATABASES['default']
         self.stdout.write(f"Database Engine: {db_config['ENGINE']}")
         if 'NAME' in db_config:
             self.stdout.write(f"Database Name: {db_config['NAME']}")
         
-        # User counts
-        total_users = User.objects.count()
-        superusers = User.objects.filter(is_superuser=True).count()
-        regular_users = total_users - superusers
+        # Check if tables exist
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+                tables = [row[0] for row in cursor.fetchall()]
+                self.stdout.write(f"Database tables: {len(tables)} found")
+                
+                if 'authentication_user' not in tables:
+                    self.stdout.write("⚠️  User table not found - database not yet migrated")
+                    return
+        except Exception as e:
+            self.stdout.write(f"⚠️  Could not check database tables: {e}")
+            return
         
-        self.stdout.write(f"Total Users: {total_users}")
-        self.stdout.write(f"Superusers: {superusers}")
-        self.stdout.write(f"Regular Users: {regular_users}")
-        
-        # List superusers
-        if superusers > 0:
-            self.stdout.write("\\nSuperusers:")
-            for user in User.objects.filter(is_superuser=True):
-                self.stdout.write(f"  - {user.email} (username: {user.username})")
-        
-        # Wallet info
-        total_transactions = WalletTransaction.objects.count()
-        self.stdout.write(f"\\nWallet Transactions: {total_transactions}")
-        
-        # Users with positive balance
-        users_with_balance = User.objects.filter(wallet_balance__gt=0).count()
-        self.stdout.write(f"Users with balance: {users_with_balance}")
+        try:
+            # User counts
+            total_users = User.objects.count()
+            superusers = User.objects.filter(is_superuser=True).count()
+            regular_users = total_users - superusers
+            
+            self.stdout.write(f"Total Users: {total_users}")
+            self.stdout.write(f"Superusers: {superusers}")
+            self.stdout.write(f"Regular Users: {regular_users}")
+            
+            # List superusers
+            if superusers > 0:
+                self.stdout.write("\\nSuperusers:")
+                for user in User.objects.filter(is_superuser=True):
+                    self.stdout.write(f"  - {user.email} (username: {user.username})")
+            
+            # Wallet info
+            total_transactions = WalletTransaction.objects.count()
+            self.stdout.write(f"\\nWallet Transactions: {total_transactions}")
+            
+            # Users with positive balance
+            users_with_balance = User.objects.filter(wallet_balance__gt=0).count()
+            self.stdout.write(f"Users with balance: {users_with_balance}")
+            
+        except Exception as e:
+            self.stdout.write(f"⚠️  Could not read user data: {e}")
+            self.stdout.write("Database may not be fully migrated yet")
     
     def backup_users(self, backup_file):
         """Backup all users and their wallet data"""
