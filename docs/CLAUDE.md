@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-NetCop Hub is a Django-based AI agent marketplace that allows users to purchase and use various AI-powered agents for tasks like social media ad generation, data analysis, weather reporting, and more. The system features a wallet-based payment system with Stripe integration and N8N webhook processing.
+NetCop Hub is a Django-based AI agent marketplace that allows users to purchase and use various AI-powered agents for tasks like social media ad generation, data analysis, weather reporting, and more. The system features a wallet-based payment system with Stripe integration using API-based payment verification for reliable, instant transactions.
 
 ### Project Structure
 ```
@@ -457,6 +457,59 @@ function updateWalletBalance(newBalance) {
 ```
 
 This ensures users never lose money for failed processing while maintaining simple, efficient code.
+
+## Payment System Architecture
+
+### Stripe Integration (API-Based Verification)
+
+The payment system uses **API-based verification** instead of webhooks for reliable, instant payment processing:
+
+#### Payment Flow
+```
+1. User clicks "💳 Top Up Wallet"
+2. Create Stripe checkout session via API
+3. User completes payment on Stripe
+4. Stripe redirects to success page with session_id
+5. Success page verifies payment via Stripe API
+6. Wallet balance updated immediately
+7. Transaction recorded as "Wallet top-up via Stripe"
+```
+
+#### Key Components
+- **StripePaymentHandler** (`wallet/stripe_handler.py`): Handles session creation and verification
+- **Success Page Verification** (`core/views.py`): Automatic payment verification on return
+- **Clean Transaction Descriptions**: Professional "Wallet top-up via Stripe" messages
+- **No Webhook Dependency**: Reliable without webhook delivery issues
+
+#### Configuration
+```python
+# settings.py
+STRIPE_SECRET_KEY = 'sk_test_...'  # From .env
+STRIPE_PUBLISHABLE_KEY = 'pk_test_...'  # From .env
+STRIPE_WEBHOOK_SECRET = 'whsec_...'  # Optional (backup)
+```
+
+#### Environment Variables
+```bash
+# .env
+STRIPE_SECRET_KEY=sk_test_your_key_here
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_key_here
+STRIPE_WEBHOOK_SECRET=whsec_your_secret_here  # Optional
+```
+
+### Payment System URLs
+- `/wallet/` - Wallet overview and transactions
+- `/wallet/topup/` - Payment amount selection
+- `/wallet/top-up/success/` - Payment verification and confirmation
+- `/wallet/top-up/cancel/` - Payment cancellation
+- `/stripe/debug/` - Stripe connectivity debugging (dev only)
+
+### Advantages of API Verification
+- **Instant confirmation** - No waiting for webhook delivery
+- **Reliable** - No webhook delivery failures
+- **Immediate user feedback** - Balance updates immediately
+- **Simpler debugging** - You control the verification timing
+- **Production-proven** - Used by many successful platforms
 
 ## Current Architecture (Clean & Modern)
 

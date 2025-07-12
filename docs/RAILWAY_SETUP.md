@@ -26,11 +26,11 @@ After adding PostgreSQL, check that these environment variables are set in Railw
 
 **API Keys:**
 - `OPENWEATHER_API_KEY` - Your OpenWeather API key
-- `STRIPE_SECRET_KEY` - Your Stripe secret key
-- `STRIPE_WEBHOOK_SECRET` - Your Stripe webhook secret
-- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` - Your Stripe publishable key
+- `STRIPE_SECRET_KEY` - Your Stripe secret key (sk_test_...)
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` - Your Stripe publishable key (pk_test_...)
+- `STRIPE_WEBHOOK_SECRET` - Your Stripe webhook secret (optional - whsec_...)
 
-**Webhook URLs:**
+**N8N Webhook URLs:**
 - `N8N_WEBHOOK_DATA_ANALYZER` - Your N8N webhook URL
 - `N8N_WEBHOOK_JOB_POSTING` - Your N8N webhook URL  
 - `N8N_WEBHOOK_SOCIAL_ADS` - Your N8N webhook URL
@@ -91,10 +91,10 @@ DATABASE_URL=postgresql://...
 # OpenWeather API
 OPENWEATHER_API_KEY=your-openweather-api-key
 
-# Stripe
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+# Stripe (API-based payment system)
+STRIPE_SECRET_KEY=sk_test_your_secret_key_here
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here  # Optional
 
 # N8N Webhooks
 N8N_WEBHOOK_DATA_ANALYZER=https://your-n8n.com/webhook/data-analyzer
@@ -138,6 +138,16 @@ Superusers: 1
 ```
 
 **Key:** Look for `postgresql` engine, not `sqlite3`!
+
+## Payment System Notes
+
+The payment system uses **API-based verification** instead of webhooks:
+- ✅ **More reliable** than webhook delivery
+- ✅ **Instant confirmation** when users return from Stripe
+- ✅ **No webhook delivery issues** on Railway
+- ✅ **Simpler debugging** and maintenance
+
+See `docs/PAYMENT_SYSTEM.md` for detailed payment system documentation.
 
 
 
