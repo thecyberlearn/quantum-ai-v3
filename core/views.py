@@ -260,9 +260,14 @@ def simple_webhook_test(request):
     return HttpResponse("WEBHOOK RECEIVED OK", content_type="text/plain")
 
 
+@csrf_exempt
 def get_webhook_logs(request):
     """Get webhook logs for the test page"""
-    return JsonResponse({'logs': webhook_logs})
+    try:
+        return JsonResponse({'logs': webhook_logs})
+    except Exception as e:
+        print(f"Error in get_webhook_logs: {e}")
+        return JsonResponse({'logs': [], 'error': str(e)})
 
 
 @csrf_exempt
