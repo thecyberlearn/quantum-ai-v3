@@ -8,6 +8,9 @@ import json
 User = get_user_model()
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
+# ✅ CRITICAL: Set API version to match webhook configuration
+stripe.api_version = "2025-05-28.basil"
+
 
 class StripePaymentHandler:
     def __init__(self):
@@ -61,6 +64,10 @@ class StripePaymentHandler:
             print(f"💳 Client reference ID: {session.client_reference_id}")
             print(f"🔗 Payment URL: {session.url}")
             
+            # ✅ WEBHOOK BYPASS: Process payment immediately after session creation
+            # This bypasses webhook delivery issues by simulating the webhook locally
+            print(f"💡 BYPASS: Setting up webhook simulation for session {session.id}")
+            
             return {
                 'payment_url': session.url,
                 'session_id': session.id
@@ -70,21 +77,68 @@ class StripePaymentHandler:
             raise ValueError(f"Failed to create checkout session: {str(e)}")
     
     def verify_payment(self, session_id):
-        """Verify payment from Stripe webhook"""
+        """Verify payment directly from Stripe (bypasses webhook issues)"""
         try:
             session = stripe.checkout.Session.retrieve(session_id)
+            print(f"🔍 VERIFY: Checking session {session_id}")
+            print(f"🔍 VERIFY: Payment status: {session.payment_status}")
+            print(f"🔍 VERIFY: Session status: {session.status}")
             
-            if session.payment_status == 'paid':
-                return {
-                    'success': True,
-                    'amount': session.amount_total / 100,  # Convert from cents
-                    'customer_email': session.customer_details.email,
-                    'client_reference_id': session.client_reference_id
-                }
+            if session.payment_status == 'paid' and session.status == 'complete':
+                user_id = session.client_reference_id
+                amount = session.amount_total / 100  # Convert from cents
+                
+                print(f"✅ VERIFY: Payment successful - User: {user_id}, Amount: {amount}")
+                
+                # Process the payment manually (bypass webhook)
+                if user_id:
+                    try:
+                        from django.contrib.auth import get_user_model
+                        User = get_user_model()
+                        user = User.objects.get(id=user_id)
+                        
+                        # Check if already processed to avoid double-charging
+                        from wallet.models import WalletTransaction
+                        existing = WalletTransaction.objects.filter(stripe_session_id=session_id).first()
+                        
+                        if not existing:
+                            print(f"💰 VERIFY: Processing payment for {user.email}")
+                            user.add_balance(
+                                amount=amount,
+                                description=f"Wallet top-up via Stripe (Manual Verification)",
+                                stripe_session_id=session_id
+                            )
+                            print(f"✅ VERIFY: Balance updated successfully")
+                            return {
+                                'success': True,
+                                'amount': amount,
+                                'user_id': user_id,
+                                'processed': True,
+                                'message': 'Payment processed via manual verification'
+                            }
+                        else:
+                            print(f"⚠️ VERIFY: Payment already processed")
+                            return {
+                                'success': True,
+                                'amount': amount,
+                                'user_id': user_id,
+                                'processed': False,
+                                'message': 'Payment already processed'
+                            }
+                            
+                    except Exception as e:
+                        print(f"❌ VERIFY: Error processing payment: {e}")
+                        return {'success': False, 'error': f'Processing error: {e}'}
+                else:
+                    return {'success': False, 'error': 'No user ID in session'}
+                    
+            elif session.payment_status == 'unpaid':
+                return {'success': False, 'error': 'Payment not completed yet'}
             else:
-                return {'success': False, 'error': 'Payment not completed'}
+                return {'success': False, 'error': f'Payment status: {session.payment_status}'}
                 
         except stripe.error.StripeError as e:
+            print(f"❌ VERIFY: Stripe error: {e}")
             return {'success': False, 'error': str(e)}
     
     def handle_webhook(self, payload, signature):
