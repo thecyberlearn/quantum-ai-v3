@@ -32,10 +32,15 @@ class StripePaymentHandler:
             cancel_url = 'https://netcop.up.railway.app/wallet/top-up/cancel/'
         
         try:
-            print(f"🚀 [MODERN] Creating checkout session for user {user.id} ({user.email}), amount: {amount} AED")
+            print(f"🚀 [STRIPE DEBUG] Starting checkout session creation...")
+            print(f"👤 User: {user.id} ({user.email})")
+            print(f"💰 Amount: {amount} AED")
+            print(f"🔑 Stripe API Key (last 4): ...{settings.STRIPE_SECRET_KEY[-4:]}")
+            print(f"🔑 API Version: {stripe.api_version}")
             print(f"📍 Success URL: {success_url}")
             print(f"📍 Cancel URL: {cancel_url}")
-            print(f"📍 Webhook URL: https://netcop.up.railway.app/stripe/webhook/")
+            print(f"📍 Expected Webhook URL: https://netcop.up.railway.app/stripe/webhook/")
+            print(f"🌍 Environment: {'production' if 'railway.app' in (request.get_host() if request else '') else 'development'}")
             
             # Create session with modern Stripe practices
             session = stripe.checkout.Session.create(
@@ -99,12 +104,32 @@ class StripePaymentHandler:
                 expires_at=int(time.time()) + (30 * 60),  # 30 minutes from now
             )
             
-            print(f"✅ [MODERN] Session created successfully:")
+            print(f"✅ [STRIPE DEBUG] Session created successfully!")
             print(f"   💳 Session ID: {session.id}")
             print(f"   👤 Client Reference: {session.client_reference_id}")
-            print(f"   💰 Amount: {amount} AED ({int(amount * 100)} fils)")
+            print(f"   👤 Customer Email: {session.customer_email}")
+            print(f"   💰 Amount Total: {session.amount_total} fils ({session.amount_total / 100} AED)")
+            print(f"   💱 Currency: {session.currency}")
             print(f"   🔗 Payment URL: {session.url}")
+            print(f"   📊 Status: {session.status}")
+            print(f"   💳 Payment Status: {session.payment_status}")
+            print(f"   ⏰ Created: {session.created}")
             print(f"   ⏰ Expires: {session.expires_at}")
+            print(f"   🏷️ Mode: {session.mode}")
+            print(f"   🆔 Object Type: {session.object}")
+            print(f"   📝 Metadata: {session.metadata}")
+            
+            # CRITICAL: Verify session was created in correct Stripe account
+            print(f"🔍 [STRIPE DEBUG] Verifying session exists immediately...")
+            try:
+                verification_session = stripe.checkout.Session.retrieve(session.id)
+                print(f"✅ [STRIPE DEBUG] Session verification successful!")
+                print(f"   🔗 Retrieved Session ID: {verification_session.id}")
+                print(f"   📊 Retrieved Status: {verification_session.status}")
+                print(f"   👤 Retrieved Customer Email: {verification_session.customer_email}")
+            except Exception as verify_error:
+                print(f"❌ [STRIPE DEBUG] Session verification FAILED: {verify_error}")
+                print(f"❌ This means the session was NOT created in the expected Stripe account!")
             
             return {
                 'payment_url': session.url,
@@ -121,10 +146,42 @@ class StripePaymentHandler:
     def verify_payment(self, session_id):
         """Verify payment directly from Stripe (bypasses webhook issues)"""
         try:
+            print(f"🔍 [STRIPE DEBUG] Starting payment verification...")
+            print(f"🔑 Using Stripe API Key (last 4): ...{settings.STRIPE_SECRET_KEY[-4:]}")
+            print(f"🔑 API Version: {stripe.api_version}")
+            print(f"💳 Session ID to verify: {session_id}")
+            
             session = stripe.checkout.Session.retrieve(session_id)
-            print(f"🔍 VERIFY: Checking session {session_id}")
-            print(f"🔍 VERIFY: Payment status: {session.payment_status}")
-            print(f"🔍 VERIFY: Session status: {session.status}")
+            
+            print(f"✅ [STRIPE DEBUG] Session retrieved successfully!")
+            print(f"   💳 Session ID: {session.id}")
+            print(f"   📊 Session Status: {session.status}")
+            print(f"   💳 Payment Status: {session.payment_status}")
+            print(f"   👤 Client Reference ID: {session.client_reference_id}")
+            print(f"   👤 Customer Email: {session.customer_email}")
+            print(f"   💰 Amount Total: {session.amount_total} fils ({session.amount_total / 100} AED)")
+            print(f"   💱 Currency: {session.currency}")
+            print(f"   ⏰ Created: {session.created}")
+            print(f"   ⏰ Expires At: {session.expires_at}")
+            print(f"   🏷️ Mode: {session.mode}")
+            print(f"   📝 Metadata: {session.metadata}")
+            print(f"   💳 Payment Intent: {getattr(session, 'payment_intent', 'None')}")
+            print(f"   🧾 Invoice: {getattr(session, 'invoice', 'None')}")
+            print(f"   🎯 Success URL: {getattr(session, 'success_url', 'None')}")
+            
+            # Check if payment was actually completed
+            if hasattr(session, 'payment_intent') and session.payment_intent:
+                try:
+                    payment_intent = stripe.PaymentIntent.retrieve(session.payment_intent)
+                    print(f"💳 [STRIPE DEBUG] Payment Intent Details:")
+                    print(f"   🆔 Payment Intent ID: {payment_intent.id}")
+                    print(f"   📊 Status: {payment_intent.status}")
+                    print(f"   💰 Amount: {payment_intent.amount} fils ({payment_intent.amount / 100} AED)")
+                    print(f"   💱 Currency: {payment_intent.currency}")
+                    print(f"   ⏰ Created: {payment_intent.created}")
+                    print(f"   📝 Description: {payment_intent.description}")
+                except Exception as pi_error:
+                    print(f"❌ [STRIPE DEBUG] Could not retrieve Payment Intent: {pi_error}")
             
             if session.payment_status == 'paid' and session.status == 'complete':
                 user_id = session.client_reference_id

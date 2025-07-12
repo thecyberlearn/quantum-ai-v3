@@ -290,6 +290,98 @@ def verify_payment_view(request):
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 
+@login_required
+def stripe_debug_view(request):
+    """Debug endpoint to show Stripe API configuration and test connectivity"""
+    import stripe
+    from django.conf import settings
+    
+    debug_info = {
+        'timestamp': datetime.datetime.now().isoformat(),
+        'user_id': request.user.id,
+        'user_email': request.user.email,
+    }
+    
+    try:
+        # Test Stripe API connectivity
+        print(f"🔍 [STRIPE DEBUG] Testing Stripe API connectivity...")
+        
+        # Get API key info (masked)
+        api_key = settings.STRIPE_SECRET_KEY
+        debug_info['stripe_api_key_last4'] = api_key[-4:] if api_key else 'Not set'
+        debug_info['stripe_api_key_prefix'] = api_key[:7] if api_key else 'Not set'
+        debug_info['stripe_api_version'] = stripe.api_version
+        
+        # Test account connectivity
+        try:
+            account = stripe.Account.retrieve()
+            debug_info['stripe_account'] = {
+                'id': account.id,
+                'email': account.email,
+                'display_name': account.display_name,
+                'country': account.country,
+                'default_currency': account.default_currency,
+                'business_profile': account.business_profile,
+                'charges_enabled': account.charges_enabled,
+                'payouts_enabled': account.payouts_enabled,
+            }
+            print(f"✅ [STRIPE DEBUG] Account connected: {account.id}")
+        except Exception as account_error:
+            debug_info['stripe_account_error'] = str(account_error)
+            print(f"❌ [STRIPE DEBUG] Account error: {account_error}")
+        
+        # Test recent checkout sessions
+        try:
+            sessions = stripe.checkout.Session.list(limit=5)
+            debug_info['recent_sessions'] = []
+            for session in sessions.data:
+                debug_info['recent_sessions'].append({
+                    'id': session.id,
+                    'status': session.status,
+                    'payment_status': session.payment_status,
+                    'amount_total': session.amount_total,
+                    'currency': session.currency,
+                    'customer_email': session.customer_email,
+                    'client_reference_id': session.client_reference_id,
+                    'created': session.created,
+                    'metadata': session.metadata,
+                })
+            print(f"✅ [STRIPE DEBUG] Retrieved {len(sessions.data)} recent sessions")
+        except Exception as sessions_error:
+            debug_info['sessions_error'] = str(sessions_error)
+            print(f"❌ [STRIPE DEBUG] Sessions error: {sessions_error}")
+        
+        # Test recent payments
+        try:
+            charges = stripe.Charge.list(limit=5)
+            debug_info['recent_charges'] = []
+            for charge in charges.data:
+                debug_info['recent_charges'].append({
+                    'id': charge.id,
+                    'amount': charge.amount,
+                    'currency': charge.currency,
+                    'status': charge.status,
+                    'paid': charge.paid,
+                    'customer': charge.customer,
+                    'description': charge.description,
+                    'created': charge.created,
+                    'metadata': charge.metadata,
+                })
+            print(f"✅ [STRIPE DEBUG] Retrieved {len(charges.data)} recent charges")
+        except Exception as charges_error:
+            debug_info['charges_error'] = str(charges_error)
+            print(f"❌ [STRIPE DEBUG] Charges error: {charges_error}")
+            
+        debug_info['status'] = 'success'
+        
+    except Exception as e:
+        debug_info['error'] = str(e)
+        debug_info['status'] = 'error'
+        print(f"❌ [STRIPE DEBUG] General error: {e}")
+    
+    return JsonResponse(debug_info, indent=2)
+
+
 # Simple webhook test page
 def webhook_test_view(request):
     """Simple HTML page for webhook testing"""
