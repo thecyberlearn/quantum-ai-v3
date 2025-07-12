@@ -204,7 +204,7 @@ class StripePaymentHandler:
                             print(f"💰 VERIFY: Processing payment for {user.email}")
                             user.add_balance(
                                 amount=amount,
-                                description=f"Wallet top-up via Stripe (Manual Verification)",
+                                description=f"Wallet top-up via Stripe",
                                 stripe_session_id=session_id
                             )
                             print(f"✅ VERIFY: Balance updated successfully")
