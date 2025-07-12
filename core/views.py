@@ -132,8 +132,36 @@ def wallet_topup_view(request):
 
 @login_required
 def wallet_topup_success_view(request):
-    """Payment success page"""
-    messages.success(request, 'Payment successful! Your wallet balance has been updated.')
+    """Payment success page with automatic payment verification (NO WEBHOOKS NEEDED)"""
+    session_id = request.GET.get('session_id')
+    
+    if not session_id:
+        messages.error(request, 'No payment session found. Please contact support if you completed a payment.')
+        return redirect('core:wallet')
+    
+    # Verify payment directly with Stripe API (bypasses webhook issues)
+    try:
+        from wallet.stripe_handler import StripePaymentHandler
+        stripe_handler = StripePaymentHandler()
+        
+        print(f"💳 [SUCCESS PAGE] Verifying payment for session: {session_id}")
+        result = stripe_handler.verify_payment(session_id)
+        
+        if result['success']:
+            if result['processed']:
+                messages.success(request, f'Payment successful! {result["amount"]} AED has been added to your wallet.')
+                print(f"✅ [SUCCESS PAGE] Payment verified and wallet updated for user {request.user.id}")
+            else:
+                messages.info(request, 'Payment already processed. Your wallet balance is up to date.')
+                print(f"ℹ️ [SUCCESS PAGE] Payment already processed for session {session_id}")
+        else:
+            messages.warning(request, f'Payment verification failed: {result.get("error", "Unknown error")}. Please contact support.')
+            print(f"❌ [SUCCESS PAGE] Payment verification failed: {result}")
+        
+    except Exception as e:
+        print(f"❌ [SUCCESS PAGE] Error verifying payment: {e}")
+        messages.error(request, 'Unable to verify payment. Please contact support if you completed a payment.')
+    
     return redirect('core:wallet')
 
 
@@ -220,6 +248,46 @@ def wallet_demo_check_balance(request):
         'recent_transactions': recent_transactions,
         'timestamp': request.user.updated_at.isoformat() if hasattr(request.user, 'updated_at') else None
     })
+
+
+@login_required
+def verify_payment_view(request):
+    """Manual payment verification endpoint (fallback for webhook issues)"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            session_id = data.get('session_id', '').strip()
+            
+            if not session_id:
+                return JsonResponse({'error': 'Session ID is required'}, status=400)
+            
+            # Verify payment with Stripe
+            from wallet.stripe_handler import StripePaymentHandler
+            stripe_handler = StripePaymentHandler()
+            
+            print(f"🔍 [MANUAL VERIFY] User {request.user.id} verifying session: {session_id}")
+            result = stripe_handler.verify_payment(session_id)
+            
+            if result['success']:
+                return JsonResponse({
+                    'success': True,
+                    'processed': result['processed'],
+                    'amount': result.get('amount', 0),
+                    'message': result['message']
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'error': result['error']
+                })
+                
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+        except Exception as e:
+            print(f"❌ [MANUAL VERIFY] Error: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 
 # Simple webhook test page

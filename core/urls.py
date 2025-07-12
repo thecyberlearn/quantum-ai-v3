@@ -15,6 +15,7 @@ urlpatterns = [
     path('wallet/demo/', views.wallet_demo_view, name='wallet_demo'),
     path('wallet/demo/test-payment/', views.wallet_demo_test_payment, name='wallet_demo_test_payment'),
     path('wallet/demo/check-balance/', views.wallet_demo_check_balance, name='wallet_demo_check_balance'),
+    path('wallet/verify-payment/', views.verify_payment_view, name='verify_payment'),
     path('stripe/webhook/', views.stripe_webhook_view, name='stripe_webhook'),
     path('webhook-test/', views.webhook_test_view, name='webhook_test'),
     path('stripe-webhook-test/', views.stripe_webhook_test_view, name='stripe_webhook_test'),

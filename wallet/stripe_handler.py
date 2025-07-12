@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.http import JsonResponse
 from decimal import Decimal
 import json
+import time
 
 User = get_user_model()
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -17,63 +18,104 @@ class StripePaymentHandler:
         self.allowed_amounts = [10, 50, 100, 500]
     
     def create_checkout_session(self, user, amount, request=None):
-        """Create a Stripe checkout session for wallet top-up"""
+        """Create a Stripe checkout session for wallet top-up (Modern Integration)"""
         if amount not in self.allowed_amounts:
             raise ValueError(f"Invalid amount: {amount}. Allowed amounts: {self.allowed_amounts}")
         
-        # Build URLs based on current request domain
+        # Build URLs with session_id parameter for payment verification
         if request:
-            success_url = request.build_absolute_uri('/wallet/top-up/success/')
+            success_url = request.build_absolute_uri('/wallet/top-up/success/') + '?session_id={CHECKOUT_SESSION_ID}'
             cancel_url = request.build_absolute_uri('/wallet/top-up/cancel/')
         else:
-            # Fallback URLs (shouldn't happen in normal flow)
-            success_url = 'https://netcop.up.railway.app/wallet/top-up/success/'
+            # Fallback URLs
+            success_url = 'https://netcop.up.railway.app/wallet/top-up/success/?session_id={CHECKOUT_SESSION_ID}'
             cancel_url = 'https://netcop.up.railway.app/wallet/top-up/cancel/'
         
         try:
-            print(f"🚀 Creating checkout session for user {user.id} ({user.email}), amount: {amount} AED")
+            print(f"🚀 [MODERN] Creating checkout session for user {user.id} ({user.email}), amount: {amount} AED")
             print(f"📍 Success URL: {success_url}")
             print(f"📍 Cancel URL: {cancel_url}")
+            print(f"📍 Webhook URL: https://netcop.up.railway.app/stripe/webhook/")
             
+            # Create session with modern Stripe practices
             session = stripe.checkout.Session.create(
+                # Modern payment method configuration
                 payment_method_types=['card'],
+                
+                # Line items configuration
                 line_items=[{
                     'price_data': {
                         'currency': 'aed',
                         'product_data': {
-                            'name': f'NetCop Wallet Top-up',
-                            'description': f'Add {amount} AED to your wallet balance'
+                            'name': 'NetCop Wallet Top-up',
+                            'description': f'Add {amount} AED to your wallet balance',
+                            'metadata': {
+                                'service': 'netcop_wallet',
+                                'user_id': str(user.id)
+                            }
                         },
-                        'unit_amount': int(amount * 100),  # Convert to cents
+                        'unit_amount': int(amount * 100),  # Convert to fils (AED cents)
                     },
                     'quantity': 1,
                 }],
+                
+                # Payment configuration
                 mode='payment',
+                
+                # URLs with session ID parameter
                 success_url=success_url,
                 cancel_url=cancel_url,
+                
+                # Customer and reference data
                 client_reference_id=str(user.id),
                 customer_email=user.email,
+                
+                # Comprehensive metadata for webhook processing
                 metadata={
                     'user_id': str(user.id),
+                    'user_email': user.email,
                     'amount': str(amount),
-                    'type': 'wallet_topup'
-                }
+                    'currency': 'aed',
+                    'type': 'wallet_topup',
+                    'service': 'netcop',
+                    'environment': 'production' if 'railway.app' in (request.get_host() if request else '') else 'development',
+                    'created_at': str(int(time.time())),
+                    'app_version': '1.0'
+                },
+                
+                # Modern Stripe features
+                payment_intent_data={
+                    'metadata': {
+                        'user_id': str(user.id),
+                        'amount': str(amount),
+                        'service': 'netcop_wallet'
+                    }
+                },
+                
+                # Automatic tax and billing
+                automatic_tax={'enabled': False},
+                
+                # Expiration
+                expires_at=int(time.time()) + (30 * 60),  # 30 minutes from now
             )
             
-            print(f"✅ Session created: {session.id}")
-            print(f"💳 Client reference ID: {session.client_reference_id}")
-            print(f"🔗 Payment URL: {session.url}")
-            
-            # ✅ WEBHOOK BYPASS: Process payment immediately after session creation
-            # This bypasses webhook delivery issues by simulating the webhook locally
-            print(f"💡 BYPASS: Setting up webhook simulation for session {session.id}")
+            print(f"✅ [MODERN] Session created successfully:")
+            print(f"   💳 Session ID: {session.id}")
+            print(f"   👤 Client Reference: {session.client_reference_id}")
+            print(f"   💰 Amount: {amount} AED ({int(amount * 100)} fils)")
+            print(f"   🔗 Payment URL: {session.url}")
+            print(f"   ⏰ Expires: {session.expires_at}")
             
             return {
                 'payment_url': session.url,
-                'session_id': session.id
+                'session_id': session.id,
+                'amount': amount,
+                'currency': 'aed',
+                'expires_at': session.expires_at
             }
             
         except stripe.error.StripeError as e:
+            print(f"❌ [MODERN] Stripe error: {str(e)}")
             raise ValueError(f"Failed to create checkout session: {str(e)}")
     
     def verify_payment(self, session_id):

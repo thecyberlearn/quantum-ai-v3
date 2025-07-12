@@ -231,6 +231,120 @@
         margin: 0;
     }
     
+    /* Verify payment button */
+    .verify-payment-btn {
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+    
+    .verify-payment-btn:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
+    }
+    
+    /* Verify modal */
+    .verify-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .verify-modal-content {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .verify-modal-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 16px;
+        color: var(--text-primary);
+    }
+    
+    .verify-input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+        margin: 8px 0;
+        font-family: 'Courier New', monospace;
+    }
+    
+    .verify-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+    }
+    
+    .verify-btn {
+        flex: 1;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .verify-btn.primary {
+        background: var(--primary-blue);
+        color: white;
+    }
+    
+    .verify-btn.primary:hover {
+        background: var(--primary-dark);
+    }
+    
+    .verify-btn.secondary {
+        background: #f1f5f9;
+        color: var(--text-primary);
+    }
+    
+    .verify-btn.secondary:hover {
+        background: #e2e8f0;
+    }
+    
+    .verify-result {
+        margin-top: 16px;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        display: none;
+    }
+    
+    .verify-result.success {
+        background: #dcfce7;
+        color: #16a34a;
+        border: 1px solid #bbf7d0;
+    }
+    
+    .verify-result.error {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+    }
+    
     /* Responsive adjustments */
     @media (max-width: 768px) {
         .stats-grid {
@@ -260,6 +374,11 @@
         <a href="{% url 'core:wallet_topup' %}" class="topup-btn">
             💳 Top Up Wallet
         </a>
+        <div style="margin-top: 16px;">
+            <button class="verify-payment-btn" onclick="showVerifyModal()">
+                🔍 Verify Payment
+            </button>
+        </div>
     </div>
     
     <!-- Statistics -->
@@ -311,7 +430,126 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Verify Payment Modal -->
+<div class="verify-modal" id="verifyModal">
+    <div class="verify-modal-content">
+        <h3 class="verify-modal-title">🔍 Verify Payment</h3>
+        <p style="margin-bottom: 16px; color: #666; font-size: 14px;">
+            If you completed a payment but your wallet balance wasn't updated, enter the Stripe session ID below to verify it manually.
+        </p>
+        
+        <label for="sessionIdInput" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
+            Stripe Session ID:
+        </label>
+        <input type="text" id="sessionIdInput" class="verify-input" placeholder="cs_test_..." />
+        
+        <p style="margin: 12px 0; font-size: 13px; color: #666;">
+            💡 You can find the session ID in your browser URL after completing payment, or in your email receipt.
+        </p>
+        
+        <div class="verify-buttons">
+            <button class="verify-btn secondary" onclick="hideVerifyModal()">Cancel</button>
+            <button class="verify-btn primary" onclick="verifyPayment()">Verify Payment</button>
+        </div>
+        
+        <div class="verify-result" id="verifyResult"></div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
+<script>
+    function showVerifyModal() {
+        document.getElementById('verifyModal').style.display = 'flex';
+        document.getElementById('sessionIdInput').focus();
+    }
+    
+    function hideVerifyModal() {
+        document.getElementById('verifyModal').style.display = 'none';
+        document.getElementById('sessionIdInput').value = '';
+        document.getElementById('verifyResult').style.display = 'none';
+    }
+    
+    function verifyPayment() {
+        const sessionId = document.getElementById('sessionIdInput').value.trim();
+        const resultDiv = document.getElementById('verifyResult');
+        
+        if (!sessionId) {
+            showResult('Please enter a session ID', 'error');
+            return;
+        }
+        
+        if (!sessionId.startsWith('cs_')) {
+            showResult('Invalid session ID format. It should start with "cs_"', 'error');
+            return;
+        }
+        
+        // Show loading
+        showResult('🔍 Verifying payment...', 'success');
+        
+        // Get CSRF token
+        const csrfToken = getCsrfToken();
+        
+        fetch('/wallet/verify-payment/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ session_id: sessionId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (data.processed) {
+                    showResult(`✅ Payment verified! ${data.amount} AED has been added to your wallet.`, 'success');
+                    // Refresh page after 2 seconds
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    showResult(`ℹ️ Payment already processed. ${data.message}`, 'success');
+                }
+            } else {
+                showResult(`❌ Verification failed: ${data.error}`, 'error');
+            }
+        })
+        .catch(error => {
+            showResult(`❌ Error: ${error.message}`, 'error');
+        });
+    }
+    
+    function showResult(message, type) {
+        const resultDiv = document.getElementById('verifyResult');
+        resultDiv.textContent = message;
+        resultDiv.className = `verify-result ${type}`;
+        resultDiv.style.display = 'block';
+    }
+    
+    function getCsrfToken() {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'csrftoken') {
+                return value;
+            }
+        }
+        return '';
+    }
+    
+    // Close modal when clicking outside
+    document.getElementById('verifyModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            hideVerifyModal();
+        }
+    });
+    
+    // Handle Enter key in input
+    document.getElementById('sessionIdInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            verifyPayment();
+        }
+    });
+</script>
 {% endblock %}
