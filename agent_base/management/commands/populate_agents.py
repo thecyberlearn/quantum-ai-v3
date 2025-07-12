@@ -8,21 +8,36 @@ User = get_user_model()
 class Command(BaseCommand):
     help = 'Populate the database with default agents and create admin user'
     
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--create-admin',
+            action='store_true',
+            help='Force create admin user even if superusers exist',
+        )
+    
     def handle(self, *args, **options):
-        self.stdout.write("Creating admin user...")
+        self.stdout.write("Checking admin user...")
         
-        # Create superuser if it doesn't exist
-        if not User.objects.filter(is_superuser=True).exists():
-            User.objects.create_superuser(
-                username='admin',
-                email='admin@netcop.ai',
-                password='admin123',
-                first_name='Admin',
-                last_name='User'
-            )
-            self.stdout.write("Created superuser: admin@netcop.ai / admin123")
+        # Only create admin if explicitly requested or no superusers exist
+        should_create_admin = options.get('create_admin', False) or not User.objects.filter(is_superuser=True).exists()
+        
+        if should_create_admin:
+            # Check if admin email already exists
+            admin_email = 'admin@netcop.ai'
+            if User.objects.filter(email=admin_email).exists():
+                self.stdout.write(f"Admin user with email {admin_email} already exists - skipping creation")
+            else:
+                User.objects.create_superuser(
+                    username='admin',
+                    email=admin_email,
+                    password='admin123',
+                    first_name='Admin',
+                    last_name='User'
+                )
+                self.stdout.write("Created superuser: admin@netcop.ai / admin123")
         else:
-            self.stdout.write("Superuser already exists")
+            superuser_count = User.objects.filter(is_superuser=True).count()
+            self.stdout.write(f"Superuser(s) already exist ({superuser_count} found) - skipping admin creation")
         
         self.stdout.write("Creating default agents...")
         
