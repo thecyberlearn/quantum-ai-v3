@@ -143,6 +143,78 @@ def wallet_topup_cancel_view(request):
     return redirect('core:wallet_topup')
 
 
+@login_required
+def wallet_demo_view(request):
+    """Demo page for testing Stripe webhook integration"""
+    
+    # Get recent transactions for debugging
+    recent_transactions = request.user.wallet_transactions.all()[:10]
+    
+    # Get current balance
+    current_balance = request.user.wallet_balance
+    
+    context = {
+        'current_balance': current_balance,
+        'recent_transactions': recent_transactions,
+        'user_id': request.user.id,
+        'user_email': request.user.email,
+    }
+    
+    return render(request, 'core/wallet_demo.html', context)
+
+
+@login_required
+def wallet_demo_test_payment(request):
+    """Test payment creation for webhook testing"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            amount = float(data.get('amount', 10))
+            
+            # Validate amount
+            if amount not in [10, 50, 100, 500]:
+                return JsonResponse({'error': 'Invalid amount'}, status=400)
+            
+            print(f"🧪 DEMO: Creating test payment for {request.user.email}")
+            print(f"🧪 DEMO: Amount: {amount} AED, User ID: {request.user.id}")
+            
+            # Create Stripe checkout session
+            stripe_handler = StripePaymentHandler()
+            session_data = stripe_handler.create_checkout_session(request.user, amount, request)
+            
+            return JsonResponse({
+                'success': True,
+                'payment_url': session_data['payment_url'],
+                'session_id': session_data['session_id'],
+                'user_id': request.user.id,
+                'amount': amount
+            })
+            
+        except Exception as e:
+            print(f"🧪 DEMO: Error creating payment: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@login_required
+def wallet_demo_check_balance(request):
+    """Check current wallet balance for demo"""
+    request.user.refresh_from_db()
+    
+    # Get latest transactions
+    recent_transactions = list(request.user.wallet_transactions.all()[:5].values(
+        'amount', 'type', 'description', 'created_at', 'stripe_session_id'
+    ))
+    
+    return JsonResponse({
+        'balance': float(request.user.wallet_balance),
+        'user_id': request.user.id,
+        'recent_transactions': recent_transactions,
+        'timestamp': request.user.updated_at.isoformat() if hasattr(request.user, 'updated_at') else None
+    })
+
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def stripe_webhook_view(request):
