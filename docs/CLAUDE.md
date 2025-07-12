@@ -494,6 +494,22 @@ The project uses a clean, modular individual agent architecture:
 - resetForm()                     // Prepares for next request
 ```
 
+#### CSRF Token Requirements
+All agent templates that use JavaScript form submission must include:
+```html
+<!-- Required: Add CSRF token to template -->
+{% csrf_token %}
+```
+
+For manual FormData submission (like data analyzer), access token via:
+```javascript
+// For templates with {% csrf_token %} tag
+formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+// For HTML forms with {% csrf_token %} inside form
+const formData = new FormData(this); // 'this' refers to form element - automatically includes CSRF
+```
+
 #### Template Requirements
 ```html
 <!-- Required data attributes for wallet balance -->
