@@ -89,18 +89,70 @@ WSGI_APPLICATION = 'netcop_hub.wsgi.application'
 
 import dj_database_url
 
-# Use DATABASE_URL if available (Railway, Heroku, etc.)
-if config('DATABASE_URL', default=''):
+# Smart database configuration: Auto-detect environment
+database_url = config('DATABASE_URL', default='')
+
+if database_url:
+    # Parse the provided DATABASE_URL
     DATABASES = {
-        'default': dj_database_url.parse(config('DATABASE_URL'))
+        'default': dj_database_url.parse(database_url)
     }
-else:
+elif config('RAILWAY_ENVIRONMENT', default=''):
+    # Railway environment without DATABASE_URL (shouldn't happen, but fallback)
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('PGDATABASE', default='railway'),
+            'USER': config('PGUSER', default='postgres'),
+            'PASSWORD': config('PGPASSWORD', default=''),
+            'HOST': config('PGHOST', default='localhost'),
+            'PORT': config('PGPORT', default='5432'),
         }
     }
+else:
+    # Local development: Try PostgreSQL first, fallback to SQLite
+    try:
+        import psycopg2
+        # Test if PostgreSQL is actually available
+        try:
+            # Quick connection test
+            test_conn = psycopg2.connect(
+                host='localhost',
+                database='netcop_hub',
+                user='netcop_user',
+                password='netcop_pass',
+                port='5432',
+                connect_timeout=3
+            )
+            test_conn.close()
+            
+            # PostgreSQL works - use it
+            DATABASES = {
+                'default': {
+                    'ENGINE': 'django.db.backends.postgresql',
+                    'NAME': 'netcop_hub',
+                    'USER': 'netcop_user',
+                    'PASSWORD': 'netcop_pass',
+                    'HOST': 'localhost',
+                    'PORT': '5432',
+                }
+            }
+        except (psycopg2.OperationalError, psycopg2.Error):
+            # PostgreSQL not available - fallback to SQLite
+            DATABASES = {
+                'default': {
+                    'ENGINE': 'django.db.backends.sqlite3',
+                    'NAME': BASE_DIR / 'db.sqlite3',
+                }
+            }
+    except ImportError:
+        # psycopg2 not available - use SQLite
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
 
 
 # Password validation
