@@ -222,16 +222,21 @@ def wallet_demo_check_balance(request):
 
 
 @csrf_exempt
-@require_http_methods(["POST"])
 def stripe_webhook_view(request):
     """Handle Stripe webhook events"""
-    print("🎯 Stripe webhook received!")
+    print(f"🎯 Stripe webhook received! Method: {request.method}")
+    print(f"🎯 Headers: {dict(request.META)}")
+    
+    if request.method != 'POST':
+        print(f"❌ Invalid method: {request.method}")
+        return JsonResponse({'status': 'error', 'message': f'Method {request.method} not allowed'}, status=405)
     
     payload = request.body
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
     
     print(f"📦 Payload length: {len(payload)} bytes")
     print(f"🔐 Signature header: {sig_header is not None}")
+    print(f"🔐 Full signature header: {sig_header}")
     
     stripe_handler = StripePaymentHandler()
     result = stripe_handler.handle_webhook(payload, sig_header)
