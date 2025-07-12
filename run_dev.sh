@@ -16,6 +16,17 @@ source venv/bin/activate
 echo "🔍 Checking database configuration..."
 python manage.py check_db
 
+# Check for pending migrations
+echo ""
+echo "🔄 Checking for pending migrations..."
+if python manage.py showmigrations --plan | grep -q '\[ \]'; then
+    echo "⚠️  Found pending migrations. Applying them..."
+    python manage.py migrate
+    echo "✅ Migrations applied successfully!"
+else
+    echo "✅ All migrations up to date!"
+fi
+
 echo ""
 echo "🌐 Starting Django server..."
 echo "Visit: http://localhost:8000"
