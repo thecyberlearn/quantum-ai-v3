@@ -166,6 +166,14 @@ OPENWEATHER_API_KEY = config('OPENWEATHER_API_KEY', default='')
 
 # Security settings
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in config('CSRF_TRUSTED_ORIGINS', default='').split(',') if origin.strip()]
+
+# Add Railway domain if running on Railway
+if config('RAILWAY_ENVIRONMENT', default=''):
+    railway_url = config('RAILWAY_PUBLIC_DOMAIN', default='')
+    if railway_url:
+        CSRF_TRUSTED_ORIGINS.append(f'https://{railway_url}')
+    # Also add common Railway domain pattern
+    CSRF_TRUSTED_ORIGINS.append('https://netcop.up.railway.app')
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Default primary key field type
