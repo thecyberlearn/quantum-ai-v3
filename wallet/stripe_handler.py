@@ -81,33 +81,52 @@ class StripePaymentHandler:
     
     def handle_webhook(self, payload, signature):
         """Handle Stripe webhook events"""
+        print(f"🔍 Processing webhook with signature: {bool(signature)}")
+        
         try:
             event = stripe.Webhook.construct_event(
                 payload, signature, settings.STRIPE_WEBHOOK_SECRET
             )
-        except ValueError:
+            print(f"📋 Event type: {event['type']}")
+        except ValueError as e:
+            print(f"❌ Invalid payload: {e}")
             return {'success': False, 'error': 'Invalid payload'}
-        except stripe.error.SignatureVerificationError:
+        except stripe.error.SignatureVerificationError as e:
+            print(f"❌ Invalid signature: {e}")
             return {'success': False, 'error': 'Invalid signature'}
         
         if event['type'] == 'checkout.session.completed':
             session = event['data']['object']
+            print(f"💳 Processing checkout session: {session['id']}")
             
             # Process successful payment
             user_id = session.get('client_reference_id')
             amount = session['amount_total'] / 100  # Convert from cents
             
+            print(f"👤 User ID: {user_id}, Amount: {amount} AED")
+            
             if user_id:
                 try:
                     user = User.objects.get(id=user_id)
+                    print(f"✅ Found user: {user.email}, Current balance: {user.wallet_balance}")
+                    
                     user.add_balance(
                         amount=amount,
                         description=f"Wallet top-up via Stripe",
                         stripe_session_id=session['id']
                     )
+                    user.refresh_from_db()
+                    print(f"💰 New balance: {user.wallet_balance}")
+                    
                     return {'success': True, 'message': 'Payment processed successfully'}
                 except User.DoesNotExist:
+                    print(f"❌ User not found: {user_id}")
                     return {'success': False, 'error': 'User not found'}
+            else:
+                print("❌ No user_id in session")
+                return {'success': False, 'error': 'No user reference'}
+        else:
+            print(f"ℹ️ Ignored event type: {event['type']}")
         
         return {'success': True, 'message': 'Event processed'}
     

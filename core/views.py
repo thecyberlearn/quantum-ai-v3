@@ -147,11 +147,18 @@ def wallet_topup_cancel_view(request):
 @require_http_methods(["POST"])
 def stripe_webhook_view(request):
     """Handle Stripe webhook events"""
+    print("🎯 Stripe webhook received!")
+    
     payload = request.body
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
     
+    print(f"📦 Payload length: {len(payload)} bytes")
+    print(f"🔐 Signature header: {sig_header is not None}")
+    
     stripe_handler = StripePaymentHandler()
     result = stripe_handler.handle_webhook(payload, sig_header)
+    
+    print(f"✅ Webhook result: {result}")
     
     if result['success']:
         return JsonResponse({'status': 'success'})
