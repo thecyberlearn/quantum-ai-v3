@@ -110,23 +110,20 @@ elif config('RAILWAY_ENVIRONMENT', default=''):
         }
     }
 else:
-    # Local development: Try PostgreSQL first, fallback to SQLite
-    try:
-        import psycopg2
-        # Test if PostgreSQL is actually available
+    # Local development: Default to SQLite for reliability
+    # Users can override with DATABASE_URL if they want PostgreSQL
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+    
+    # Optional: Check if user wants PostgreSQL (via environment or file)
+    postgres_preference = config('USE_POSTGRESQL', default='False').lower()
+    if postgres_preference in ['true', '1', 'yes']:
         try:
-            # Quick connection test
-            test_conn = psycopg2.connect(
-                host='localhost',
-                database='netcop_hub',
-                user='netcop_user',
-                password='netcop_pass',
-                port='5432',
-                connect_timeout=3
-            )
-            test_conn.close()
-            
-            # PostgreSQL works - use it
+            import psycopg2
             DATABASES = {
                 'default': {
                     'ENGINE': 'django.db.backends.postgresql',
@@ -137,22 +134,9 @@ else:
                     'PORT': '5432',
                 }
             }
-        except (psycopg2.OperationalError, psycopg2.Error):
-            # PostgreSQL not available - fallback to SQLite
-            DATABASES = {
-                'default': {
-                    'ENGINE': 'django.db.backends.sqlite3',
-                    'NAME': BASE_DIR / 'db.sqlite3',
-                }
-            }
-    except ImportError:
-        # psycopg2 not available - use SQLite
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': BASE_DIR / 'db.sqlite3',
-            }
-        }
+        except ImportError:
+            # psycopg2 not available - stick with SQLite
+            pass
 
 
 # Password validation
