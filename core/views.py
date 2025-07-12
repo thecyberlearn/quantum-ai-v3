@@ -118,7 +118,7 @@ def wallet_topup_view(request):
             
             # Create Stripe checkout session
             stripe_handler = StripePaymentHandler()
-            session_data = stripe_handler.create_checkout_session(request.user, amount)
+            session_data = stripe_handler.create_checkout_session(request.user, amount, request)
             
             return redirect(session_data['payment_url'])
             
@@ -127,6 +127,20 @@ def wallet_topup_view(request):
             return redirect('core:wallet_topup')
     
     return render(request, 'core/wallet_topup.html')
+
+
+@login_required
+def wallet_topup_success_view(request):
+    """Payment success page"""
+    messages.success(request, 'Payment successful! Your wallet balance has been updated.')
+    return redirect('core:wallet')
+
+
+@login_required
+def wallet_topup_cancel_view(request):
+    """Payment cancel page"""
+    messages.info(request, 'Payment was cancelled. No charges were made.')
+    return redirect('core:wallet_topup')
 
 
 @csrf_exempt

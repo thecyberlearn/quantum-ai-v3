@@ -11,25 +11,55 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 class StripePaymentHandler:
     def __init__(self):
-        self.payment_links = {
-            10: 'https://buy.stripe.com/test_28EbJ16AA7ly3ic7vh2VG0a',
-            50: 'https://buy.stripe.com/test_4gM00jbUUgW83ic3f12VG0b',
-            100: 'https://buy.stripe.com/test_aFadR99MM35ibOI6rd2VG0c',
-            500: 'https://buy.stripe.com/test_14AbJ12kk7lyf0U16T2VG0d'
-        }
+        self.allowed_amounts = [10, 50, 100, 500]
     
-    def create_checkout_session(self, user, amount):
+    def create_checkout_session(self, user, amount, request=None):
         """Create a Stripe checkout session for wallet top-up"""
-        if amount not in self.payment_links:
-            raise ValueError(f"Invalid amount: {amount}")
+        if amount not in self.allowed_amounts:
+            raise ValueError(f"Invalid amount: {amount}. Allowed amounts: {self.allowed_amounts}")
         
-        payment_link = self.payment_links[amount]
+        # Build URLs based on current request domain
+        if request:
+            success_url = request.build_absolute_uri('/wallet/top-up/success/')
+            cancel_url = request.build_absolute_uri('/wallet/top-up/cancel/')
+        else:
+            # Fallback URLs (shouldn't happen in normal flow)
+            success_url = 'https://netcop.up.railway.app/wallet/top-up/success/'
+            cancel_url = 'https://netcop.up.railway.app/wallet/top-up/cancel/'
         
-        # Return the payment link URL with user reference
-        return {
-            'payment_url': f"{payment_link}?client_reference_id={user.id}&prefilled_email={user.email}",
-            'session_id': None  # Payment links don't have session IDs
-        }
+        try:
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[{
+                    'price_data': {
+                        'currency': 'aed',
+                        'product_data': {
+                            'name': f'NetCop Wallet Top-up',
+                            'description': f'Add {amount} AED to your wallet balance'
+                        },
+                        'unit_amount': int(amount * 100),  # Convert to cents
+                    },
+                    'quantity': 1,
+                }],
+                mode='payment',
+                success_url=success_url,
+                cancel_url=cancel_url,
+                client_reference_id=str(user.id),
+                customer_email=user.email,
+                metadata={
+                    'user_id': str(user.id),
+                    'amount': str(amount),
+                    'type': 'wallet_topup'
+                }
+            )
+            
+            return {
+                'payment_url': session.url,
+                'session_id': session.id
+            }
+            
+        except stripe.error.StripeError as e:
+            raise ValueError(f"Failed to create checkout session: {str(e)}")
     
     def verify_payment(self, session_id):
         """Verify payment from Stripe webhook"""
