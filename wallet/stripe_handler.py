@@ -28,6 +28,10 @@ class StripePaymentHandler:
             cancel_url = 'https://netcop.up.railway.app/wallet/top-up/cancel/'
         
         try:
+            print(f"🚀 Creating checkout session for user {user.id} ({user.email}), amount: {amount} AED")
+            print(f"📍 Success URL: {success_url}")
+            print(f"📍 Cancel URL: {cancel_url}")
+            
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
                 line_items=[{
@@ -52,6 +56,10 @@ class StripePaymentHandler:
                     'type': 'wallet_topup'
                 }
             )
+            
+            print(f"✅ Session created: {session.id}")
+            print(f"💳 Client reference ID: {session.client_reference_id}")
+            print(f"🔗 Payment URL: {session.url}")
             
             return {
                 'payment_url': session.url,
