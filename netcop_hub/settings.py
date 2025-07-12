@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'data_analyzer',
     'job_posting_generator',
     'social_ads_generator',
+    'five_whys_analyzer',
 ]
 
 MIDDLEWARE = [

@@ -78,6 +78,15 @@ class Command(BaseCommand):
                 'icon': '📱',
                 'agent_type': 'webhook',
             },
+            {
+                'name': '5 Whys Analysis Agent',
+                'slug': 'five-whys-analyzer',
+                'description': 'Systematic root cause analysis using the proven 5 Whys methodology to identify and solve business problems effectively.',
+                'category': 'analytics',
+                'price': 8.0,
+                'icon': '🔍',
+                'agent_type': 'webhook',
+            },
         ]
         
         created_count = 0
