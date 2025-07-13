@@ -35,7 +35,7 @@ class StripePaymentHandler:
             print(f"🚀 [STRIPE DEBUG] Starting checkout session creation...")
             print(f"👤 User: {user.id} ({user.email})")
             print(f"💰 Amount: {amount} AED")
-            print(f"🔑 Stripe API Key (last 4): ...{settings.STRIPE_SECRET_KEY[-4:]}")
+            print(f"🔑 Stripe API Key configured: {bool(settings.STRIPE_SECRET_KEY)}")
             print(f"🔑 API Version: {stripe.api_version}")
             print(f"📍 Success URL: {success_url}")
             print(f"📍 Cancel URL: {cancel_url}")
@@ -147,7 +147,7 @@ class StripePaymentHandler:
         """Verify payment directly from Stripe (bypasses webhook issues)"""
         try:
             print(f"🔍 [STRIPE DEBUG] Starting payment verification...")
-            print(f"🔑 Using Stripe API Key (last 4): ...{settings.STRIPE_SECRET_KEY[-4:]}")
+            print(f"🔑 Stripe API Key configured: {bool(settings.STRIPE_SECRET_KEY)}")
             print(f"🔑 API Version: {stripe.api_version}")
             print(f"💳 Session ID to verify: {session_id}")
             

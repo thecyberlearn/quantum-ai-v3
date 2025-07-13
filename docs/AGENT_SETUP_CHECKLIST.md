@@ -150,7 +150,7 @@ print("Agent created:", BaseAgent.objects.filter(slug='pdf-analyzer').exists())
 **Add API credentials for your agent:**
 ```bash
 # Existing variables...
-OPENWEATHER_API_KEY=15befe6bac7b1cd0268900fb97d31482
+OPENWEATHER_API_KEY=your_openweather_api_key_here
 
 # Add your new agent's API key
 DOCPARSER_API_KEY=your_actual_api_key_here

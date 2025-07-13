@@ -25,7 +25,17 @@ sys.path.insert(0, str(BASE_DIR / 'apps'))
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-thdd^re4==p$4geq^$52w7%egd0xxrj#fpgk1c+$xt-jrr5d7%')
+SECRET_KEY = config('SECRET_KEY')
+
+# Validate required environment variables
+required_env_vars = ['SECRET_KEY']
+missing_vars = [var for var in required_env_vars if not config(var, default='')]
+if missing_vars:
+    import sys
+    print(f"❌ Missing required environment variables: {', '.join(missing_vars)}")
+    print("💡 Please create a .env file based on .env.example")
+    print("💡 For local development, copy .env.example to .env and fill in the values")
+    sys.exit(1)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
@@ -129,11 +139,11 @@ else:
             DATABASES = {
                 'default': {
                     'ENGINE': 'django.db.backends.postgresql',
-                    'NAME': 'netcop_hub',
-                    'USER': 'netcop_user',
-                    'PASSWORD': 'netcop_pass',
-                    'HOST': 'localhost',
-                    'PORT': '5432',
+                    'NAME': config('PGDATABASE', default='netcop_hub'),
+                    'USER': config('PGUSER', default='netcop_user'),
+                    'PASSWORD': config('PGPASSWORD'),
+                    'HOST': config('PGHOST', default='localhost'),
+                    'PORT': config('PGPORT', default='5432'),
                 }
             }
         except ImportError:
