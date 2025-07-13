@@ -4,82 +4,116 @@
 {% block title %}Job Posting Generator Agent - NetCop AI Hub{% endblock %}
 
 {% block extra_css %}
+<!-- Google Fonts - Simple -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="{% static 'css/themes.css' %}">
 <style>
+    /* Modern Typography & Theme System */
+    :root {
+        /* Color System */
+        --bg-color: #ffffff;
+        --text-color: #1a1a1a;
+        --primary-color: #000000;
+        --card-bg: #f8f9fa;
+        --border-color: #e0e0e0;
+        --hover-color: #f0f0f0;
+        --accent-color: #666666;
+        --success-color: #10b981;
+        --error-color: #ef4444;
+        --warning-color: #f59e0b;
+        
+        /* Simple Typography */
+        --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        
+        /* Small, Crisp Font Sizes */
+        --text-xs: 11px;
+        --text-sm: 13px;
+        --text-base: 14px;
+        --text-lg: 16px;
+        --text-xl: 18px;
+        
+        /* Simple Spacing */
+        --space-xs: 4px;
+        --space-sm: 8px;
+        --space-md: 12px;
+        --space-lg: 16px;
+        --space-xl: 24px;
+        
+        /* Simple Properties */
+        --radius: 6px;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        --transition: 150ms ease;
+    }
+
+    body {
+        font-family: var(--font-primary);
+        font-size: var(--text-base);
+        line-height: 1.4;
+        font-weight: 400;
+    }
+
     .job-posting-page {
-        background: var(--gradient-hero);
+        background: var(--bg-color);
         min-height: calc(100vh - 80px);
-        padding: clamp(20px, 5vw, 40px);
+        padding: var(--space-lg);
         width: 100vw;
         margin-left: calc(-50vw + 50%);
+        color: var(--text-color);
     }
     
     .job-posting-container {
-        max-width: 1280px;
+        max-width: 1200px;
         margin: 0 auto;
         display: grid;
-        grid-template-columns: 1fr 400px;
-        gap: 24px;
+        grid-template-columns: 1fr 350px;
+        gap: var(--space-xl);
         align-items: start;
     }
     
     .card {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 16px;
-        padding: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        backdrop-filter: blur(20px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        margin-bottom: 24px;
+        background: var(--card-bg);
+        border-radius: var(--radius);
+        padding: var(--space-lg);
+        border: 1px solid var(--border-color);
+        margin-bottom: var(--space-lg);
     }
     
     .section-title {
-        font-size: 18px;
+        font-size: var(--text-lg);
         font-weight: 600;
-        color: var(--text-primary);
-        margin-bottom: 16px;
-        border-bottom: 2px solid var(--border-light);
-        padding-bottom: 8px;
+        color: var(--primary-color);
+        margin-bottom: var(--space-md);
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: var(--space-sm);
     }
     
     .section-container {
-        margin-bottom: 24px;
-        padding: 16px;
-        border-radius: 12px;
-        border: 1px solid var(--border-light);
-    }
-    
-    .basic-info {
-        background: var(--background-light);
-    }
-    
-    .requirements {
-        background: rgba(59, 130, 246, 0.1);
-    }
-    
-    .additional {
-        background: rgba(16, 185, 129, 0.1);
+        margin-bottom: var(--space-lg);
+        padding: var(--space-md);
+        border-radius: var(--radius);
+        border: 1px solid var(--border-color);
     }
     
     .section-subtitle {
-        font-size: 14px;
+        font-size: var(--text-sm);
         font-weight: 600;
-        color: var(--text-secondary);
-        margin-bottom: 16px;
+        color: var(--accent-color);
+        margin-bottom: var(--space-md);
         text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
     
     .form-input, .form-textarea {
         width: 100%;
-        padding: 12px 16px;
-        border: 2px solid var(--border-medium);
-        border-radius: 12px;
-        font-size: 16px;
-        transition: border-color 0.2s ease;
-        min-height: 44px;
-        margin-bottom: 16px;
-        font-family: inherit;
-        background: var(--background-light);
+        padding: var(--space-md);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        font-size: var(--text-base);
+        margin-bottom: var(--space-md);
+        background: white;
+        color: var(--text-color);
     }
     
     .form-textarea {
@@ -89,182 +123,271 @@
     
     .form-input:focus, .form-textarea:focus {
         outline: none;
-        border-color: var(--warning-orange);
-        background: white;
-        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        border-color: var(--primary-color);
     }
     
     .form-label {
         display: block;
-        margin-bottom: 8px;
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--text-primary);
+        margin-bottom: var(--space-xs);
+        font-size: var(--text-sm);
+        font-weight: 500;
+        color: var(--text-color);
     }
     
     .processing-status {
-        padding: 20px;
-        background: rgba(245, 158, 11, 0.1);
-        border: 2px solid var(--warning-orange);
-        border-radius: 12px;
-        color: var(--warning-orange);
-        font-weight: 600;
+        padding: var(--space-lg);
+        background: var(--card-bg);
+        border: 1px solid var(--primary-color);
+        border-radius: var(--radius);
+        color: var(--primary-color);
+        font-weight: 500;
         text-align: center;
-        margin-bottom: 24px;
+        margin-bottom: var(--space-lg);
         display: none;
     }
     
     .processing-status .status-icon {
-        font-size: 32px;
-        margin-bottom: 12px;
-        animation: pulse 2s infinite;
+        font-size: var(--text-xl);
+        margin-bottom: var(--space-sm);
+        display: block;
     }
-    
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.1); }
+
+    .processing-status .status-text {
+        font-size: var(--text-base);
+        font-weight: 500;
+        margin-bottom: var(--space-xs);
+    }
+
+    .processing-status .status-detail {
+        font-size: var(--text-sm);
+        opacity: 0.7;
     }
     
     .results-card {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 16px;
-        padding: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        backdrop-filter: blur(20px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        margin-top: 24px;
+        background: var(--card-bg);
+        border-radius: var(--radius);
+        padding: var(--space-lg);
+        border: 1px solid var(--border-color);
+        margin-top: var(--space-lg);
         display: none;
     }
     
     .results-header {
         display: flex;
         align-items: center;
-        gap: 12px;
-        margin-bottom: 20px;
-        padding-bottom: 16px;
-        border-bottom: 1px solid var(--border-light);
+        gap: var(--space-sm);
+        margin-bottom: var(--space-md);
+        padding-bottom: var(--space-sm);
+        border-bottom: 1px solid var(--border-color);
     }
     
     .results-content {
-        background: var(--background-page);
-        border: 1px solid var(--border-light);
-        border-radius: 12px;
-        padding: 24px;
-        margin-bottom: 20px;
-        white-space: pre-line;
-        line-height: 1.7;
-        color: var(--text-primary);
-        font-size: 15px;
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        padding: var(--space-lg);
+        margin-bottom: var(--space-md);
+        line-height: 1.6;
+        color: var(--text-color);
+        font-size: var(--text-base);
+    }
+
+    /* Markdown styling for results */
+    .results-content h1,
+    .results-content h2,
+    .results-content h3 {
+        color: var(--primary-color);
+        font-weight: 600;
+        margin: var(--space-lg) 0 var(--space-sm) 0;
+        line-height: 1.3;
+    }
+
+    .results-content h1 {
+        font-size: var(--text-xl);
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: var(--space-xs);
+    }
+
+    .results-content h2 {
+        font-size: var(--text-lg);
+        margin-top: var(--space-xl);
+    }
+
+    .results-content h3 {
+        font-size: var(--text-base);
+        font-weight: 600;
+    }
+
+    .results-content p {
+        margin: var(--space-sm) 0;
+        line-height: 1.6;
+    }
+
+    .results-content ul,
+    .results-content ol {
+        margin: var(--space-sm) 0;
+        padding-left: var(--space-xl);
+    }
+
+    .results-content li {
+        margin: var(--space-xs) 0;
+        line-height: 1.5;
+    }
+
+    .results-content strong {
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    .results-content em {
+        font-style: italic;
+        color: var(--accent-color);
+    }
+
+    .results-content code {
+        background: var(--card-bg);
+        padding: 2px 4px;
+        border-radius: 3px;
+        font-size: var(--text-sm);
+        color: var(--primary-color);
+    }
+
+    .results-content blockquote {
+        border-left: 3px solid var(--primary-color);
+        margin: var(--space-md) 0;
+        padding-left: var(--space-md);
+        color: var(--accent-color);
+        font-style: italic;
+    }
+
+    .results-content hr {
+        border: none;
+        border-top: 1px solid var(--border-color);
+        margin: var(--space-lg) 0;
     }
     
     .action-buttons {
         display: flex;
-        gap: 12px;
-        margin-top: 20px;
+        gap: var(--space-sm);
+        margin-top: var(--space-md);
         flex-wrap: wrap;
     }
     
     .btn {
-        padding: 16px 32px;
+        padding: var(--space-md);
         border: none;
-        border-radius: 12px;
-        font-weight: 600;
+        border-radius: var(--radius);
+        font-weight: 500;
         cursor: pointer;
-        font-size: 16px;
-        min-height: 48px;
+        font-size: var(--text-sm);
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        transition: transform 0.1s ease;
+        gap: var(--space-xs);
         text-decoration: none;
+        transition: all var(--transition);
+        flex: 1;
+        min-width: 120px;
     }
     
     .btn-primary {
-        background: var(--warning-orange);
+        background: var(--primary-color);
         color: white;
-        flex: 1;
-        min-width: 120px;
+        box-shadow: var(--shadow);
     }
     
     .btn-secondary {
-        background: var(--background-subtle);
-        color: var(--text-primary);
-        border: 2px solid var(--border-medium);
-        flex: 1;
-        min-width: 120px;
+        background: var(--card-bg);
+        color: var(--primary-color);
+        border: 1px solid var(--border-color);
     }
     
     .btn:hover:not(:disabled) {
         transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background: var(--accent-color);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+        border-color: var(--primary-color);
+        background: var(--hover-color);
+    }
+    
+    .btn:active {
+        transform: translateY(0);
     }
     
     .btn:disabled {
-        background: var(--text-muted);
+        background: var(--accent-color);
         cursor: not-allowed;
+        opacity: 0.5;
         transform: none;
     }
     
     .wallet-section {
         position: sticky;
-        top: 20px;
+        top: var(--space-lg);
     }
     
     .wallet-balance {
-        font-size: 28px;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 8px;
+        font-size: var(--text-lg);
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: var(--space-xs);
     }
     
     .balance-label {
-        font-size: 16px;
-        color: var(--text-secondary);
-        margin-bottom: 20px;
+        font-size: var(--text-sm);
+        color: var(--accent-color);
+        margin-bottom: var(--space-lg);
     }
     
     .process-btn {
         width: 100%;
-        margin-bottom: 12px;
+        margin-bottom: var(--space-sm);
     }
     
     .insufficient-balance {
-        background: rgba(239, 68, 68, 0.1);
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        color: var(--error-red);
-        padding: 12px;
-        border-radius: 8px;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        color: var(--primary-color);
+        padding: var(--space-md);
+        border-radius: var(--radius);
         text-align: center;
-        font-size: 14px;
-        margin-bottom: 12px;
+        font-size: var(--text-sm);
+        margin-bottom: var(--space-sm);
+        font-weight: 500;
     }
     
     .usage-info {
-        padding: 16px;
-        background: rgba(245, 158, 11, 0.1);
-        border-radius: 12px;
-        border: 1px solid rgba(245, 158, 11, 0.2);
+        padding: var(--space-md);
+        background: var(--card-bg);
+        border-radius: var(--radius);
+        border: 1px solid var(--border-color);
     }
     
     .usage-info h4 {
-        margin: 0 0 8px 0;
-        font-size: 14px;
+        margin: 0 0 var(--space-sm) 0;
+        font-size: var(--text-sm);
         font-weight: 600;
-        color: var(--warning-orange);
+        color: var(--primary-color);
     }
     
     .usage-info ul {
         margin: 0;
-        font-size: 12px;
-        color: var(--text-primary);
+        font-size: var(--text-xs);
+        color: var(--text-color);
         line-height: 1.4;
         list-style: none;
         padding-left: 0;
     }
     
     .usage-info li {
-        margin: 4px 0;
-        padding-left: 16px;
+        margin: var(--space-xs) 0;
+        padding-left: var(--space-md);
         position: relative;
     }
     
@@ -272,13 +395,19 @@
         content: "•";
         position: absolute;
         left: 0;
-        color: var(--warning-orange);
+        color: var(--primary-color);
     }
     
-    /* Mobile optimizations */
+    /* Simple Responsive Design */
     @media (max-width: 768px) {
         .job-posting-container {
             grid-template-columns: 1fr;
+            gap: var(--space-lg);
+        }
+        
+        .wallet-section {
+            position: static;
+            order: -1;
         }
         
         .action-buttons {
@@ -288,6 +417,33 @@
         .btn {
             width: 100%;
         }
+
+        .form-input, .form-textarea {
+            font-size: 16px; /* Prevent zoom on iOS */
+        }
+    }
+
+    /* Form Help Text */
+    .form-help {
+        font-size: var(--text-xs);
+        color: var(--accent-color);
+        margin-top: var(--space-xs);
+        opacity: 0.7;
+    }
+
+    .form-group {
+        margin-bottom: var(--space-md);
+    }
+
+    .form-group.error .form-input,
+    .form-group.error .form-textarea {
+        border-color: var(--error-color);
+    }
+
+    /* Simple loading state for buttons */
+    .btn.loading {
+        opacity: 0.6;
+        pointer-events: none;
     }
 </style>
 {% endblock %}
@@ -317,42 +473,60 @@
                     <div class="section-container basic-info">
                         <h4 class="section-subtitle">Basic Information</h4>
                         
-                        <label class="form-label">💼 Job Title *</label>
-                        <input type="text" name="job_title" id="job_title" class="form-input" placeholder="e.g., Senior Software Engineer" required>
+                        <div class="form-group">
+                            <label class="form-label" for="job_title">💼 Job Title *</label>
+                            <input type="text" name="job_title" id="job_title" class="form-input" placeholder="e.g., Senior Software Engineer" required aria-describedby="job_title_help">
+                            <div id="job_title_help" class="form-help">Enter the exact position title you're hiring for</div>
+                        </div>
                         
-                        <label class="form-label">🏢 Company Name *</label>
-                        <input type="text" name="company_name" id="company_name" class="form-input" placeholder="e.g., TechCorp Inc." required>
+                        <div class="form-group">
+                            <label class="form-label" for="company_name">🏢 Company Name *</label>
+                            <input type="text" name="company_name" id="company_name" class="form-input" placeholder="e.g., TechCorp Inc." required aria-describedby="company_name_help">
+                            <div id="company_name_help" class="form-help">Your organization's official name</div>
+                        </div>
                         
-                        <label class="form-label">📝 Job Description *</label>
-                        <textarea name="job_description" id="job_description" class="form-textarea" placeholder="Describe the role, key requirements, company culture, etc." rows="4" required></textarea>
+                        <div class="form-group">
+                            <label class="form-label" for="job_description">📝 Job Description *</label>
+                            <textarea name="job_description" id="job_description" class="form-textarea" placeholder="Describe the role, key requirements, company culture, etc." rows="4" required aria-describedby="job_description_help"></textarea>
+                            <div id="job_description_help" class="form-help">Provide detailed information about the role and what you're looking for</div>
+                        </div>
                     </div>
                     
                     <!-- Job Requirements Section -->
                     <div class="section-container requirements">
                         <h4 class="section-subtitle">Job Requirements</h4>
                         
-                        <label class="form-label">📊 Seniority Level *</label>
-                        <select name="seniority_level" id="seniority_level" class="form-input" required>
-                            <option value="">Select seniority level...</option>
-                            <option value="entry">Entry Level</option>
-                            <option value="mid">Mid Level</option>
-                            <option value="senior">Senior Level</option>
-                            <option value="lead">Lead/Principal</option>
-                            <option value="executive">Executive/C-Level</option>
-                        </select>
+                        <div class="form-group">
+                            <label class="form-label" for="seniority_level">📊 Seniority Level *</label>
+                            <select name="seniority_level" id="seniority_level" class="form-input" required aria-describedby="seniority_help">
+                                <option value="">Select seniority level...</option>
+                                <option value="entry">Entry Level</option>
+                                <option value="mid">Mid Level</option>
+                                <option value="senior">Senior Level</option>
+                                <option value="lead">Lead/Principal</option>
+                                <option value="executive">Executive/C-Level</option>
+                            </select>
+                            <div id="seniority_help" class="form-help">Choose the experience level required for this position</div>
+                        </div>
                         
-                        <label class="form-label">📋 Contract Type *</label>
-                        <select name="contract_type" id="contract_type" class="form-input" required>
-                            <option value="">Select contract type...</option>
-                            <option value="full-time">Full-time</option>
-                            <option value="part-time">Part-time</option>
-                            <option value="contract">Contract</option>
-                            <option value="freelance">Freelance</option>
-                            <option value="internship">Internship</option>
-                        </select>
+                        <div class="form-group">
+                            <label class="form-label" for="contract_type">📋 Contract Type *</label>
+                            <select name="contract_type" id="contract_type" class="form-input" required aria-describedby="contract_help">
+                                <option value="">Select contract type...</option>
+                                <option value="full-time">Full-time</option>
+                                <option value="part-time">Part-time</option>
+                                <option value="contract">Contract</option>
+                                <option value="freelance">Freelance</option>
+                                <option value="internship">Internship</option>
+                            </select>
+                            <div id="contract_help" class="form-help">Select the type of employment relationship</div>
+                        </div>
                         
-                        <label class="form-label">📍 Location *</label>
-                        <input type="text" name="location" id="location" class="form-input" placeholder="e.g., Dubai, UAE or Remote" required>
+                        <div class="form-group">
+                            <label class="form-label" for="location">📍 Location *</label>
+                            <input type="text" name="location" id="location" class="form-input" placeholder="e.g., Dubai, UAE or Remote" required aria-describedby="location_help">
+                            <div id="location_help" class="form-help">Specify where the role is based or if it's remote</div>
+                        </div>
                     </div>
                     
                     <!-- Additional Details Section -->
@@ -380,16 +554,16 @@
             <!-- Processing Status -->
             <div id="processingStatus" class="processing-status">
                 <div class="status-icon">💼</div>
-                <div style="font-weight: 600; color: var(--warning-orange);">Creating Job Posting...</div>
-                <div style="font-size: 14px; color: var(--warning-orange); margin-top: 8px;" id="statusText">Crafting professional job description...</div>
+                <div class="status-text">Creating Job Posting...</div>
+                <div class="status-detail" id="statusText">Crafting professional job description...</div>
             </div>
             
             <!-- Results -->
             <div id="jobResults" class="results-card">
                 <div class="results-header">
                     <div style="font-size: 24px;">✅</div>
-                    <h3 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">Generated Job Posting</h3>
-                    <div style="background: var(--warning-orange); color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-left: auto;">✅ Complete</div>
+                    <h3 style="font-size: 20px; font-weight: 600; color: var(--primary-color); margin: 0;">Generated Job Posting</h3>
+                    <div style="background: var(--primary-color); color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-left: auto;">✅ Complete</div>
                 </div>
                 
                 <div class="results-content" id="jobContent">
@@ -399,7 +573,7 @@
                 <div class="action-buttons">
                     <button onclick="copyJobPosting()" class="btn btn-primary">📋 Copy Job Posting</button>
                     <button onclick="downloadJobPosting()" class="btn btn-secondary">💾 Download Posting</button>
-                    <button onclick="resetForm()" class="btn" style="background: var(--warning-orange); color: white;">🔄 Create Another</button>
+                    <button onclick="resetForm()" class="btn" style="background: var(--primary-color); color: white;">🔄 Create Another</button>
                 </div>
             </div>
         </div>
@@ -493,42 +667,127 @@
     function generateJobText() {
         const content = document.querySelector('#jobContent');
         if (content) {
-            return content.textContent || content.innerText || '';
+            // Get text content without HTML tags for clean copying
+            return content.innerText || content.textContent || '';
         }
         return 'No job posting content available';
     }
 
     // Reset form for creating another job posting
     function resetForm() {
+        // Clear any active polling
+        if (currentPollInterval) {
+            clearInterval(currentPollInterval);
+            currentPollInterval = null;
+        }
+        resultsDisplayed = false;
+        
+        // Reset form and UI
         document.getElementById('jobPostingForm').reset();
         document.getElementById('jobResults').style.display = 'none';
         document.getElementById('processingStatus').style.display = 'none';
-        document.getElementById('processButton').disabled = false;
-        document.getElementById('processButton').innerHTML = '💼 Generate Job Posting (4.00 AED)';
+        const processButton = document.getElementById('processButton');
+        processButton.disabled = false;
+        processButton.classList.remove('loading');
+        processButton.innerHTML = '💼 Generate Job Posting (4.00 AED)';
+        
         showToast('Form reset! Ready for another job posting.', 'success');
     }
     
-    // Simple toast notification
+    // Toast management - prevent all duplicates
+    let toastTimeout = null;
+    let lastToastMessage = '';
+    let currentToast = null;
+    
     function showToast(message, type = 'info') {
-        const toast = document.createElement('div');
-        toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 12px 20px;
-            border-radius: 8px;
-            color: white;
-            font-weight: 600;
-            z-index: 1000;
-            ${type === 'success' ? 'background: var(--success-green);' : 'background: var(--error-red);'}
-        `;
-        toast.textContent = message;
-        document.body.appendChild(toast);
+        // Prevent duplicate messages
+        if (message === lastToastMessage && currentToast) {
+            return;
+        }
         
-        setTimeout(() => {
-            toast.remove();
-        }, 3000);
+        // Clear existing toast
+        if (currentToast) {
+            currentToast.remove();
+            currentToast = null;
+        }
+        
+        // Clear existing timeout
+        if (toastTimeout) {
+            clearTimeout(toastTimeout);
+        }
+        
+        // Store message to prevent duplicates
+        lastToastMessage = message;
+        
+        // Create new toast
+        currentToast = document.createElement('div');
+        currentToast.style.cssText = `
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            color: white;
+            font-size: 13px;
+            z-index: 1000;
+            max-width: 300px;
+            ${type === 'success' ? 'background: var(--primary-color);' : 'background: var(--accent-color);'}
+        `;
+        currentToast.textContent = message;
+        document.body.appendChild(currentToast);
+        
+        // Auto remove after 2 seconds
+        toastTimeout = setTimeout(() => {
+            if (currentToast) {
+                currentToast.remove();
+                currentToast = null;
+            }
+            lastToastMessage = '';
+        }, 2000);
     }
+
+    // Form validation with visual feedback
+    function validateField(field) {
+        const isValid = field.value.trim() !== '';
+        const container = field.closest('.form-group') || field.parentElement;
+        
+        if (isValid) {
+            field.style.borderColor = 'var(--success-color)';
+            container.classList.remove('error');
+        } else {
+            field.style.borderColor = 'var(--error-color)';
+            container.classList.add('error');
+        }
+        
+        return isValid;
+    }
+
+    // Progressive form enhancement
+    function initializeFormEnhancements() {
+        const requiredFields = document.querySelectorAll('[required]');
+        
+        requiredFields.forEach(field => {
+            // Real-time validation
+            field.addEventListener('blur', () => validateField(field));
+            
+            // Reset validation on focus
+            field.addEventListener('focus', () => {
+                field.style.borderColor = 'var(--primary-color)';
+                field.closest('.form-group')?.classList.remove('error');
+            });
+            
+            // Auto-resize textareas
+            if (field.tagName === 'TEXTAREA') {
+                field.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = Math.max(120, this.scrollHeight) + 'px';
+                });
+            }
+        });
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initializeFormEnhancements);
 
     // Update wallet balance display
     function updateWalletBalance(newBalance) {
@@ -539,13 +798,37 @@
         window.currentWalletBalance = newBalance;
     }
 
-    // Display job posting results
+    // Simple markdown to HTML converter
+    function parseMarkdown(text) {
+        return text
+            // Headers
+            .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+            .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+            .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+            // Bold
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            // Italic
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            // Lists
+            .replace(/^- (.*$)/gm, '<li>$1</li>')
+            .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+            // Line breaks
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/\n/g, '<br>');
+    }
+
+    // Display job posting results with markdown formatting
     function displayResults(result) {
         const resultsContainer = document.getElementById('jobResults');
         const contentContainer = document.getElementById('jobContent');
         
         if (result.success && result.status === 'completed') {
-            contentContainer.textContent = result.content || result.job_posting_content || result.output_text || 'Job posting generated successfully!';
+            const content = result.content || result.job_posting_content || result.output_text || 'Job posting generated successfully!';
+            
+            // Parse and display as HTML with markdown formatting
+            const formattedContent = parseMarkdown(content);
+            contentContainer.innerHTML = '<p>' + formattedContent + '</p>';
+            
             resultsContainer.style.display = 'block';
             
             // Update wallet balance if provided
@@ -559,39 +842,65 @@
         }
     }
 
+    // Track if results have been displayed to prevent duplicates
+    let resultsDisplayed = false;
+    let currentPollInterval = null;
+
     // Poll for results
     function pollForResults(requestId) {
         let pollCount = 0;
         const maxPolls = 30; // 30 seconds maximum
+        resultsDisplayed = false; // Reset flag
         
-        const pollInterval = setInterval(() => {
+        // Clear any existing polling
+        if (currentPollInterval) {
+            clearInterval(currentPollInterval);
+        }
+        
+        currentPollInterval = setInterval(() => {
             pollCount++;
             
             fetch(`/agents/job-posting-generator/status/${requestId}/`)
                 .then(response => response.json())
                 .then(result => {
                     if (result.status === 'completed' || result.status === 'failed') {
-                        clearInterval(pollInterval);
-                        document.getElementById('processingStatus').style.display = 'none';
-                        document.getElementById('processButton').disabled = false;
-                        document.getElementById('processButton').innerHTML = '💼 Generate Job Posting (4.00 AED)';
+                        // Stop polling immediately
+                        clearInterval(currentPollInterval);
+                        currentPollInterval = null;
                         
-                        displayResults(result);
-                    } else if (pollCount >= maxPolls) {
-                        clearInterval(pollInterval);
+                        // Reset UI
                         document.getElementById('processingStatus').style.display = 'none';
-                        document.getElementById('processButton').disabled = false;
-                        document.getElementById('processButton').innerHTML = '💼 Generate Job Posting (4.00 AED)';
+                        const processButton = document.getElementById('processButton');
+                        processButton.disabled = false;
+                        processButton.classList.remove('loading');
+                        processButton.innerHTML = '💼 Generate Job Posting (4.00 AED)';
+                        
+                        // Display results only once
+                        if (!resultsDisplayed) {
+                            resultsDisplayed = true;
+                            displayResults(result);
+                        }
+                    } else if (pollCount >= maxPolls) {
+                        clearInterval(currentPollInterval);
+                        currentPollInterval = null;
+                        document.getElementById('processingStatus').style.display = 'none';
+                        const processButton = document.getElementById('processButton');
+                        processButton.disabled = false;
+                        processButton.classList.remove('loading');
+                        processButton.innerHTML = '💼 Generate Job Posting (4.00 AED)';
                         showToast('❌ Processing timeout - please try again', 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error polling results:', error);
                     if (pollCount >= maxPolls) {
-                        clearInterval(pollInterval);
+                        clearInterval(currentPollInterval);
+                        currentPollInterval = null;
                         document.getElementById('processingStatus').style.display = 'none';
-                        document.getElementById('processButton').disabled = false;
-                        document.getElementById('processButton').innerHTML = '💼 Generate Job Posting (4.00 AED)';
+                        const processButton = document.getElementById('processButton');
+                        processButton.disabled = false;
+                        processButton.classList.remove('loading');
+                        processButton.innerHTML = '💼 Generate Job Posting (4.00 AED)';
                         showToast('❌ Network error - please try again', 'error');
                     }
                 });
@@ -605,6 +914,12 @@
         if (!isFormValid()) {
             showToast('Please fill in all required fields', 'error');
             return;
+        }
+        
+        // Prevent multiple submissions
+        const processButton = document.getElementById('processButton');
+        if (processButton.disabled) {
+            return; // Already processing
         }
         
         // Check user authentication
@@ -623,10 +938,18 @@
             return;
         }
 
-        // Show processing status with steps
+        // Clear any existing polling and reset flags
+        if (currentPollInterval) {
+            clearInterval(currentPollInterval);
+            currentPollInterval = null;
+        }
+        resultsDisplayed = false;
+
+        // Show processing status with enhanced loading
         document.getElementById('processingStatus').style.display = 'block';
-        document.getElementById('processButton').disabled = true;
-        document.getElementById('processButton').innerHTML = '⏳ Processing...';
+        processButton.disabled = true;
+        processButton.classList.add('loading');
+        processButton.innerHTML = '⏳ Processing...';
         document.getElementById('jobResults').style.display = 'none';
         
         const steps = [
@@ -666,8 +989,10 @@
             } else {
                 // Handle immediate response
                 document.getElementById('processingStatus').style.display = 'none';
-                document.getElementById('processButton').disabled = false;
-                document.getElementById('processButton').innerHTML = '💼 Generate Job Posting (4.00 AED)';
+                const processButton = document.getElementById('processButton');
+                processButton.disabled = false;
+                processButton.classList.remove('loading');
+                processButton.innerHTML = '💼 Generate Job Posting (4.00 AED)';
                 
                 if (result.error) {
                     showToast(`❌ ${result.error}`, 'error');
@@ -680,8 +1005,10 @@
             clearInterval(stepInterval);
             console.error('Error:', error);
             document.getElementById('processingStatus').style.display = 'none';
-            document.getElementById('processButton').disabled = false;
-            document.getElementById('processButton').innerHTML = '💼 Generate Job Posting (4.00 AED)';
+            const processButton = document.getElementById('processButton');
+            processButton.disabled = false;
+            processButton.classList.remove('loading');
+            processButton.innerHTML = '💼 Generate Job Posting (4.00 AED)';
             showToast('❌ Network error - please try again', 'error');
         });
     });

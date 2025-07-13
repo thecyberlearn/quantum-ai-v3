@@ -476,8 +476,15 @@
         return 'No weather data available';
     }
 
+    // Track processing state to prevent duplicates
+    let isProcessing = false;
+
     // Reset form for creating another report
     function resetForm() {
+        // Reset processing state
+        isProcessing = false;
+        
+        // Reset form and UI
         document.getElementById('weatherForm').reset();
         document.getElementById('weatherResults').style.display = 'none';
         document.getElementById('processingStatus').style.display = 'none';
@@ -593,6 +600,11 @@
             return;
         }
         
+        // Prevent duplicate submissions
+        if (isProcessing) {
+            return;
+        }
+        
         // Check user authentication
         {% if not user.is_authenticated %}
         window.location.href = "{% url 'authentication:login' %}";
@@ -608,6 +620,9 @@
             }, 2000);
             return;
         }
+
+        // Set processing state
+        isProcessing = true;
 
         // Show processing status with steps
         document.getElementById('processingStatus').style.display = 'block';
@@ -646,6 +661,10 @@
         .then(response => response.json())
         .then(result => {
             clearInterval(stepInterval);
+            
+            // Reset processing state
+            isProcessing = false;
+            
             // Handle immediate response (API-based agent)
             document.getElementById('processingStatus').style.display = 'none';
             document.getElementById('processButton').disabled = false;
@@ -662,6 +681,10 @@
         .catch(error => {
             clearInterval(stepInterval);
             console.error('Error:', error);
+            
+            // Reset processing state
+            isProcessing = false;
+            
             document.getElementById('processingStatus').style.display = 'none';
             document.getElementById('processButton').disabled = false;
             document.getElementById('processButton').innerHTML = '🌤️ Get Weather Report (2.00 AED)';

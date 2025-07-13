@@ -687,26 +687,51 @@
         }
     }
 
+    // Track polling and results to prevent duplicates
+    let resultsDisplayed = false;
+    let currentPollInterval = null;
+
     // Poll for results
     function pollForResults(requestId) {
         let pollCount = 0;
         const maxPolls = 60; // 60 seconds maximum for data analysis
+        resultsDisplayed = false; // Reset flag
         
-        const pollInterval = setInterval(() => {
+        // Clear any existing polling
+        if (currentPollInterval) {
+            clearInterval(currentPollInterval);
+            currentPollInterval = null;
+        }
+        
+        currentPollInterval = setInterval(() => {
             pollCount++;
             
             fetch(`/agents/data-analyzer/result/${requestId}/`)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(result => {
                     if (result.status === 'completed' || result.status === 'failed') {
-                        clearInterval(pollInterval);
+                        // Stop polling immediately
+                        clearInterval(currentPollInterval);
+                        currentPollInterval = null;
+                        
+                        // Reset UI
                         document.getElementById('processingStatus').style.display = 'none';
                         document.getElementById('processButton').disabled = false;
                         document.getElementById('processButton').innerHTML = '📊 Analyze Data (5.00 AED)';
                         
-                        displayResults(result);
+                        // Display results only once
+                        if (!resultsDisplayed) {
+                            resultsDisplayed = true;
+                            displayResults(result);
+                        }
                     } else if (pollCount >= maxPolls) {
-                        clearInterval(pollInterval);
+                        clearInterval(currentPollInterval);
+                        currentPollInterval = null;
                         document.getElementById('processingStatus').style.display = 'none';
                         document.getElementById('processButton').disabled = false;
                         document.getElementById('processButton').innerHTML = '📊 Analyze Data (5.00 AED)';
@@ -715,13 +740,12 @@
                 })
                 .catch(error => {
                     console.error('Error polling results:', error);
-                    if (pollCount >= maxPolls) {
-                        clearInterval(pollInterval);
-                        document.getElementById('processingStatus').style.display = 'none';
-                        document.getElementById('processButton').disabled = false;
-                        document.getElementById('processButton').innerHTML = '📊 Analyze Data (5.00 AED)';
-                        showToast('❌ Network error - please try again', 'error');
-                    }
+                    clearInterval(currentPollInterval);
+                    currentPollInterval = null;
+                    document.getElementById('processingStatus').style.display = 'none';
+                    document.getElementById('processButton').disabled = false;
+                    document.getElementById('processButton').innerHTML = '📊 Analyze Data (5.00 AED)';
+                    showToast('❌ Network error during processing - please try again', 'error');
                 });
         }, 1000);
     }
@@ -729,10 +753,10 @@
     
     function updateWalletBalance(newBalance) {
         // Update wallet balance display
-        const balanceElements = document.querySelectorAll('[data-wallet-balance]');
-        balanceElements.forEach(element => {
-            element.textContent = `${newBalance.toFixed(2)} AED`;
-        });
+        const balanceElement = document.getElementById('walletBalance');
+        if (balanceElement) {
+            balanceElement.textContent = `${newBalance.toFixed(2)} AED`;
+        }
         window.currentWalletBalance = newBalance;
     }
     
