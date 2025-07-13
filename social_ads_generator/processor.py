@@ -51,6 +51,7 @@ Please create platform-optimized ad copy that:
             request_obj.status = 'processing'
             request_obj.save()
             
+            
             # Handle array response from N8N (extract first item)
             if isinstance(response_data, list) and len(response_data) > 0:
                 response_data = response_data[0]

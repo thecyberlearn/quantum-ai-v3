@@ -102,7 +102,7 @@
                 <div class="action-buttons">
                     <button onclick="copySocialAds()" class="btn btn-primary">📋 Copy Ads</button>
                     <button onclick="downloadSocialAds()" class="btn btn-secondary">💾 Download Ads</button>
-                    <button onclick="resetForm()" class="btn" style="background: rgba(236, 72, 153, 1); color: white;">🔄 Create Another</button>
+                    <button onclick="resetForm()" class="btn btn-secondary">🔄 Create Another</button>
                 </div>
             </div>
         </div>
@@ -201,6 +201,7 @@
 
     // Display social ads results with engaging ad copy formatting
     function displayResults(result) {
+        
         const resultsContainer = document.getElementById('adResults');
         const contentElement = document.getElementById('adContent');
         
@@ -211,7 +212,7 @@
         
         // Update wallet balance if provided
         if (result.wallet_balance !== undefined) {
-            updateWalletBalance(result.wallet_balance);
+            AgentUtils.updateWalletBalance(result.wallet_balance);
         }
         
         // Handle errors

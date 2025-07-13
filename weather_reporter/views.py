@@ -57,8 +57,7 @@ class WeatherReporterProcessView(View):
                 agent=agent,
                 cost=agent.price,
                 location=data.get('location', ''),
-                report_type=data.get('report_type', 'current'),
-                
+                report_type=data.get('report_type', 'current')
             )
             
             # Process request immediately (API-based agent)
@@ -128,6 +127,48 @@ def weather_reporter_result(request, request_id):
                 'wind_speed': getattr(response, 'wind_speed', None),
                 'formatted_report': getattr(response, 'formatted_report', None),
                 
+                'processing_time': float(response.processing_time) if response.processing_time else None,
+                'error_message': response.error_message,
+                'wallet_balance': float(request.user.wallet_balance)
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'status': agent_request.status,
+                'message': 'Processing in progress...'
+            })
+            
+    except WeatherReporterRequest.DoesNotExist:
+        return JsonResponse({'error': 'Request not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def weather_reporter_status(request, request_id):
+    """Get status for a specific request (for polling)"""
+    try:
+        agent_request = WeatherReporterRequest.objects.get(
+            id=request_id,
+            user=request.user
+        )
+        
+        if hasattr(agent_request, 'response'):
+            response = agent_request.response
+            # Refresh user to get current wallet balance
+            request.user.refresh_from_db()
+            
+            return JsonResponse({
+                'success': response.success,
+                'status': agent_request.status,
+                'content': getattr(response, 'weather_data', None),
+                'weather_data': getattr(response, 'weather_data', None),
+                'temperature': getattr(response, 'temperature', None),
+                'description': getattr(response, 'description', None),
+                'humidity': getattr(response, 'humidity', None),
+                'wind_speed': getattr(response, 'wind_speed', None),
+                'formatted_report': getattr(response, 'formatted_report', None),
+                'raw_response': getattr(response, 'raw_response', None),
                 'processing_time': float(response.processing_time) if response.processing_time else None,
                 'error_message': response.error_message,
                 'wallet_balance': float(request.user.wallet_balance)

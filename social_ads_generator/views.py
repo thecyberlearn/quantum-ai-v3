@@ -138,19 +138,25 @@ def social_ads_generator_status(request, request_id):
             # Refresh user to get current wallet balance
             request.user.refresh_from_db()
             
-            return JsonResponse({
+            ad_copy = getattr(response, 'ad_copy', None)
+            raw_response = getattr(response, 'raw_response', None)
+            
+            
+            json_response = {
                 'success': response.success,
                 'status': agent_request.status,
-                'content': getattr(response, 'ad_copy', None),
-                'ad_copy_content': getattr(response, 'ad_copy', None),
+                'content': ad_copy,
+                'ad_copy_content': ad_copy,
                 'hashtags': getattr(response, 'hashtags', None),
                 'targeting_suggestions': getattr(response, 'targeting_suggestions', None),
                 'formatted_ad': getattr(response, 'formatted_ad', None),
-                'raw_response': getattr(response, 'raw_response', None),
+                'raw_response': raw_response,
                 'processing_time': float(response.processing_time) if response.processing_time else None,
                 'error_message': response.error_message,
                 'wallet_balance': float(request.user.wallet_balance)
-            })
+            }
+            
+            return JsonResponse(json_response)
         else:
             return JsonResponse({
                 'success': False,
