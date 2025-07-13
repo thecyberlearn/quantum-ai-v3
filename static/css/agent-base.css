@@ -1,0 +1,527 @@
+/* NetCop AI Agents - Unified CSS System */
+/* Supports multiple themes with consistent components */
+
+/* Base CSS Variables - Default Professional Theme */
+:root {
+    /* Core Color System */
+    --bg-color: #ffffff;
+    --text-color: #1a1a1a;
+    --primary-color: #000000;
+    --card-bg: #f8f9fa;
+    --border-color: #e0e0e0;
+    --hover-color: #f0f0f0;
+    --accent-color: #666666;
+    --success-color: #10b981;
+    --error-color: #ef4444;
+    --warning-color: #f59e0b;
+    
+    /* Typography */
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    
+    /* Font Sizes - Crisp & Readable */
+    --text-xs: 11px;
+    --text-sm: 13px;
+    --text-base: 14px;
+    --text-lg: 16px;
+    --text-xl: 18px;
+    
+    /* Spacing System */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 12px;
+    --space-lg: 16px;
+    --space-xl: 24px;
+    
+    /* Design Tokens */
+    --radius: 6px;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --transition: 150ms ease;
+    
+    /* Theme-specific Properties */
+    --agent-bg: var(--bg-color);
+    --agent-primary: var(--primary-color);
+    --agent-card-bg: var(--card-bg);
+    --agent-border: var(--border-color);
+    --agent-backdrop-filter: none;
+    --agent-card-shadow: var(--shadow);
+    --agent-card-border: 1px solid var(--border-color);
+}
+
+/* Professional Theme (Default - Black & White) */
+.theme-professional {
+    --agent-bg: #ffffff;
+    --agent-primary: #000000;
+    --agent-card-bg: #f8f9fa;
+    --agent-border: #e0e0e0;
+    --agent-backdrop-filter: none;
+    --agent-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --agent-card-border: 1px solid var(--border-color);
+}
+
+/* Creative Theme (Pink/Purple with Glassmorphism) */
+.theme-creative {
+    --agent-bg: var(--gradient-hero);
+    --agent-primary: rgba(236, 72, 153, 1);
+    --agent-card-bg: rgba(255, 255, 255, 0.9);
+    --agent-border: rgba(255, 255, 255, 0.3);
+    --agent-backdrop-filter: blur(20px);
+    --agent-card-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    --agent-card-border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Minimal Theme (Light Gray) */
+.theme-minimal {
+    --agent-bg: #fafafa;
+    --agent-primary: #374151;
+    --agent-card-bg: #ffffff;
+    --agent-border: #e5e7eb;
+    --agent-backdrop-filter: none;
+    --agent-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --agent-card-border: 1px solid #e5e7eb;
+}
+
+/* Base Styles */
+body {
+    font-family: var(--font-primary);
+    font-size: var(--text-base);
+    line-height: 1.4;
+    font-weight: 400;
+}
+
+/* Page Layout - Universal Agent Layout */
+.agent-page {
+    background: var(--agent-bg);
+    min-height: calc(100vh - 80px);
+    padding: var(--space-lg);
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    color: var(--text-color);
+}
+
+.agent-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: var(--space-xl);
+    align-items: start;
+}
+
+/* Card Components */
+.card {
+    background: var(--agent-card-bg);
+    border-radius: var(--radius);
+    padding: var(--space-lg);
+    border: var(--agent-card-border);
+    margin-bottom: var(--space-lg);
+    backdrop-filter: var(--agent-backdrop-filter);
+    box-shadow: var(--agent-card-shadow);
+}
+
+.section-title {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: var(--space-md);
+    border-bottom: 1px solid var(--agent-border);
+    padding-bottom: var(--space-sm);
+}
+
+.section-container {
+    margin-bottom: var(--space-lg);
+    padding: var(--space-md);
+    border-radius: var(--radius);
+    border: 1px solid var(--agent-border);
+}
+
+/* Special Section Styling for Creative Theme */
+.theme-creative .section-container.content-info {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.theme-creative .section-container.platform-info {
+    background: rgba(139, 92, 246, 0.1);
+    border-color: rgba(139, 92, 246, 0.3);
+}
+
+.section-subtitle {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--accent-color);
+    margin-bottom: var(--space-md);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Form Elements */
+.form-input, .form-textarea {
+    width: 100%;
+    padding: var(--space-md);
+    border: 1px solid var(--agent-border);
+    border-radius: var(--radius);
+    font-size: var(--text-base);
+    margin-bottom: var(--space-md);
+    background: white;
+    color: var(--text-color);
+    transition: border-color var(--transition);
+    font-family: inherit;
+}
+
+.form-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-input:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--agent-primary);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Creative theme focus styles */
+.theme-creative .form-input:focus, 
+.theme-creative .form-textarea:focus {
+    border-color: var(--agent-primary);
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+}
+
+.form-label {
+    display: block;
+    margin-bottom: var(--space-xs);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.form-help {
+    font-size: var(--text-xs);
+    color: var(--accent-color);
+    margin-top: var(--space-xs);
+    opacity: 0.7;
+}
+
+.form-group {
+    margin-bottom: var(--space-md);
+}
+
+.form-group.error .form-input,
+.form-group.error .form-textarea {
+    border-color: var(--error-color);
+}
+
+/* Processing States */
+.processing-status {
+    padding: var(--space-lg);
+    background: var(--agent-card-bg);
+    border: 1px solid var(--agent-primary);
+    border-radius: var(--radius);
+    color: var(--agent-primary);
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: var(--space-lg);
+    display: none;
+}
+
+/* Creative theme processing status */
+.theme-creative .processing-status {
+    background: rgba(236, 72, 153, 0.1);
+    border: 2px solid var(--agent-primary);
+    color: rgba(190, 24, 93, 1);
+    font-weight: 600;
+}
+
+.processing-status .status-icon {
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-sm);
+    display: block;
+}
+
+/* Creative theme icon animation */
+.theme-creative .processing-status .status-icon {
+    font-size: 32px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.processing-status .status-text {
+    font-size: var(--text-base);
+    font-weight: 500;
+    margin-bottom: var(--space-xs);
+}
+
+.processing-status .status-detail {
+    font-size: var(--text-sm);
+    opacity: 0.7;
+}
+
+/* Results Display */
+.results-card {
+    background: var(--agent-card-bg);
+    border-radius: var(--radius);
+    padding: var(--space-lg);
+    border: var(--agent-card-border);
+    margin-top: var(--space-lg);
+    backdrop-filter: var(--agent-backdrop-filter);
+    box-shadow: var(--agent-card-shadow);
+    display: none;
+}
+
+.results-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--agent-border);
+}
+
+.results-content {
+    background: white;
+    border: 1px solid var(--agent-border);
+    border-radius: var(--radius);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-md);
+    line-height: 1.6;
+    color: var(--text-color);
+    font-size: var(--text-base);
+    white-space: pre-line;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* Simple Text Styling for Results */
+.results-content {
+    line-height: 1.6;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Buttons & Actions */
+.action-buttons {
+    display: flex;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: var(--space-md);
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 500;
+    cursor: pointer;
+    font-size: var(--text-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    text-decoration: none;
+    transition: all var(--transition);
+    flex: 1;
+    min-width: 120px;
+}
+
+.btn-primary {
+    background: var(--agent-primary);
+    color: white;
+    box-shadow: var(--shadow);
+}
+
+.btn-secondary {
+    background: var(--agent-card-bg);
+    color: var(--agent-primary);
+    border: 1px solid var(--agent-border);
+}
+
+/* Creative theme button styles */
+.theme-creative .btn {
+    padding: 16px 32px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 16px;
+    min-height: 48px;
+}
+
+.theme-creative .btn-secondary {
+    border: 2px solid var(--border-medium);
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-primary:hover:not(:disabled) {
+    opacity: 0.9;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    border-color: var(--agent-primary);
+    background: var(--hover-color);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn:disabled {
+    background: var(--accent-color);
+    cursor: not-allowed;
+    opacity: 0.5;
+    transform: none;
+}
+
+.btn.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Wallet Sidebar */
+.wallet-section {
+    position: sticky;
+    top: var(--space-lg);
+}
+
+.wallet-balance {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: var(--space-xs);
+}
+
+/* Creative theme larger wallet balance */
+.theme-creative .wallet-balance {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.balance-label {
+    font-size: var(--text-sm);
+    color: var(--accent-color);
+    margin-bottom: var(--space-lg);
+}
+
+/* Creative theme larger balance label */
+.theme-creative .balance-label {
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.process-btn {
+    width: 100%;
+    margin-bottom: var(--space-sm);
+}
+
+.insufficient-balance {
+    background: var(--agent-card-bg);
+    border: 1px solid var(--agent-border);
+    color: var(--text-color);
+    padding: var(--space-md);
+    border-radius: var(--radius);
+    text-align: center;
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-sm);
+    font-weight: 500;
+}
+
+/* Creative theme insufficient balance */
+.theme-creative .insufficient-balance {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: var(--error-color);
+}
+
+/* Usage Info */
+.usage-info {
+    padding: var(--space-md);
+    background: var(--agent-card-bg);
+    border-radius: var(--radius);
+    border: 1px solid var(--agent-border);
+}
+
+/* Creative theme usage info */
+.theme-creative .usage-info {
+    background: rgba(236, 72, 153, 0.1);
+    border: 1px solid rgba(236, 72, 153, 0.2);
+}
+
+.usage-info h4 {
+    margin: 0 0 var(--space-sm) 0;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+/* Creative theme usage info header */
+.theme-creative .usage-info h4 {
+    color: rgba(190, 24, 93, 1);
+}
+
+.usage-info ul {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--text-color);
+    line-height: 1.4;
+    list-style: none;
+    padding-left: 0;
+}
+
+.usage-info li {
+    margin: var(--space-xs) 0;
+    padding-left: var(--space-md);
+    position: relative;
+}
+
+.usage-info li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--agent-primary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .agent-container {
+        grid-template-columns: 1fr;
+        gap: var(--space-lg);
+        padding: var(--space-md);
+    }
+    
+    .wallet-section {
+        position: static;
+        order: -1;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+
+    .form-input, .form-textarea {
+        font-size: 16px; /* Prevent zoom on iOS */
+    }
+}
+
+@media (max-width: 480px) {
+    .agent-page {
+        padding: var(--space-sm);
+    }
+    
+    .card {
+        padding: var(--space-md);
+    }
+    
+    .section-container {
+        padding: var(--space-sm);
+    }
+}

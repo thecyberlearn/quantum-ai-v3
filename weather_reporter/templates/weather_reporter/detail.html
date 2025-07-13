@@ -4,292 +4,67 @@
 {% block title %}Weather Reporter Agent - NetCop AI Hub{% endblock %}
 
 {% block extra_css %}
+<!-- Optimized Font Loading -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- External Stylesheets -->
+<link rel="stylesheet" href="{% static 'css/themes.css' %}">
+<link rel="stylesheet" href="{% static 'css/agent-base.css' %}">
+
+<!-- Shared JavaScript Utilities -->
+<script src="{% static 'js/agent-utils.js' %}"></script>
+
 <style>
-    .weather-page {
-        background: var(--gradient-hero);
-        min-height: calc(100vh - 80px);
-        padding: clamp(20px, 5vw, 40px);
-        width: 100vw;
-        margin-left: calc(-50vw + 50%);
-    }
-    
-    .weather-container {
-        max-width: 1280px;
-        margin: 0 auto;
-        display: grid;
-        grid-template-columns: 1fr 400px;
-        gap: 24px;
-        align-items: start;
-    }
-    
-    .card {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 16px;
-        padding: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        backdrop-filter: blur(20px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        margin-bottom: 24px;
-    }
-    
-    .section-title {
-        font-size: 18px;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin-bottom: 16px;
-    }
-    
-    .form-input {
-        width: 100%;
-        padding: 12px 16px;
-        border: 2px solid var(--border-medium);
-        border-radius: 12px;
-        font-size: 16px;
-        transition: border-color 0.2s ease;
-        min-height: 48px;
-        margin-bottom: 16px;
-        font-family: inherit;
-        background: var(--background-light);
-    }
-    
-    .form-input:focus {
-        outline: none;
-        border-color: var(--primary-blue);
-        background: white;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-    
-    .help-text {
-        font-size: 12px;
-        color: var(--text-secondary);
-        margin-top: 6px;
-    }
-    
+    /* Custom styles for weather reporter radio grid */
     .radio-grid {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 12px;
+        gap: var(--space-md);
     }
     
     .radio-option {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 16px;
-        border: 2px solid var(--border-light);
-        border-radius: 12px;
+        gap: var(--space-md);
+        padding: var(--space-lg);
+        border: 1px solid var(--agent-border);
+        border-radius: var(--radius);
         cursor: pointer;
         background: white;
-        transition: all 0.2s ease;
+        transition: all var(--transition);
         min-height: 60px;
     }
     
     .radio-option.selected {
-        border-color: var(--primary-blue);
-        background: rgba(59, 130, 246, 0.1);
+        border-color: var(--agent-primary);
+        background: var(--agent-card-bg);
+    }
+    
+    .radio-option:hover {
+        border-color: var(--agent-primary);
+        background: var(--hover-color);
     }
     
     .radio-option input[type="radio"] {
-        margin: 0;
         width: 18px;
         height: 18px;
-    }
-    
-    .processing-status {
-        padding: 20px;
-        background: rgba(59, 130, 246, 0.1);
-        border: 2px solid var(--primary-blue);
-        border-radius: 12px;
-        color: var(--primary-dark);
-        font-weight: 600;
-        text-align: center;
-        margin-bottom: 24px;
-        display: none;
-    }
-    
-    .processing-status .status-icon {
-        font-size: 32px;
-        margin-bottom: 12px;
-        animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.1); }
-    }
-    
-    .results-card {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 16px;
-        padding: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        backdrop-filter: blur(20px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        margin-top: 24px;
-        display: none;
-    }
-    
-    .results-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 20px;
-        padding-bottom: 16px;
-        border-bottom: 1px solid var(--border-light);
-    }
-    
-    .results-content {
-        background: var(--background-page);
-        border: 1px solid var(--border-light);
-        border-radius: 12px;
-        padding: 24px;
-        margin-bottom: 20px;
-        white-space: pre-line;
-        line-height: 1.7;
-        color: var(--text-primary);
-        font-size: 15px;
-    }
-    
-    .action-buttons {
-        display: flex;
-        gap: 12px;
-        margin-top: 20px;
-        flex-wrap: wrap;
-    }
-    
-    .btn {
-        padding: 16px 32px;
-        border: none;
-        border-radius: 12px;
-        font-weight: 600;
-        cursor: pointer;
-        font-size: 16px;
-        min-height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        transition: transform 0.1s ease;
-        text-decoration: none;
-    }
-    
-    .btn-primary {
-        background: var(--gradient-primary);
-        color: white;
-        flex: 1;
-        min-width: 120px;
-    }
-    
-    .btn-secondary {
-        background: var(--background-subtle);
-        color: var(--text-primary);
-        border: 2px solid var(--border-medium);
-        flex: 1;
-        min-width: 120px;
-    }
-    
-    .btn:hover:not(:disabled) {
-        transform: translateY(-1px);
-    }
-    
-    .btn:disabled {
-        background: var(--border-strong);
-        color: white;
-        cursor: not-allowed;
-        transform: none;
-        opacity: 0.6;
-    }
-    
-    .wallet-section {
-        position: sticky;
-        top: 20px;
-    }
-    
-    .wallet-balance {
-        font-size: 28px;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 8px;
-    }
-    
-    .balance-label {
-        font-size: 16px;
-        color: var(--text-secondary);
-        margin-bottom: 20px;
-    }
-    
-    .process-btn {
-        width: 100%;
-        margin-bottom: 12px;
-    }
-    
-    .insufficient-balance {
-        background: rgba(239, 68, 68, 0.1);
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        color: var(--error-red);
-        padding: 12px;
-        border-radius: 8px;
-        text-align: center;
-        font-size: 14px;
-        margin-bottom: 12px;
-    }
-    
-    .usage-info {
-        padding: 16px;
-        background: rgba(59, 130, 246, 0.1);
-        border-radius: 12px;
-        border: 1px solid rgba(59, 130, 246, 0.2);
-    }
-    
-    .usage-info h4 {
-        margin: 0 0 8px 0;
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--primary-dark);
-    }
-    
-    .usage-info ul {
         margin: 0;
-        font-size: 12px;
-        color: var(--text-primary);
-        line-height: 1.4;
-        list-style: none;
-        padding-left: 0;
     }
     
-    .usage-info li {
-        margin: 4px 0;
-        padding-left: 16px;
-        position: relative;
-    }
-    
-    .usage-info li::before {
-        content: "•";
-        position: absolute;
-        left: 0;
-        color: var(--primary-blue);
-    }
-    
-    /* Mobile optimizations */
-    @media (max-width: 768px) {
-        .weather-container {
-            grid-template-columns: 1fr;
-        }
-        
-        .action-buttons {
-            flex-direction: column;
-        }
-        
-        .btn {
-            width: 100%;
-        }
+    .form-help {
+        font-size: var(--text-xs);
+        color: var(--accent-color);
+        margin-top: var(--space-xs);
+        opacity: 0.7;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="weather-page">
-    <div class="weather-container">
+<div class="agent-page theme-professional">
+    <div class="agent-container">
         <!-- Messages -->
         {% if messages %}
             {% for message in messages %}
@@ -308,15 +83,15 @@
                     {% csrf_token %}
                     
                     <!-- Location Input -->
-                    <div style="margin-bottom: 24px;">
-                        <label for="location" style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: var(--text-primary);">📍 Enter Location *</label>
+                    <div class="form-group">
+                        <label for="location" class="form-label">📍 Enter Location *</label>
                         <input type="text" name="location" id="location" class="form-input" placeholder="Enter city name, address, or coordinates..." required>
-                        <div class="help-text">Examples: "New York", "London, UK", "Tokyo, Japan", "37.7749,-122.4194"</div>
+                        <div class="form-help">Examples: "New York", "London, UK", "Tokyo, Japan", "37.7749,-122.4194"</div>
                     </div>
                     
                     <!-- Report Type Selection -->
                     <div>
-                        <label style="display: block; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: var(--text-primary);">📊 Report Type *</label>
+                        <label class="form-label">📊 Report Type *</label>
                         <div class="radio-grid">
                             <label class="radio-option selected" onclick="selectReportType('current')">
                                 <input type="radio" name="report_type" value="current" checked>
@@ -446,34 +221,14 @@
     
     // Copy weather report to clipboard
     function copyWeatherReport() {
-        const reportText = generateReportText();
-        navigator.clipboard.writeText(reportText).then(() => {
-            showToast('📋 Weather report copied to clipboard!', 'success');
-        }).catch(() => {
-            showToast('Failed to copy report', 'error');
-        });
+        const reportText = AgentUtils.generateTextForExport('weatherContent');
+        AgentUtils.copyToClipboard(reportText, 'Weather report copied to clipboard!');
     }
     
     // Download weather report as text file
     function downloadWeatherReport() {
-        const reportText = generateReportText();
-        const blob = new Blob([reportText], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'weather-report-' + Date.now() + '.txt';
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('💾 Weather report downloaded!', 'success');
-    }
-    
-    // Generate report text for copy/download
-    function generateReportText() {
-        const content = document.querySelector('#weatherContent');
-        if (content) {
-            return content.textContent || content.innerText || '';
-        }
-        return 'No weather data available';
+        const reportText = AgentUtils.generateTextForExport('weatherContent');
+        AgentUtils.downloadAsFile(reportText, `weather-report-${Date.now()}.txt`, 'Weather report downloaded!');
     }
 
     // Track processing state to prevent duplicates
@@ -498,58 +253,22 @@
         document.querySelector('.radio-option').classList.add('selected');
         document.querySelector('input[value="current"]').checked = true;
         
-        showToast('Form reset! Ready for another weather report.', 'success');
+        AgentUtils.showToast('Form reset! Ready for another weather report.', 'success');
     }
     
     // Simple toast notification
-    function showToast(message, type = 'info') {
-        const toast = document.createElement('div');
-        toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 12px 20px;
-            border-radius: 8px;
-            color: white;
-            font-weight: 600;
-            z-index: 1000;
-            ${type === 'success' ? 'background: var(--success-green);' : 'background: var(--error-red);'}
-        `;
-        toast.textContent = message;
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            toast.remove();
-        }, 3000);
-    }
 
-    // Update wallet balance display
-    function updateWalletBalance(newBalance) {
-        const balanceElements = document.querySelectorAll('[data-wallet-balance]');
-        balanceElements.forEach(element => {
-            element.textContent = `${newBalance.toFixed(2)} AED`;
-        });
-        window.currentWalletBalance = newBalance;
-    }
 
-    // Display weather results
+    // Display weather results with markdown parsing
     function displayResults(result) {
-        const resultsContainer = document.getElementById('weatherResults');
-        const contentContainer = document.getElementById('weatherContent');
-        
-        if (result.success && result.status === 'completed') {
-            contentContainer.textContent = result.content || result.weather_data || result.formatted_report || 'Weather report generated successfully!';
-            resultsContainer.style.display = 'block';
-            
-            // Update wallet balance if provided
-            if (result.wallet_balance !== undefined) {
-                updateWalletBalance(result.wallet_balance);
-            }
-            
-            showToast('✅ Weather report completed and payment processed!', 'success');
-        } else {
-            showToast('❌ Failed to generate weather report - no charge applied', 'error');
-        }
+        AgentUtils.displayResults({
+            result: result,
+            resultsId: 'weatherResults',
+            contentId: 'weatherContent',
+            defaultMessage: 'Weather report generated successfully!',
+            successMessage: '✅ Weather report completed and payment processed!',
+            errorMessage: '❌ Failed to generate weather report - no charge applied'
+        });
     }
 
     // Poll for results
@@ -575,7 +294,7 @@
                         document.getElementById('processingStatus').style.display = 'none';
                         document.getElementById('processButton').disabled = false;
                         document.getElementById('processButton').innerHTML = '🌤️ Get Weather Report (2.00 AED)';
-                        showToast('❌ Processing timeout - please try again', 'error');
+                        AgentUtils.showToast('❌ Processing timeout - please try again', 'error');
                     }
                 })
                 .catch(error => {
@@ -585,7 +304,7 @@
                         document.getElementById('processingStatus').style.display = 'none';
                         document.getElementById('processButton').disabled = false;
                         document.getElementById('processButton').innerHTML = '🌤️ Get Weather Report (2.00 AED)';
-                        showToast('❌ Network error - please try again', 'error');
+                        AgentUtils.showToast('❌ Network error - please try again', 'error');
                     }
                 });
         }, 1000);
@@ -596,7 +315,7 @@
         e.preventDefault();
         
         if (!isFormValid()) {
-            showToast('Please fill in all required fields', 'error');
+            AgentUtils.showToast('Please fill in all required fields', 'error');
             return;
         }
         
@@ -607,14 +326,14 @@
         
         // Check user authentication
         {% if not user.is_authenticated %}
-        window.location.href = "{% url 'authentication:login' %}";
-        return;
+            window.location.href = "{% url 'authentication:login' %}";
+            return;
         {% endif %}
         
         // Check wallet balance
         const balance = {{ user.wallet_balance|default:0 }};
         if (balance < 2.00) {
-            showToast('Insufficient balance! You need 2.00 AED.', 'error');
+            AgentUtils.showToast('Insufficient balance! You need 2.00 AED.', 'error');
             setTimeout(() => {
                 window.location.href = "{% url 'core:wallet' %}";
             }, 2000);
@@ -651,7 +370,7 @@
         // Submit form via AJAX
         const formData = new FormData(this);
         
-        fetch('/agents/weather-reporter/process/', {
+        fetch(window.location.href, {
             method: 'POST',
             body: formData,
             headers: {
@@ -671,11 +390,11 @@
             document.getElementById('processButton').innerHTML = '🌤️ Get Weather Report (2.00 AED)';
             
             if (result.error) {
-                showToast(`❌ ${result.error}`, 'error');
+                AgentUtils.showToast(`❌ ${result.error}`, 'error');
             } else if (result.success) {
                 displayResults(result);
             } else {
-                showToast('❌ Failed to generate weather report', 'error');
+                AgentUtils.showToast('❌ Failed to generate weather report', 'error');
             }
         })
         .catch(error => {
@@ -688,7 +407,7 @@
             document.getElementById('processingStatus').style.display = 'none';
             document.getElementById('processButton').disabled = false;
             document.getElementById('processButton').innerHTML = '🌤️ Get Weather Report (2.00 AED)';
-            showToast('❌ Network error - please try again', 'error');
+            AgentUtils.showToast('❌ Network error - please try again', 'error');
         });
     });
 </script>

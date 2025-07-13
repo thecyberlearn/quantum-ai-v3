@@ -192,9 +192,12 @@ The system uses Django templates in `agent_base/templates/agent_generator/` to g
 
 **Data Analysis Agent** (Price: 5.00 AED):
 - **N8N Integration**: PDF analysis webhook processor
-- **File Upload**: PDF-only with binary multipart upload
+- **File Upload**: PDF, CSV, Excel files with drag-and-drop interface
 - **Real-time Results**: AJAX display with wallet balance updates
 - **Features**: Summary/Detailed/Statistical analysis types
+- **Form Submission Pattern**: Uses unified form submission (not button click)
+- **Unified CSS**: Uses agent-base.css with professional theme
+- **Text Display**: Simple text formatting (no complex markdown parsing)
 
 **Weather Reporter Agent** (Price: 2.00 AED):
 - **API Integration**: OpenWeatherMap API with direct calls
@@ -202,6 +205,21 @@ The system uses Django templates in `agent_base/templates/agent_generator/` to g
 - **Formatted Reports**: Both current and detailed weather reports
 - **Real-time Results**: Dynamic display below form
 - **Error Handling**: API failures and invalid locations
+- **Unified CSS**: Uses agent-base.css with minimal theme
+
+**Social Ads Generator Agent** (Price: 7.00 AED):
+- **N8N Integration**: Social media ad generation via webhook
+- **Platform Support**: Facebook, Instagram, LinkedIn, Twitter/X, TikTok, YouTube
+- **Multi-language**: English, Arabic, Spanish, French, German, Chinese
+- **Real-time Results**: Dynamic content generation and display
+- **Unified CSS**: Uses agent-base.css with creative theme (glassmorphism)
+
+**Job Posting Generator Agent** (Price: 4.00 AED):
+- **N8N Integration**: Professional job posting creation
+- **Comprehensive Forms**: Job details, requirements, company info
+- **Multi-language Support**: Multiple output languages
+- **Enhanced UX**: Progressive form validation and real-time feedback
+- **Unified CSS**: Uses agent-base.css with professional theme
 
 ### Management Commands
 
@@ -510,6 +528,126 @@ STRIPE_WEBHOOK_SECRET=whsec_your_secret_here  # Optional
 - **Immediate user feedback** - Balance updates immediately
 - **Simpler debugging** - You control the verification timing
 - **Production-proven** - Used by many successful platforms
+
+## Unified CSS and UI System
+
+### Agent Styling Architecture
+All agents now use a unified CSS system for consistent user experience and maintainability:
+
+#### Core Files
+- **`/static/css/agent-base.css`**: Unified component library for all agents
+- **`/static/css/themes.css`**: Global color variables and themes
+- **`/static/js/agent-utils.js`**: Shared JavaScript utilities for all agents
+
+#### Theme System
+The unified CSS supports multiple themes via CSS custom properties:
+
+1. **Professional Theme** (Default - Black & White):
+   - Used by: Job Posting Generator, Data Analyzer, Weather Reporter
+   - Clean, corporate appearance with subtle shadows
+   - Focused on readability and professional presentation
+
+2. **Creative Theme** (Pink/Purple with Glassmorphism):
+   - Used by: Social Ads Generator
+   - Vibrant gradients and glassmorphism effects
+   - Enhanced visual appeal for creative content
+
+3. **Minimal Theme** (Light Gray):
+   - Available for future agents requiring minimal design
+   - Subtle styling with maximum content focus
+
+#### Implementation Pattern
+```html
+<!-- Standard agent template structure -->
+<div class="agent-page theme-professional">  <!-- or theme-creative, theme-minimal -->
+    <div class="agent-container">
+        <div>
+            <!-- Main content area -->
+            <div class="card">
+                <h3 class="section-title">Agent Title</h3>
+                <!-- Agent form and content -->
+            </div>
+        </div>
+        <div class="wallet-section">
+            <!-- Wallet sidebar -->
+        </div>
+    </div>
+</div>
+```
+
+### Text Display Standardization
+
+#### Simple Text Formatting Approach
+After testing complex markdown parsing, the system now uses simplified text formatting for better reliability:
+
+**Current Implementation:**
+```javascript
+// Simple text formatting in AgentUtils.parseMarkdown()
+parseMarkdown(text) {
+    if (!text) return '';
+    return text
+        .replace(/\*\*/g, '') // Remove markdown bold syntax
+        .replace(/\#{1,3}\s/g, '') // Remove header syntax
+        .replace(/\n{3,}/g, '\n\n') // Reduce excessive line breaks
+        .replace(/\n/g, '<br>') // Convert line breaks to HTML
+        .trim();
+}
+```
+
+**Benefits:**
+- No external dependencies (removed Marked.js + DOMPurify)
+- Consistent formatting across all agents
+- No risk of layout breaking from complex markdown
+- Fast rendering and simple maintenance
+
+#### CSS Text Styling
+```css
+.results-content {
+    line-height: 1.6;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-line; /* Preserves line breaks */
+}
+```
+
+### Form Submission Standardization
+
+All agents now use consistent form submission patterns:
+
+#### Unified Pattern
+```javascript
+// Standard form submission handler
+document.getElementById('agentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Validation, authentication, and balance checks
+    if (!isFormValid()) return;
+    
+    // Submit via FormData with CSRF token (automatic inclusion)
+    const formData = new FormData(this);
+    
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => response.json())
+    .then(result => {
+        // Handle polling or immediate response
+        if (result.success && result.request_id) {
+            pollForResults(result.request_id);
+        } else {
+            displayResults(result);
+        }
+    });
+});
+```
+
+#### Key Improvements
+- **Form submission** instead of button click handlers
+- **Automatic CSRF handling** via FormData(form)
+- **Consistent error handling** across all agents
+- **Unified polling mechanism** for webhook-based agents
 
 ## Current Architecture (Clean & Modern)
 

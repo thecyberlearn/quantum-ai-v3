@@ -4,453 +4,22 @@
 {% block title %}Job Posting Generator Agent - NetCop AI Hub{% endblock %}
 
 {% block extra_css %}
-<!-- Google Fonts - Simple -->
+<!-- Optimized Font Loading with Performance Hints -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
+<!-- External Stylesheets -->
 <link rel="stylesheet" href="{% static 'css/themes.css' %}">
-<style>
-    /* Modern Typography & Theme System */
-    :root {
-        /* Color System */
-        --bg-color: #ffffff;
-        --text-color: #1a1a1a;
-        --primary-color: #000000;
-        --card-bg: #f8f9fa;
-        --border-color: #e0e0e0;
-        --hover-color: #f0f0f0;
-        --accent-color: #666666;
-        --success-color: #10b981;
-        --error-color: #ef4444;
-        --warning-color: #f59e0b;
-        
-        /* Simple Typography */
-        --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        
-        /* Small, Crisp Font Sizes */
-        --text-xs: 11px;
-        --text-sm: 13px;
-        --text-base: 14px;
-        --text-lg: 16px;
-        --text-xl: 18px;
-        
-        /* Simple Spacing */
-        --space-xs: 4px;
-        --space-sm: 8px;
-        --space-md: 12px;
-        --space-lg: 16px;
-        --space-xl: 24px;
-        
-        /* Simple Properties */
-        --radius: 6px;
-        --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        --transition: 150ms ease;
-    }
+<link rel="stylesheet" href="{% static 'css/agent-base.css' %}">
 
-    body {
-        font-family: var(--font-primary);
-        font-size: var(--text-base);
-        line-height: 1.4;
-        font-weight: 400;
-    }
-
-    .job-posting-page {
-        background: var(--bg-color);
-        min-height: calc(100vh - 80px);
-        padding: var(--space-lg);
-        width: 100vw;
-        margin-left: calc(-50vw + 50%);
-        color: var(--text-color);
-    }
-    
-    .job-posting-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        display: grid;
-        grid-template-columns: 1fr 350px;
-        gap: var(--space-xl);
-        align-items: start;
-    }
-    
-    .card {
-        background: var(--card-bg);
-        border-radius: var(--radius);
-        padding: var(--space-lg);
-        border: 1px solid var(--border-color);
-        margin-bottom: var(--space-lg);
-    }
-    
-    .section-title {
-        font-size: var(--text-lg);
-        font-weight: 600;
-        color: var(--primary-color);
-        margin-bottom: var(--space-md);
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: var(--space-sm);
-    }
-    
-    .section-container {
-        margin-bottom: var(--space-lg);
-        padding: var(--space-md);
-        border-radius: var(--radius);
-        border: 1px solid var(--border-color);
-    }
-    
-    .section-subtitle {
-        font-size: var(--text-sm);
-        font-weight: 600;
-        color: var(--accent-color);
-        margin-bottom: var(--space-md);
-        text-transform: uppercase;
-    }
-    
-    .form-input, .form-textarea {
-        width: 100%;
-        padding: var(--space-md);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius);
-        font-size: var(--text-base);
-        margin-bottom: var(--space-md);
-        background: white;
-        color: var(--text-color);
-    }
-    
-    .form-textarea {
-        min-height: 100px;
-        resize: vertical;
-    }
-    
-    .form-input:focus, .form-textarea:focus {
-        outline: none;
-        border-color: var(--primary-color);
-    }
-    
-    .form-label {
-        display: block;
-        margin-bottom: var(--space-xs);
-        font-size: var(--text-sm);
-        font-weight: 500;
-        color: var(--text-color);
-    }
-    
-    .processing-status {
-        padding: var(--space-lg);
-        background: var(--card-bg);
-        border: 1px solid var(--primary-color);
-        border-radius: var(--radius);
-        color: var(--primary-color);
-        font-weight: 500;
-        text-align: center;
-        margin-bottom: var(--space-lg);
-        display: none;
-    }
-    
-    .processing-status .status-icon {
-        font-size: var(--text-xl);
-        margin-bottom: var(--space-sm);
-        display: block;
-    }
-
-    .processing-status .status-text {
-        font-size: var(--text-base);
-        font-weight: 500;
-        margin-bottom: var(--space-xs);
-    }
-
-    .processing-status .status-detail {
-        font-size: var(--text-sm);
-        opacity: 0.7;
-    }
-    
-    .results-card {
-        background: var(--card-bg);
-        border-radius: var(--radius);
-        padding: var(--space-lg);
-        border: 1px solid var(--border-color);
-        margin-top: var(--space-lg);
-        display: none;
-    }
-    
-    .results-header {
-        display: flex;
-        align-items: center;
-        gap: var(--space-sm);
-        margin-bottom: var(--space-md);
-        padding-bottom: var(--space-sm);
-        border-bottom: 1px solid var(--border-color);
-    }
-    
-    .results-content {
-        background: white;
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius);
-        padding: var(--space-lg);
-        margin-bottom: var(--space-md);
-        line-height: 1.6;
-        color: var(--text-color);
-        font-size: var(--text-base);
-    }
-
-    /* Markdown styling for results */
-    .results-content h1,
-    .results-content h2,
-    .results-content h3 {
-        color: var(--primary-color);
-        font-weight: 600;
-        margin: var(--space-lg) 0 var(--space-sm) 0;
-        line-height: 1.3;
-    }
-
-    .results-content h1 {
-        font-size: var(--text-xl);
-        border-bottom: 2px solid var(--border-color);
-        padding-bottom: var(--space-xs);
-    }
-
-    .results-content h2 {
-        font-size: var(--text-lg);
-        margin-top: var(--space-xl);
-    }
-
-    .results-content h3 {
-        font-size: var(--text-base);
-        font-weight: 600;
-    }
-
-    .results-content p {
-        margin: var(--space-sm) 0;
-        line-height: 1.6;
-    }
-
-    .results-content ul,
-    .results-content ol {
-        margin: var(--space-sm) 0;
-        padding-left: var(--space-xl);
-    }
-
-    .results-content li {
-        margin: var(--space-xs) 0;
-        line-height: 1.5;
-    }
-
-    .results-content strong {
-        font-weight: 600;
-        color: var(--primary-color);
-    }
-
-    .results-content em {
-        font-style: italic;
-        color: var(--accent-color);
-    }
-
-    .results-content code {
-        background: var(--card-bg);
-        padding: 2px 4px;
-        border-radius: 3px;
-        font-size: var(--text-sm);
-        color: var(--primary-color);
-    }
-
-    .results-content blockquote {
-        border-left: 3px solid var(--primary-color);
-        margin: var(--space-md) 0;
-        padding-left: var(--space-md);
-        color: var(--accent-color);
-        font-style: italic;
-    }
-
-    .results-content hr {
-        border: none;
-        border-top: 1px solid var(--border-color);
-        margin: var(--space-lg) 0;
-    }
-    
-    .action-buttons {
-        display: flex;
-        gap: var(--space-sm);
-        margin-top: var(--space-md);
-        flex-wrap: wrap;
-    }
-    
-    .btn {
-        padding: var(--space-md);
-        border: none;
-        border-radius: var(--radius);
-        font-weight: 500;
-        cursor: pointer;
-        font-size: var(--text-sm);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: var(--space-xs);
-        text-decoration: none;
-        transition: all var(--transition);
-        flex: 1;
-        min-width: 120px;
-    }
-    
-    .btn-primary {
-        background: var(--primary-color);
-        color: white;
-        box-shadow: var(--shadow);
-    }
-    
-    .btn-secondary {
-        background: var(--card-bg);
-        color: var(--primary-color);
-        border: 1px solid var(--border-color);
-    }
-    
-    .btn:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    }
-
-    .btn-primary:hover:not(:disabled) {
-        background: var(--accent-color);
-    }
-
-    .btn-secondary:hover:not(:disabled) {
-        border-color: var(--primary-color);
-        background: var(--hover-color);
-    }
-    
-    .btn:active {
-        transform: translateY(0);
-    }
-    
-    .btn:disabled {
-        background: var(--accent-color);
-        cursor: not-allowed;
-        opacity: 0.5;
-        transform: none;
-    }
-    
-    .wallet-section {
-        position: sticky;
-        top: var(--space-lg);
-    }
-    
-    .wallet-balance {
-        font-size: var(--text-lg);
-        font-weight: 600;
-        color: var(--primary-color);
-        margin-bottom: var(--space-xs);
-    }
-    
-    .balance-label {
-        font-size: var(--text-sm);
-        color: var(--accent-color);
-        margin-bottom: var(--space-lg);
-    }
-    
-    .process-btn {
-        width: 100%;
-        margin-bottom: var(--space-sm);
-    }
-    
-    .insufficient-balance {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        color: var(--primary-color);
-        padding: var(--space-md);
-        border-radius: var(--radius);
-        text-align: center;
-        font-size: var(--text-sm);
-        margin-bottom: var(--space-sm);
-        font-weight: 500;
-    }
-    
-    .usage-info {
-        padding: var(--space-md);
-        background: var(--card-bg);
-        border-radius: var(--radius);
-        border: 1px solid var(--border-color);
-    }
-    
-    .usage-info h4 {
-        margin: 0 0 var(--space-sm) 0;
-        font-size: var(--text-sm);
-        font-weight: 600;
-        color: var(--primary-color);
-    }
-    
-    .usage-info ul {
-        margin: 0;
-        font-size: var(--text-xs);
-        color: var(--text-color);
-        line-height: 1.4;
-        list-style: none;
-        padding-left: 0;
-    }
-    
-    .usage-info li {
-        margin: var(--space-xs) 0;
-        padding-left: var(--space-md);
-        position: relative;
-    }
-    
-    .usage-info li::before {
-        content: "•";
-        position: absolute;
-        left: 0;
-        color: var(--primary-color);
-    }
-    
-    /* Simple Responsive Design */
-    @media (max-width: 768px) {
-        .job-posting-container {
-            grid-template-columns: 1fr;
-            gap: var(--space-lg);
-        }
-        
-        .wallet-section {
-            position: static;
-            order: -1;
-        }
-        
-        .action-buttons {
-            flex-direction: column;
-        }
-        
-        .btn {
-            width: 100%;
-        }
-
-        .form-input, .form-textarea {
-            font-size: 16px; /* Prevent zoom on iOS */
-        }
-    }
-
-    /* Form Help Text */
-    .form-help {
-        font-size: var(--text-xs);
-        color: var(--accent-color);
-        margin-top: var(--space-xs);
-        opacity: 0.7;
-    }
-
-    .form-group {
-        margin-bottom: var(--space-md);
-    }
-
-    .form-group.error .form-input,
-    .form-group.error .form-textarea {
-        border-color: var(--error-color);
-    }
-
-    /* Simple loading state for buttons */
-    .btn.loading {
-        opacity: 0.6;
-        pointer-events: none;
-    }
-</style>
+<!-- Shared JavaScript Utilities -->
+<script src="{% static 'js/agent-utils.js' %}"></script>
 {% endblock %}
 
 {% block content %}
-<div class="job-posting-page">
-    <div class="job-posting-container">
+<div class="agent-page theme-professional">
+    <div class="agent-container">
         <!-- Messages -->
         {% if messages %}
             {% for message in messages %}
@@ -642,35 +211,14 @@
     
     // Copy job posting to clipboard
     function copyJobPosting() {
-        const jobText = generateJobText();
-        navigator.clipboard.writeText(jobText).then(() => {
-            showToast('📋 Job posting copied to clipboard!', 'success');
-        }).catch(() => {
-            showToast('Failed to copy job posting', 'error');
-        });
+        const jobText = AgentUtils.generateTextForExport('jobContent');
+        AgentUtils.copyToClipboard(jobText, 'Job posting copied to clipboard!');
     }
     
     // Download job posting as text file
     function downloadJobPosting() {
-        const jobText = generateJobText();
-        const blob = new Blob([jobText], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'job-posting-' + Date.now() + '.txt';
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('💾 Job posting downloaded!', 'success');
-    }
-    
-    // Generate job text for copy/download
-    function generateJobText() {
-        const content = document.querySelector('#jobContent');
-        if (content) {
-            // Get text content without HTML tags for clean copying
-            return content.innerText || content.textContent || '';
-        }
-        return 'No job posting content available';
+        const jobText = AgentUtils.generateTextForExport('jobContent');
+        AgentUtils.downloadAsFile(jobText, `job-posting-${Date.now()}.txt`, 'Job posting downloaded!');
     }
 
     // Reset form for creating another job posting
@@ -685,77 +233,24 @@
         // Reset form and UI
         document.getElementById('jobPostingForm').reset();
         document.getElementById('jobResults').style.display = 'none';
-        document.getElementById('processingStatus').style.display = 'none';
-        const processButton = document.getElementById('processButton');
-        processButton.disabled = false;
-        processButton.classList.remove('loading');
-        processButton.innerHTML = '💼 Generate Job Posting (4.00 AED)';
+        resetUIState();
         
-        showToast('Form reset! Ready for another job posting.', 'success');
+        AgentUtils.showToast('Form reset! Ready for another job posting.', 'success');
     }
     
-    // Toast management - prevent all duplicates
-    let toastTimeout = null;
-    let lastToastMessage = '';
-    let currentToast = null;
-    
-    function showToast(message, type = 'info') {
-        // Prevent duplicate messages
-        if (message === lastToastMessage && currentToast) {
-            return;
-        }
-        
-        // Clear existing toast
-        if (currentToast) {
-            currentToast.remove();
-            currentToast = null;
-        }
-        
-        // Clear existing timeout
-        if (toastTimeout) {
-            clearTimeout(toastTimeout);
-        }
-        
-        // Store message to prevent duplicates
-        lastToastMessage = message;
-        
-        // Create new toast
-        currentToast = document.createElement('div');
-        currentToast.style.cssText = `
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            padding: 8px 12px;
-            border-radius: 4px;
-            color: white;
-            font-size: 13px;
-            z-index: 1000;
-            max-width: 300px;
-            ${type === 'success' ? 'background: var(--primary-color);' : 'background: var(--accent-color);'}
-        `;
-        currentToast.textContent = message;
-        document.body.appendChild(currentToast);
-        
-        // Auto remove after 2 seconds
-        toastTimeout = setTimeout(() => {
-            if (currentToast) {
-                currentToast.remove();
-                currentToast = null;
-            }
-            lastToastMessage = '';
-        }, 2000);
-    }
 
-    // Form validation with visual feedback
+    // Enhanced form validation with visual feedback
     function validateField(field) {
         const isValid = field.value.trim() !== '';
         const container = field.closest('.form-group') || field.parentElement;
         
         if (isValid) {
             field.style.borderColor = 'var(--success-color)';
+            field.style.boxShadow = '0 0 0 2px rgba(16, 185, 129, 0.1)';
             container.classList.remove('error');
         } else {
             field.style.borderColor = 'var(--error-color)';
+            field.style.boxShadow = '0 0 0 2px rgba(239, 68, 68, 0.1)';
             container.classList.add('error');
         }
         
@@ -773,6 +268,7 @@
             // Reset validation on focus
             field.addEventListener('focus', () => {
                 field.style.borderColor = 'var(--primary-color)';
+                field.style.boxShadow = '0 0 0 2px rgba(0, 0, 0, 0.1)';
                 field.closest('.form-group')?.classList.remove('error');
             });
             
@@ -798,55 +294,24 @@
         window.currentWalletBalance = newBalance;
     }
 
-    // Simple markdown to HTML converter
-    function parseMarkdown(text) {
-        return text
-            // Headers
-            .replace(/^### (.*$)/gm, '<h3>$1</h3>')
-            .replace(/^## (.*$)/gm, '<h2>$1</h2>')
-            .replace(/^# (.*$)/gm, '<h1>$1</h1>')
-            // Bold
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            // Italic
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            // Lists
-            .replace(/^- (.*$)/gm, '<li>$1</li>')
-            .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
-            // Line breaks
-            .replace(/\n\n/g, '</p><p>')
-            .replace(/\n/g, '<br>');
-    }
 
     // Display job posting results with markdown formatting
     function displayResults(result) {
-        const resultsContainer = document.getElementById('jobResults');
-        const contentContainer = document.getElementById('jobContent');
-        
-        if (result.success && result.status === 'completed') {
-            const content = result.content || result.job_posting_content || result.output_text || 'Job posting generated successfully!';
-            
-            // Parse and display as HTML with markdown formatting
-            const formattedContent = parseMarkdown(content);
-            contentContainer.innerHTML = '<p>' + formattedContent + '</p>';
-            
-            resultsContainer.style.display = 'block';
-            
-            // Update wallet balance if provided
-            if (result.wallet_balance !== undefined) {
-                updateWalletBalance(result.wallet_balance);
-            }
-            
-            showToast('✅ Job posting created and payment processed!', 'success');
-        } else {
-            showToast('❌ Failed to generate job posting - no charge applied', 'error');
-        }
+        AgentUtils.displayResults({
+            result: result,
+            resultsId: 'jobResults',
+            contentId: 'jobContent',
+            defaultMessage: 'Job posting generated successfully!',
+            successMessage: '✅ Job posting created and payment processed!',
+            errorMessage: '❌ Failed to generate job posting - no charge applied'
+        });
     }
 
     // Track if results have been displayed to prevent duplicates
     let resultsDisplayed = false;
     let currentPollInterval = null;
 
-    // Poll for results
+    // Poll for results with improved error handling
     function pollForResults(requestId) {
         let pollCount = 0;
         const maxPolls = 30; // 30 seconds maximum
@@ -855,13 +320,19 @@
         // Clear any existing polling
         if (currentPollInterval) {
             clearInterval(currentPollInterval);
+            currentPollInterval = null;
         }
         
         currentPollInterval = setInterval(() => {
             pollCount++;
             
             fetch(`/agents/job-posting-generator/status/${requestId}/`)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(result => {
                     if (result.status === 'completed' || result.status === 'failed') {
                         // Stop polling immediately
@@ -869,11 +340,7 @@
                         currentPollInterval = null;
                         
                         // Reset UI
-                        document.getElementById('processingStatus').style.display = 'none';
-                        const processButton = document.getElementById('processButton');
-                        processButton.disabled = false;
-                        processButton.classList.remove('loading');
-                        processButton.innerHTML = '💼 Generate Job Posting (4.00 AED)';
+                        resetUIState();
                         
                         // Display results only once
                         if (!resultsDisplayed) {
@@ -883,28 +350,27 @@
                     } else if (pollCount >= maxPolls) {
                         clearInterval(currentPollInterval);
                         currentPollInterval = null;
-                        document.getElementById('processingStatus').style.display = 'none';
-                        const processButton = document.getElementById('processButton');
-                        processButton.disabled = false;
-                        processButton.classList.remove('loading');
-                        processButton.innerHTML = '💼 Generate Job Posting (4.00 AED)';
-                        showToast('❌ Processing timeout - please try again', 'error');
+                        resetUIState();
+                        AgentUtils.showToast('❌ Processing timeout - please try again', 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error polling results:', error);
-                    if (pollCount >= maxPolls) {
-                        clearInterval(currentPollInterval);
-                        currentPollInterval = null;
-                        document.getElementById('processingStatus').style.display = 'none';
-                        const processButton = document.getElementById('processButton');
-                        processButton.disabled = false;
-                        processButton.classList.remove('loading');
-                        processButton.innerHTML = '💼 Generate Job Posting (4.00 AED)';
-                        showToast('❌ Network error - please try again', 'error');
-                    }
+                    clearInterval(currentPollInterval);
+                    currentPollInterval = null;
+                    resetUIState();
+                    AgentUtils.showToast('❌ Network error during processing - please try again', 'error');
                 });
         }, 1000);
+    }
+    
+    // Helper function to reset UI state
+    function resetUIState() {
+        document.getElementById('processingStatus').style.display = 'none';
+        const processButton = document.getElementById('processButton');
+        processButton.disabled = false;
+        processButton.classList.remove('loading');
+        processButton.innerHTML = '💼 Generate Job Posting (4.00 AED)';
     }
     
     // Handle form submission
@@ -912,7 +378,7 @@
         e.preventDefault();
         
         if (!isFormValid()) {
-            showToast('Please fill in all required fields', 'error');
+            AgentUtils.showToast('Please fill in all required fields', 'error');
             return;
         }
         
@@ -931,7 +397,7 @@
         // Check wallet balance
         const balance = {{ user.wallet_balance|default:0 }};
         if (balance < 4.00) {
-            showToast('Insufficient balance! You need 4.00 AED.', 'error');
+            AgentUtils.showToast('Insufficient balance! You need 4.00 AED.', 'error');
             setTimeout(() => {
                 window.location.href = "{% url 'core:wallet' %}";
             }, 2000);
@@ -953,11 +419,11 @@
         document.getElementById('jobResults').style.display = 'none';
         
         const steps = [
-            'Analyzing job requirements...',
-            'Structuring job description...',
-            'Optimizing for recruitment...',
-            'Adding company branding...',
-            'Finalizing professional format...'
+            'Analyzing job requirements and company details...',
+            'Structuring professional job description...',
+            'Optimizing content for recruitment platforms...',
+            'Adding company branding and tone...',
+            'Finalizing professional format and review...'
         ];
         
         let currentStep = 0;
@@ -988,14 +454,10 @@
                 pollForResults(result.request_id);
             } else {
                 // Handle immediate response
-                document.getElementById('processingStatus').style.display = 'none';
-                const processButton = document.getElementById('processButton');
-                processButton.disabled = false;
-                processButton.classList.remove('loading');
-                processButton.innerHTML = '💼 Generate Job Posting (4.00 AED)';
+                resetUIState();
                 
                 if (result.error) {
-                    showToast(`❌ ${result.error}`, 'error');
+                    AgentUtils.showToast(`❌ ${result.error}`, 'error');
                 } else {
                     displayResults(result);
                 }
@@ -1004,12 +466,8 @@
         .catch(error => {
             clearInterval(stepInterval);
             console.error('Error:', error);
-            document.getElementById('processingStatus').style.display = 'none';
-            const processButton = document.getElementById('processButton');
-            processButton.disabled = false;
-            processButton.classList.remove('loading');
-            processButton.innerHTML = '💼 Generate Job Posting (4.00 AED)';
-            showToast('❌ Network error - please try again', 'error');
+            resetUIState();
+            AgentUtils.showToast('❌ Network error - please try again', 'error');
         });
     });
 </script>
