@@ -173,44 +173,7 @@ window.AgentUtils = {
         }, 2000);
     },
 
-    /**
-     * Display results with markdown parsing
-     * Standardized across all agents
-     */
-    displayResults(config) {
-        const resultsContainer = document.getElementById(config.resultsId);
-        const contentContainer = document.getElementById(config.contentId);
-        
-        if (config.result.success && config.result.status === 'completed') {
-            // Get content from various possible fields
-            const content = config.result.content || 
-                           config.result.job_posting_content || 
-                           config.result.ad_copy_content ||
-                           config.result.analysis_results ||
-                           config.result.insights_summary ||
-                           config.result.report_text ||
-                           config.result.weather_data ||
-                           config.result.formatted_report ||
-                           config.result.output_text || 
-                           config.defaultMessage || 
-                           'Content generated successfully!';
-            
-            // Parse markdown and display as HTML
-            const formattedContent = this.parseMarkdown(content);
-            contentContainer.innerHTML = formattedContent;
-            
-            resultsContainer.style.display = 'block';
-            
-            // Update wallet balance if provided
-            if (config.result.wallet_balance !== undefined) {
-                this.updateWalletBalance(config.result.wallet_balance);
-            }
-            
-            this.showToast(config.successMessage || '✅ Content generated and payment processed!', 'success');
-        } else {
-            this.showToast(config.errorMessage || '❌ Failed to generate content - no charge applied', 'error');
-        }
-    },
+    // NOTE: displayResults() function removed - each agent now has its own custom display logic
 
     /**
      * Generate text for copy/download functionality

@@ -295,16 +295,127 @@
     }
 
 
-    // Display job posting results with markdown formatting
+    // Display job posting results with professional formatting
     function displayResults(result) {
-        AgentUtils.displayResults({
-            result: result,
-            resultsId: 'jobResults',
-            contentId: 'jobContent',
-            defaultMessage: 'Job posting generated successfully!',
-            successMessage: '✅ Job posting created and payment processed!',
-            errorMessage: '❌ Failed to generate job posting - no charge applied'
-        });
+        const resultsContainer = document.getElementById('jobResults');
+        const contentElement = document.getElementById('jobContent');
+        
+        if (!resultsContainer || !contentElement) {
+            console.error('Job results elements not found');
+            return;
+        }
+        
+        // Update wallet balance if provided
+        if (result.wallet_balance !== undefined) {
+            updateWalletBalance(result.wallet_balance);
+        }
+        
+        // Handle errors
+        if (result.error) {
+            AgentUtils.showToast(`❌ ${result.error}`, 'error');
+            return;
+        }
+        
+        // Handle failed status
+        if (result.status === 'failed') {
+            AgentUtils.showToast('❌ Failed to generate job posting - no charge applied', 'error');
+            return;
+        }
+        
+        // Extract job posting content with priority order
+        let content = '';
+        
+        if (result.job_posting_content && typeof result.job_posting_content === 'string') {
+            content = result.job_posting_content;
+        } else if (result.content && typeof result.content === 'string') {
+            content = result.content;
+        } else if (result.formatted_report && typeof result.formatted_report === 'string') {
+            content = result.formatted_report;
+        } else if (result.output_text && typeof result.output_text === 'string') {
+            content = result.output_text;
+        } else {
+            content = 'Job posting generated successfully!';
+        }
+        
+        // Format job posting content with professional styling
+        const formattedContent = formatJobPostingContent(content);
+        
+        // Update content
+        contentElement.innerHTML = formattedContent;
+        
+        // Show results
+        resultsContainer.style.display = 'block';
+        resultsContainer.scrollIntoView({ behavior: 'smooth' });
+        
+        // Show success message
+        const successMessage = result.success ? '✅ Job posting created and payment processed!' : '✅ Job posting generated!';
+        AgentUtils.showToast(successMessage, 'success');
+    }
+    
+    // Professional job posting formatter
+    function formatJobPostingContent(content) {
+        if (!content || typeof content !== 'string') {
+            return '<p>No job posting content available.</p>';
+        }
+        
+        let html = content;
+        
+        // Enhanced header formatting for job titles and company names
+        html = html.replace(/^# (.*$)/gm, '<h1 style="font-size: 24px; font-weight: 700; color: var(--text-primary); margin: 24px 0 16px 0; border-bottom: 3px solid var(--primary-color); padding-bottom: 12px;">$1</h1>');
+        html = html.replace(/^## (.*$)/gm, '<h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 20px 0 12px 0; border-bottom: 2px solid var(--border-medium); padding-bottom: 8px;">$1</h2>');
+        html = html.replace(/^### (.*$)/gm, '<h3 style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin: 16px 0 10px 0; padding-bottom: 6px;">$1</h3>');
+        
+        // Professional bold text formatting
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight: 600; color: var(--text-primary);">$1</strong>');
+        
+        // Professional bullet point formatting
+        const lines = html.split('\n');
+        let inList = false;
+        let processedLines = [];
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            
+            if (line.startsWith('- ') || line.startsWith('• ')) {
+                if (!inList) {
+                    processedLines.push('<ul style="margin: 12px 0; padding-left: 24px; list-style-type: disc;">');
+                    inList = true;
+                }
+                const listContent = line.substring(2).trim();
+                processedLines.push(`<li style="margin: 6px 0; line-height: 1.5; color: var(--text-primary);">${listContent}</li>`);
+            } else {
+                if (inList) {
+                    processedLines.push('</ul>');
+                    inList = false;
+                }
+                processedLines.push(line);
+            }
+        }
+        
+        if (inList) {
+            processedLines.push('</ul>');
+        }
+        
+        html = processedLines.join('\n');
+        
+        // Convert line breaks to professional paragraphs
+        const paragraphs = html.split(/\n\s*\n/);
+        html = paragraphs
+            .filter(p => p.trim() !== '')
+            .map(p => {
+                const trimmed = p.trim();
+                // Don't wrap headers or lists in paragraphs
+                if (trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('</ul>') || trimmed.includes('<li')) {
+                    return trimmed;
+                }
+                return `<p style="margin: 12px 0; line-height: 1.6; color: var(--text-primary); text-align: justify;">${trimmed}</p>`;
+            })
+            .join('');
+        
+        // Add professional spacing and structure
+        html = `<div style="font-family: 'Inter', sans-serif; max-width: 100%; overflow-wrap: break-word;">${html}</div>`;
+        
+        return html;
     }
 
     // Track if results have been displayed to prevent duplicates

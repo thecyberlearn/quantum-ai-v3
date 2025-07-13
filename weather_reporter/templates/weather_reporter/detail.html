@@ -259,16 +259,127 @@
     // Simple toast notification
 
 
-    // Display weather results with markdown parsing
+    // Display weather results with clean weather data formatting
     function displayResults(result) {
-        AgentUtils.displayResults({
-            result: result,
-            resultsId: 'weatherResults',
-            contentId: 'weatherContent',
-            defaultMessage: 'Weather report generated successfully!',
-            successMessage: '✅ Weather report completed and payment processed!',
-            errorMessage: '❌ Failed to generate weather report - no charge applied'
-        });
+        const resultsContainer = document.getElementById('weatherResults');
+        const contentElement = document.getElementById('weatherContent');
+        
+        if (!resultsContainer || !contentElement) {
+            console.error('Weather results elements not found');
+            return;
+        }
+        
+        // Update wallet balance if provided
+        if (result.wallet_balance !== undefined) {
+            updateWalletBalance(result.wallet_balance);
+        }
+        
+        // Handle errors
+        if (result.error) {
+            AgentUtils.showToast(`❌ ${result.error}`, 'error');
+            return;
+        }
+        
+        // Handle failed status
+        if (result.status === 'failed') {
+            AgentUtils.showToast('❌ Failed to generate weather report - no charge applied', 'error');
+            return;
+        }
+        
+        // Extract weather content with priority order
+        let content = '';
+        
+        if (result.weather_data && typeof result.weather_data === 'string') {
+            content = result.weather_data;
+        } else if (result.formatted_report && typeof result.formatted_report === 'string') {
+            content = result.formatted_report;
+        } else if (result.content && typeof result.content === 'string') {
+            content = result.content;
+        } else if (result.output_text && typeof result.output_text === 'string') {
+            content = result.output_text;
+        } else {
+            content = 'Weather report generated successfully!';
+        }
+        
+        // Format weather content with clean data presentation
+        const formattedContent = formatWeatherContent(content);
+        
+        // Update content
+        contentElement.innerHTML = formattedContent;
+        
+        // Show results
+        resultsContainer.style.display = 'block';
+        resultsContainer.scrollIntoView({ behavior: 'smooth' });
+        
+        // Show success message
+        const successMessage = result.success ? '✅ Weather report completed and payment processed!' : '✅ Weather report generated!';
+        AgentUtils.showToast(successMessage, 'success');
+    }
+    
+    // Clean weather data formatter
+    function formatWeatherContent(content) {
+        if (!content || typeof content !== 'string') {
+            return '<p>No weather data available.</p>';
+        }
+        
+        let html = content;
+        
+        // Enhanced header formatting for weather sections
+        html = html.replace(/^# (.*$)/gm, '<h1 style="font-size: 22px; font-weight: 700; color: var(--primary-blue); margin: 20px 0 14px 0; border-bottom: 3px solid var(--primary-blue); padding-bottom: 10px; text-align: center;">$1</h1>');
+        html = html.replace(/^## (.*$)/gm, '<h2 style="font-size: 18px; font-weight: 600; color: var(--primary-dark); margin: 16px 0 10px 0; padding: 8px 12px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border-left: 4px solid var(--primary-blue);">$1</h2>');
+        html = html.replace(/^### (.*$)/gm, '<h3 style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin: 14px 0 8px 0; padding-bottom: 4px;">$1</h3>');
+        
+        // Temperature and weather metric highlighting
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight: 600; color: var(--primary-dark); background: rgba(59, 130, 246, 0.1); padding: 2px 6px; border-radius: 4px;">$1</strong>');
+        
+        // Weather condition formatting with clean presentation
+        const lines = html.split('\n');
+        let inList = false;
+        let processedLines = [];
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            
+            if (line.startsWith('- ') || line.startsWith('• ')) {
+                if (!inList) {
+                    processedLines.push('<ul style="margin: 12px 0; padding-left: 20px; list-style: none;">');
+                    inList = true;
+                }
+                const listContent = line.substring(2).trim();
+                processedLines.push(`<li style="margin: 6px 0; line-height: 1.5; color: var(--text-primary); position: relative; padding-left: 20px;"><span style="position: absolute; left: 0; color: var(--primary-blue); font-weight: bold;">•</span>${listContent}</li>`);
+            } else {
+                if (inList) {
+                    processedLines.push('</ul>');
+                    inList = false;
+                }
+                processedLines.push(line);
+            }
+        }
+        
+        if (inList) {
+            processedLines.push('</ul>');
+        }
+        
+        html = processedLines.join('\n');
+        
+        // Convert line breaks to clean paragraphs
+        const paragraphs = html.split(/\n\s*\n/);
+        html = paragraphs
+            .filter(p => p.trim() !== '')
+            .map(p => {
+                const trimmed = p.trim();
+                // Don't wrap headers or lists in paragraphs
+                if (trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('</ul>') || trimmed.includes('<li')) {
+                    return trimmed;
+                }
+                return `<p style="margin: 12px 0; line-height: 1.6; color: var(--text-primary); font-size: 15px;">${trimmed}</p>`;
+            })
+            .join('');
+        
+        // Add clean wrapper for weather data
+        html = `<div style="font-family: 'Inter', sans-serif; max-width: 100%; overflow-wrap: break-word; background: var(--background-subtle); border-radius: 8px; padding: 16px; border: 1px solid var(--border-light);">${html}</div>`;
+        
+        return html;
     }
 
     // Poll for results
