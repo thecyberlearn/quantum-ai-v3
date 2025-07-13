@@ -20,10 +20,10 @@ def data_analyzer_detail(request):
         messages.error(request, 'Data Analysis Agent agent not found.')
         return redirect('core:homepage')
     
-    # Get user's recent requests
+    # Get user's recent requests with optimized query
     user_requests = DataAnalysisAgentRequest.objects.filter(
         user=request.user
-    ).order_by('-created_at')[:10]
+    ).select_related('agent').prefetch_related('response').order_by('-created_at')[:10]
     
     context = {
         'agent': agent,

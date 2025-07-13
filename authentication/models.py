@@ -5,12 +5,19 @@ from decimal import Decimal
 
 class User(AbstractUser):
     email = models.EmailField(unique=True)
-    wallet_balance = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
-    created_at = models.DateTimeField(auto_now_add=True)
+    wallet_balance = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['email', 'wallet_balance']),
+            models.Index(fields=['created_at', 'wallet_balance']),
+            models.Index(fields=['-created_at']),
+        ]
     
     def __str__(self):
         return self.email

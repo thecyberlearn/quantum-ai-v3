@@ -30,8 +30,17 @@ urlpatterns = [
     path('', include('core.urls')),
 ]
 
-# Serve static files during development
+# Development tools (only in DEBUG mode)
 if settings.DEBUG:
+    # Serve static and media files during development
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    # Also serve media files
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    
+    # Debug toolbar
+    try:
+        import debug_toolbar
+        urlpatterns = [
+            path('__debug__/', include(debug_toolbar.urls)),
+        ] + urlpatterns
+    except ImportError:
+        pass

@@ -31,15 +31,16 @@ def homepage_view(request):
 
 def marketplace_view(request):
     """Professional marketplace view with agent system"""
-    # Get all agents for marketplace
-    agents = BaseAgent.objects.filter(is_active=True).order_by('category', 'name')
+    # Get all agents for marketplace with optimized query
+    agents_queryset = BaseAgent.objects.filter(is_active=True).select_related().order_by('category', 'name')
     
     # Filter by category if specified
     category = request.GET.get('category')
     if category:
-        agents = agents.filter(category=category)
+        agents_queryset = agents_queryset.filter(category=category)
     
-    # Get unique categories for filtering
+    # Get agents and categories in single query
+    agents = list(agents_queryset)
     categories = BaseAgent.objects.filter(is_active=True).values_list('category', 'category').distinct()
     
     context = {
