@@ -312,7 +312,7 @@
         const message = input.value.trim();
         
         if (!message) {
-            showToast('Please enter a message', 'error');
+            AgentUtils.showToast('Please enter a message', 'error');
             return;
         }
         
@@ -352,14 +352,14 @@
                 // Check if report button should be enabled
                 checkReportReadiness();
             } else {
-                showToast(data.error || 'Failed to send message', 'error');
+                AgentUtils.showToast(data.error || 'Failed to send message', 'error');
             }
         })
         .catch(error => {
             // Hide typing indicator on error
             hideTypingIndicator();
             console.error('Error:', error);
-            showToast('Network error occurred', 'error');
+            AgentUtils.showToast('Network error occurred', 'error');
         })
         .finally(() => {
             isProcessing = false;
@@ -516,12 +516,12 @@
         if (isProcessing) return;
         
         if (!currentSessionId) {
-            showToast('Please start a chat session first', 'error');
+            AgentUtils.showToast('Please start a chat session first', 'error');
             return;
         }
         
         if (messageCount < 2) {
-            showToast('Please ask at least 2 questions before generating a report', 'error');
+            AgentUtils.showToast('Please ask at least 2 questions before generating a report', 'error');
             return;
         }
         
@@ -560,16 +560,16 @@
                 displayReport(data.report);
                 
                 // Update wallet balance
-                updateWalletBalance(data.wallet_balance);
+                AgentUtils.updateWalletBalance(data.wallet_balance);
                 
-                showToast('✅ Report generated and payment processed!', 'success');
+                AgentUtils.showToast('✅ Report generated and payment processed!', 'success');
             } else {
-                showToast(data.error || 'Failed to generate report', 'error');
+                AgentUtils.showToast(data.error || 'Failed to generate report', 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showToast('Network error occurred', 'error');
+            AgentUtils.showToast('Network error occurred', 'error');
         })
         .finally(() => {
             isProcessing = false;
@@ -618,54 +618,16 @@
         return formatted;
     }
     
-    function updateWalletBalance(newBalance) {
-        document.querySelectorAll('[data-wallet-balance]').forEach(element => {
-            element.textContent = `${newBalance.toFixed(2)} AED`;
-        });
-    }
     
     function copyReport() {
-        const reportElement = document.getElementById('reportContent');
-        const reportText = reportElement.innerText || reportElement.textContent;
-        navigator.clipboard.writeText(reportText).then(() => {
-            showToast('📋 Report copied to clipboard!', 'success');
-        }).catch(() => {
-            showToast('Failed to copy report', 'error');
-        });
+        const reportText = AgentUtils.generateTextForExport('reportContent');
+        AgentUtils.copyToClipboard(reportText, '📋 Report copied to clipboard!');
     }
     
     function downloadReport() {
-        const reportElement = document.getElementById('reportContent');
-        const reportText = reportElement.innerText || reportElement.textContent;
-        const blob = new Blob([reportText], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `five-whys-analysis-${Date.now()}.txt`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('💾 Report downloaded!', 'success');
+        const reportText = AgentUtils.generateTextForExport('reportContent');
+        AgentUtils.downloadAsFile(reportText, `five-whys-analysis-${Date.now()}.txt`, '💾 Report downloaded!');
     }
     
-    function showToast(message, type = 'info') {
-        const toast = document.createElement('div');
-        toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 12px 20px;
-            border-radius: 8px;
-            color: white;
-            font-weight: 600;
-            z-index: 1000;
-            ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
-        `;
-        toast.textContent = message;
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            toast.remove();
-        }, 3000);
-    }
 </script>
 {% endblock %}

@@ -285,14 +285,6 @@
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', initializeFormEnhancements);
 
-    // Update wallet balance display
-    function updateWalletBalance(newBalance) {
-        const balanceElements = document.querySelectorAll('[data-wallet-balance]');
-        balanceElements.forEach(element => {
-            element.textContent = `${newBalance.toFixed(2)} AED`;
-        });
-        window.currentWalletBalance = newBalance;
-    }
 
 
     // Display job posting results with professional formatting
@@ -307,7 +299,7 @@
         
         // Update wallet balance if provided
         if (result.wallet_balance !== undefined) {
-            updateWalletBalance(result.wallet_balance);
+            AgentUtils.updateWalletBalance(result.wallet_balance);
         }
         
         // Handle errors

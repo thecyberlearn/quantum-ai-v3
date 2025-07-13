@@ -688,7 +688,7 @@
         
         // Update wallet balance if provided
         if (result.wallet_balance !== undefined) {
-            updateWalletBalance(result.wallet_balance);
+            AgentUtils.updateWalletBalance(result.wallet_balance);
         }
         
         // Handle errors
@@ -844,14 +844,6 @@
     }
     
     
-    function updateWalletBalance(newBalance) {
-        // Update wallet balance display
-        const balanceElement = document.getElementById('walletBalance');
-        if (balanceElement) {
-            balanceElement.textContent = `${newBalance.toFixed(2)} AED`;
-        }
-        window.currentWalletBalance = newBalance;
-    }
     
     function copyAnalysisReport() {
         const reportText = AgentUtils.generateTextForExport('analysisContent');
