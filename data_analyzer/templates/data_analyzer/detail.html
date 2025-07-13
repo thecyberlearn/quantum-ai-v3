@@ -676,16 +676,108 @@
         });
     });
     
-    // Display analysis results with markdown parsing
+    // Display analysis results with custom Data Analyzer formatting
     function displayResults(result) {
-        AgentUtils.displayResults({
-            result: result,
-            resultsId: 'analysisResults',
-            contentId: 'analysisContent',
-            defaultMessage: 'Data analysis completed successfully!',
-            successMessage: '✅ Data analysis completed and payment processed!',
-            errorMessage: '❌ Failed to analyze data - no charge applied'
+        const resultsContainer = document.getElementById('analysisResults');
+        const contentElement = document.getElementById('analysisContent');
+        
+        if (!resultsContainer || !contentElement) {
+            console.error('Results elements not found');
+            return;
+        }
+        
+        // Update wallet balance if provided
+        if (result.wallet_balance !== undefined) {
+            updateWalletBalance(result.wallet_balance);
+        }
+        
+        // Handle errors
+        if (result.error) {
+            AgentUtils.showToast(`❌ ${result.error}`, 'error');
+            return;
+        }
+        
+        // Extract content with priority: report_text > insights_summary > raw_response.analysis
+        let content = '';
+        
+        if (result.report_text && typeof result.report_text === 'string') {
+            content = result.report_text;
+        } else if (result.insights_summary && typeof result.insights_summary === 'string') {
+            content = result.insights_summary;
+        } else if (result.raw_response && result.raw_response.analysis && typeof result.raw_response.analysis === 'string') {
+            content = result.raw_response.analysis;
+        } else {
+            content = 'Data analysis completed successfully!';
+        }
+        
+        // Parse markdown content to HTML
+        const formattedContent = parseMarkdownToHTML(content);
+        
+        // Update content
+        contentElement.innerHTML = formattedContent;
+        
+        // Show results
+        resultsContainer.style.display = 'block';
+        resultsContainer.scrollIntoView({ behavior: 'smooth' });
+        
+        // Show success message
+        const successMessage = result.success ? '✅ Data analysis completed and payment processed!' : '✅ Data analysis completed!';
+        AgentUtils.showToast(successMessage, 'success');
+    }
+    
+    // Enhanced markdown parser for Data Analyzer results
+    function parseMarkdownToHTML(markdown) {
+        if (!markdown || typeof markdown !== 'string') {
+            return '<p>No content available.</p>';
+        }
+        
+        let html = markdown;
+        
+        // Convert headers (### Header, ## Header, # Header)
+        html = html.replace(/^### (.*$)/gm, '<h3 style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin: 20px 0 12px 0; border-bottom: 2px solid var(--success-green); padding-bottom: 8px;">$1</h3>');
+        html = html.replace(/^## (.*$)/gm, '<h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 24px 0 16px 0; border-bottom: 2px solid var(--success-green); padding-bottom: 8px;">$1</h2>');
+        html = html.replace(/^# (.*$)/gm, '<h1 style="font-size: 22px; font-weight: 600; color: var(--text-primary); margin: 28px 0 18px 0; border-bottom: 2px solid var(--success-green); padding-bottom: 10px;">$1</h1>');
+        
+        // Convert bold text (**text** or __text__)
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight: 600; color: var(--text-primary);">$1</strong>');
+        html = html.replace(/__(.*?)__/g, '<strong style="font-weight: 600; color: var(--text-primary);">$1</strong>');
+        
+        // Convert italic text (*text* or _text_)
+        html = html.replace(/\*(.*?)\*/g, '<em style="font-style: italic; color: var(--text-secondary);">$1</em>');
+        html = html.replace(/_(.*?)_/g, '<em style="font-style: italic; color: var(--text-secondary);">$1</em>');
+        
+        // Convert bullet points (- item or * item)
+        html = html.replace(/^[\s]*[-\*]\s+(.*)$/gm, '<li style="margin: 8px 0; padding-left: 8px; color: var(--text-primary);">$1</li>');
+        
+        // Wrap consecutive list items in ul tags
+        html = html.replace(/(<li[^>]*>.*?<\/li>\s*)+/gs, function(match) {
+            return `<ul style="margin: 16px 0; padding-left: 20px; list-style-type: disc; color: var(--success-green);">${match}</ul>`;
         });
+        
+        // Convert numbered lists (1. item, 2. item)
+        html = html.replace(/^\s*\d+\.\s+(.*)$/gm, '<li style="margin: 8px 0; padding-left: 8px; color: var(--text-primary);">$1</li>');
+        
+        // Wrap consecutive numbered list items in ol tags
+        html = html.replace(/(<li[^>]*>.*?<\/li>\s*)+/gs, function(match) {
+            if (match.includes('ul style')) return match; // Skip if already wrapped in ul
+            return `<ol style="margin: 16px 0; padding-left: 20px; list-style-type: decimal; color: var(--success-green);">${match}</ol>`;
+        });
+        
+        // Convert line breaks to paragraphs
+        const paragraphs = html.split(/\n\s*\n/);
+        html = paragraphs.map(p => {
+            const trimmed = p.trim();
+            if (trimmed === '') return '';
+            
+            // Skip if already wrapped in HTML tags
+            if (trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('<ol') || trimmed.startsWith('<li')) {
+                return trimmed;
+            }
+            
+            return `<p style="margin: 12px 0; line-height: 1.6; color: var(--text-primary);">${trimmed}</p>`;
+        }).filter(p => p !== '').join('');
+        
+        return html;
     }
 
     // Track polling and results to prevent duplicates

@@ -5,18 +5,75 @@
 
 window.AgentUtils = {
     /**
-     * Simple Text Formatter
-     * Cleans AI-generated text and converts to readable HTML
+     * Enhanced Markdown Parser
+     * Converts markdown syntax to styled HTML with proper formatting
      */
     parseMarkdown(text) {
-        if (!text) return '';
+        // Handle null, undefined, or non-string inputs
+        if (!text || typeof text !== 'string') {
+            return '';
+        }
         
-        return text
-            .replace(/\*\*/g, '') // Remove markdown bold syntax
-            .replace(/\#{1,3}\s/g, '') // Remove header syntax
-            .replace(/\n{3,}/g, '\n\n') // Reduce excessive line breaks
-            .replace(/\n/g, '<br>') // Convert line breaks to HTML
-            .trim();
+        let html = text;
+        
+        // Convert headers with proper styling
+        html = html.replace(/^### (.*$)/gm, '<h3 style="font-size: 1.1em; font-weight: 600; margin: 12px 0 8px 0; color: #374151;">$1</h3>');
+        html = html.replace(/^## (.*$)/gm, '<h2 style="font-size: 1.2em; font-weight: 600; margin: 14px 0 8px 0; color: #374151;">$1</h2>');
+        html = html.replace(/^# (.*$)/gm, '<h1 style="font-size: 1.3em; font-weight: 600; margin: 16px 0 10px 0; color: #374151;">$1</h1>');
+        
+        // Convert bold text
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight: 500; color: #1f2937;">$1</strong>');
+        
+        // Convert bullet points to proper lists
+        const lines = html.split('\n');
+        let inList = false;
+        let processedLines = [];
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            
+            if (line.startsWith('- ')) {
+                if (!inList) {
+                    processedLines.push('<ul style="margin: 8px 0; padding-left: 20px;">');
+                    inList = true;
+                }
+                processedLines.push(`<li style="margin: 3px 0; color: #4b5563;">${line.substring(2).trim()}</li>`);
+            } else {
+                if (inList) {
+                    processedLines.push('</ul>');
+                    inList = false;
+                }
+                processedLines.push(line);
+            }
+        }
+        
+        if (inList) {
+            processedLines.push('</ul>');
+        }
+        
+        html = processedLines.join('\n');
+        
+        // Reduce excessive line breaks and convert to paragraphs
+        html = html.replace(/\n{3,}/g, '\n\n');
+        
+        // Convert double line breaks to paragraph breaks
+        const paragraphs = html.split('\n\n');
+        html = paragraphs
+            .filter(p => p.trim() !== '')
+            .map(p => {
+                const trimmed = p.trim();
+                // Don't wrap headers or lists in paragraphs
+                if (trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('</ul>') || trimmed.includes('<li')) {
+                    return trimmed;
+                }
+                return `<p style="margin: 8px 0; line-height: 1.4; color: #4b5563;">${trimmed}</p>`;
+            })
+            .join('');
+        
+        // Convert remaining single line breaks to <br> tags
+        html = html.replace(/\n/g, '<br>');
+        
+        return html.trim();
     },
 
     /**

@@ -99,7 +99,7 @@ class DataAnalysisAgentProcessor(StandardWebhookProcessor):
             }
             
             # Use analysis text for multiple fields for compatibility
-            insights_summary = analysis_text[:500] + '...' if len(analysis_text) > 500 else analysis_text
+            insights_summary = analysis_text
             report_text = analysis_text
             raw_response = response_data
             
