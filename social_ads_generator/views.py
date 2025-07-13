@@ -37,7 +37,7 @@ def social_ads_generator_detail(request):
                     cost=agent.price,
                     description=request.POST.get('description'),
                     social_platform=request.POST.get('social_platform', 'facebook'),
-                    include_emoji=request.POST.get('include_emoji') == 'on',
+                    include_emoji=request.POST.get('include_emoji') == 'yes',
                     language=request.POST.get('language', 'English'),
                 )
                 
@@ -125,6 +125,46 @@ class SocialAdsGeneratorProcessView(View):
 
 
 @login_required
+def social_ads_generator_status(request, request_id):
+    """Get status for a specific request (for polling)"""
+    try:
+        agent_request = SocialAdsGeneratorRequest.objects.get(
+            id=request_id,
+            user=request.user
+        )
+        
+        if hasattr(agent_request, 'response'):
+            response = agent_request.response
+            # Refresh user to get current wallet balance
+            request.user.refresh_from_db()
+            
+            return JsonResponse({
+                'success': response.success,
+                'status': agent_request.status,
+                'content': getattr(response, 'ad_copy', None),
+                'ad_copy_content': getattr(response, 'ad_copy', None),
+                'hashtags': getattr(response, 'hashtags', None),
+                'targeting_suggestions': getattr(response, 'targeting_suggestions', None),
+                'formatted_ad': getattr(response, 'formatted_ad', None),
+                'raw_response': getattr(response, 'raw_response', None),
+                'processing_time': float(response.processing_time) if response.processing_time else None,
+                'error_message': response.error_message,
+                'wallet_balance': float(request.user.wallet_balance)
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'status': agent_request.status,
+                'message': 'Processing in progress...'
+            })
+            
+    except SocialAdsGeneratorRequest.DoesNotExist:
+        return JsonResponse({'error': 'Request not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
 def social_ads_generator_result(request, request_id):
     """Get result for a specific request"""
     try:
@@ -142,7 +182,7 @@ def social_ads_generator_result(request, request_id):
                 'success': response.success,
                 'status': agent_request.status,
                 'content': getattr(response, 'ad_copy', None),
-                'ad_copy': getattr(response, 'ad_copy', None),
+                'ad_copy_content': getattr(response, 'ad_copy', None),
                 'hashtags': getattr(response, 'hashtags', None),
                 'targeting_suggestions': getattr(response, 'targeting_suggestions', None),
                 'formatted_ad': getattr(response, 'formatted_ad', None),

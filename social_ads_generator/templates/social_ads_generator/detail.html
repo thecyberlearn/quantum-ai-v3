@@ -233,8 +233,12 @@
             content = result.ad_copy_content;
         } else if (result.content && typeof result.content === 'string') {
             content = result.content;
-        } else if (result.formatted_report && typeof result.formatted_report === 'string') {
-            content = result.formatted_report;
+        } else if (result.ad_copy && typeof result.ad_copy === 'string') {
+            content = result.ad_copy;
+        } else if (result.raw_response && result.raw_response.output && typeof result.raw_response.output === 'string') {
+            content = result.raw_response.output;
+        } else if (result.formatted_ad && typeof result.formatted_ad === 'string') {
+            content = result.formatted_ad;
         } else if (result.output_text && typeof result.output_text === 'string') {
             content = result.output_text;
         } else {
