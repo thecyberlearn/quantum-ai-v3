@@ -111,271 +111,479 @@ const DataAnalyzerUtils = {
 // For backward compatibility, create AgentUtils alias
 const AgentUtils = DataAnalyzerUtils;
 </script>
+{% endblock %}
 
-<style>
-/* Data Analyzer specific styles only */
-.file-upload-zone {
-    border: 2px dashed var(--agent-border);
-    border-radius: var(--radius);
-    padding: var(--space-xl);
-    text-align: center;
-    transition: all var(--transition);
-    background: var(--agent-card-bg);
-    cursor: pointer;
-    margin-bottom: var(--space-lg);
-}
-
-.file-upload-zone.dragover,
-.file-upload-zone:hover {
-    border-color: var(--agent-primary);
-    background: var(--hover-color);
-}
-
-.file-preview {
-    background: var(--agent-card-bg);
-    border: 1px solid var(--agent-border);
-    border-radius: var(--radius);
-    padding: var(--space-md);
-    margin-top: var(--space-md);
-    display: flex;
-    align-items: center;
-    gap: var(--space-md);
-}
-
-.radio-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: var(--space-md);
-}
-
-.radio-option {
-    display: flex;
-    align-items: center;
-    gap: var(--space-md);
-    padding: var(--space-lg);
-    border: 1px solid var(--agent-border);
-    border-radius: var(--radius);
-    cursor: pointer;
-    background: white;
-    transition: all var(--transition);
-    min-height: 60px;
-}
-
-.radio-option.selected {
-    border-color: var(--agent-primary);
-    background: var(--agent-card-bg);
-}
-
-.radio-option:hover {
-    border-color: var(--agent-primary);
-    background: var(--hover-color);
-}
-
-.radio-option input[type="radio"] {
-    margin: 0;
-}
-
-.processing-status {
-    display: none;
-    text-align: center;
-    padding: var(--space-lg);
-    margin: var(--space-lg) 0;
-    background: var(--agent-card-bg);
-    border: 1px solid var(--agent-border);
-    border-radius: var(--radius);
-}
-
-.results-card {
-    display: none;
-    margin-top: var(--space-lg);
-}
-
-/* Ensure grid layout works */
-div.agent-page div.agent-container {
-    display: grid !important;
-    grid-template-columns: 1fr 350px !important;
-    gap: 24px !important;
-    max-width: 1280px !important;
-    margin: 0 auto !important;
-    align-items: start !important;
-}
-
-@media (max-width: 768px) {
-    div.agent-page div.agent-container {
-        grid-template-columns: 1fr !important;
+{% block content %}
+    .main-container {
+        max-width: none;
+        padding: 0;
+        margin-top: 0;
     }
-}
+    
+    /* Page background */
+    .data-analyzer-page {
+        background: var(--gradient-hero);
+        min-height: calc(100vh - 80px);
+        padding: clamp(20px, 5vw, 40px);
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+    }
+    
+    .container {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 clamp(16px, 4vw, 24px);
+    }
+    
+    /* Main grid layout */
+    .main-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(350px, 100%), 1fr));
+        gap: clamp(16px, 4vw, 24px);
+        align-items: start;
+    }
+    
+    /* Card styles with glassmorphism */
+    .card {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: clamp(12px, 3vw, 16px);
+        padding: clamp(16px, 4vw, 24px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(20px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        margin-bottom: clamp(16px, 4vw, 24px);
+    }
+    
+    .section-title {
+        font-size: clamp(16px, 4vw, 18px);
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: clamp(12px, 3vw, 16px);
+    }
+    
+    /* Form inputs */
+    .form-input {
+        width: 100%;
+        padding: clamp(12px, 3vw, 16px) clamp(16px, 4vw, 20px);
+        border: 2px solid var(--border-medium);
+        border-radius: clamp(8px, 2vw, 12px);
+        font-size: clamp(14px, 3.5vw, 16px);
+        transition: border-color 0.2s ease;
+        min-height: 48px;
+        margin-bottom: clamp(12px, 3vw, 16px);
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: var(--success-green);
+    }
+    
+    .help-text {
+        font-size: clamp(12px, 3vw, 14px);
+        color: var(--text-secondary);
+    }
+    
+    /* File upload zone */
+    .file-upload-zone {
+        border: 2px dashed var(--border-medium);
+        border-radius: clamp(12px, 3vw, 16px);
+        padding: clamp(24px, 6vw, 40px);
+        text-align: center;
+        transition: all 0.3s ease;
+        background: var(--background-light);
+        cursor: pointer;
+        margin-bottom: clamp(12px, 3vw, 16px);
+    }
+    
+    .file-upload-zone.dragover {
+        border-color: var(--success-green);
+        background: rgba(16, 185, 129, 0.1);
+    }
+    
+    .file-upload-zone:hover {
+        border-color: var(--success-green);
+        background: rgba(16, 185, 129, 0.1);
+    }
+    
+    .file-preview {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.5);
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    /* Radio button grids */
+    .radio-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+        gap: clamp(8px, 2vw, 12px);
+    }
+    
+    .radio-option {
+        display: flex;
+        align-items: center;
+        gap: clamp(8px, 2vw, 12px);
+        padding: clamp(12px, 3vw, 16px);
+        border: 2px solid var(--border-light);
+        border-radius: clamp(8px, 2vw, 12px);
+        cursor: pointer;
+        background: white;
+        transition: all 0.2s ease;
+        min-height: 44px;
+    }
+    
+    .radio-option.selected {
+        border-color: var(--success-green);
+        background: rgba(16, 185, 129, 0.1);
+    }
+    
+    .radio-option input[type="radio"] {
+        margin: 0;
+    }
+    
+    /* Processing status */
+    .processing-status {
+        padding: clamp(16px, 4vw, 20px);
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid var(--success-green);
+        border-radius: clamp(8px, 2vw, 12px);
+        color: var(--success-dark);
+        font-weight: 600;
+        text-align: center;
+        margin-bottom: clamp(16px, 4vw, 24px);
+    }
+    
+    /* Results card */
+    .results-card {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(20px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        margin-top: 24px;
+    }
+    
+    .results-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .results-content {
+        background: var(--background-page);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 20px;
+        white-space: pre-line;
+        line-height: 1.7;
+        color: var(--text-primary);
+        font-size: 15px;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+    
+    /* Button styles */
+    .btn {
+        padding: clamp(12px, 3vw, 16px) clamp(20px, 5vw, 32px);
+        border: none;
+        border-radius: clamp(8px, 2vw, 12px);
+        font-weight: 600;
+        cursor: pointer;
+        font-size: clamp(14px, 3.5vw, 16px);
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: transform 0.1s ease;
+        text-decoration: none;
+    }
+    
+    .btn-primary {
+        background: var(--gradient-success);
+        color: white;
+        flex: 1;
+        min-width: 120px;
+    }
+    
+    .btn-secondary {
+        background: var(--background-subtle);
+        color: var(--text-primary);
+        border: 2px solid var(--border-medium);
+        flex: 1;
+        min-width: 120px;
+    }
+    
+    .btn:hover {
+        transform: translateY(-1px);
+    }
+    
+    .btn:disabled {
+        background: var(--border-strong);
+        color: white;
+        cursor: not-allowed;
+        transform: none;
+        opacity: 0.6;
+    }
+    
+    /* Wallet sidebar */
+    .wallet-section {
+        position: sticky;
+        top: 20px;
+    }
+    
+    .wallet-balance {
+        font-size: clamp(24px, 6vw, 28px);
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+    
+    .balance-label {
+        font-size: clamp(14px, 3.5vw, 16px);
+        color: var(--text-secondary);
+        margin-bottom: clamp(16px, 4vw, 20px);
+    }
+    
+    .process-btn {
+        width: 100%;
+        margin-bottom: 12px;
+    }
+    
+    .usage-info {
+        padding: 16px;
+        background: rgba(16, 185, 129, 0.1);
+        border-radius: 12px;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    
+    .usage-info h4 {
+        margin: 0 0 8px 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--success-dark);
+    }
+    
+    .usage-info ul {
+        margin: 0;
+        font-size: 12px;
+        color: var(--text-primary);
+        line-height: 1.4;
+        list-style: none;
+        padding-left: 0;
+    }
+    
+    .usage-info li {
+        margin: 4px 0;
+        padding-left: 16px;
+        position: relative;
+    }
+    
+    .usage-info li::before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        color: var(--success-green);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .main-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .radio-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="agent-page theme-professional">
     <div class="agent-container">
-        <!-- Messages -->
-        {% if messages %}
-            {% for message in messages %}
-                <div class="{% if message.tags == 'error' %}error-message{% else %}success-message{% endif %}" style="grid-column: 1 / -1;">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-        
         <!-- Main Content -->
         <div>
-                <form method="POST" id="dataAnalyzerForm">
-                    {% csrf_token %}
+            <form method="POST" id="dataAnalyzerForm">
+                {% csrf_token %}
+                
+                <!-- File Upload Section -->
+                <div class="card">
+                    <h3 class="section-title">📁 Upload Your Data File</h3>
                     
-                    <!-- File Upload Section -->
-                    <div class="card">
-                        <h3 class="section-title">📁 Upload Your Data File</h3>
-                        
-                        <div class="file-upload-zone" id="fileUploadZone" onclick="document.getElementById('fileInput').click()">
-                            <div style="font-size: 48px; margin-bottom: 12px;">📊</div>
-                            <div style="font-size: var(--text-lg); font-weight: 600; color: var(--text-color); margin-bottom: 8px;">
-                                Choose or drag your data file here
-                            </div>
-                            <div style="font-size: var(--text-base); color: var(--accent-color);">
-                                Supports PDF, CSV, Excel files (up to 10MB)
-                            </div>
+                    <div class="file-upload-zone" id="fileUploadZone" onclick="document.getElementById('fileInput').click()">
+                        <div style="font-size: clamp(32px, 8vw, 48px); margin-bottom: 12px;">📊</div>
+                        <div style="font-size: clamp(16px, 4vw, 18px); font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">
+                            Choose or drag your data file here
                         </div>
-                        
-                        <input
-                            type="file"
-                            id="fileInput"
-                            accept=".pdf,.csv,.xlsx,.xls"
-                            style="display: none;"
-                        />
-                        
-                        <div id="filePreview" class="file-preview" style="display: none;">
-                            <div style="font-size: 24px;">📄</div>
-                            <div style="flex: 1;">
-                                <div style="font-weight: 600; color: var(--text-primary);" id="fileName"></div>
-                                <div style="font-size: 14px; color: var(--text-secondary);" id="fileSize"></div>
-                            </div>
-                            <button type="button" onclick="removeFile()" class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;">
-                                Remove
-                            </button>
+                        <div style="font-size: clamp(14px, 3.5vw, 16px); color: var(--text-secondary);">
+                            Supports PDF, CSV, Excel files (up to 10MB)
                         </div>
                     </div>
                     
-                    <!-- Analysis Type Selection -->
-                    <div class="card">
-                        <h3 class="section-title">🔍 Analysis Type</h3>
+                    <input
+                        type="file"
+                        id="fileInput"
+                        accept=".pdf,.csv,.xlsx,.xls"
+                        style="display: none;"
+                    />
+                    
+                    <div id="filePreview" class="file-preview" style="display: none;">
+                        <div style="font-size: 24px;">📄</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; color: var(--text-primary);" id="fileName"></div>
+                            <div style="font-size: 14px; color: var(--text-secondary);" id="fileSize"></div>
+                        </div>
+                        <button type="button" onclick="removeFile()" style="
+                            background: var(--error-red);
+                            color: white;
+                            border: none;
+                            border-radius: 4px;
+                            padding: 4px 8px;
+                            cursor: pointer;
+                            font-size: 12px;
+                        ">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Analysis Type Selection -->
+                <div class="card">
+                    <h3 class="section-title">🔍 Analysis Type</h3>
+                    
+                    <div class="radio-grid">
+                        <label class="radio-option selected" data-value="summary">
+                            <input type="radio" name="analysisType" value="summary" checked />
+                            <div style="font-size: clamp(16px, 4vw, 20px);">📋</div>
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: clamp(2px, 1vw, 4px); font-size: clamp(14px, 3.5vw, 16px);">
+                                    Summary Analysis
+                                </div>
+                                <div style="font-size: clamp(12px, 3vw, 14px); color: var(--text-secondary);">
+                                    Quick overview and key insights
+                                </div>
+                            </div>
+                        </label>
                         
-                        <div class="radio-grid">
-                            <label class="radio-option selected" data-value="summary">
-                                <input type="radio" name="analysisType" value="summary" checked />
-                                <div style="font-size: 20px;">📋</div>
-                                <div>
-                                    <div style="font-weight: 600; margin-bottom: 4px; font-size: var(--text-lg);">
-                                        Summary Analysis
-                                    </div>
-                                    <div style="font-size: var(--text-sm); color: var(--accent-color);">
-                                        Quick overview and key insights
-                                    </div>
+                        <label class="radio-option" data-value="detailed">
+                            <input type="radio" name="analysisType" value="detailed" />
+                            <div style="font-size: clamp(16px, 4vw, 20px);">📈</div>
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: clamp(2px, 1vw, 4px); font-size: clamp(14px, 3.5vw, 16px);">
+                                    Detailed Analysis
                                 </div>
-                            </label>
-                            
-                            <label class="radio-option" data-value="detailed">
-                                <input type="radio" name="analysisType" value="detailed" />
-                                <div style="font-size: 20px;">📈</div>
-                                <div>
-                                    <div style="font-weight: 600; margin-bottom: 4px; font-size: var(--text-lg);">
-                                        Detailed Analysis
-                                    </div>
-                                    <div style="font-size: var(--text-sm); color: var(--accent-color);">
-                                        Comprehensive statistical analysis
-                                    </div>
+                                <div style="font-size: clamp(12px, 3vw, 14px); color: var(--text-secondary);">
+                                    Comprehensive statistical analysis
                                 </div>
-                            </label>
-                            
-                            <label class="radio-option" data-value="statistical">
-                                <input type="radio" name="analysisType" value="statistical" />
-                                <div style="font-size: 20px;">📊</div>
-                                <div>
-                                    <div style="font-weight: 600; margin-bottom: 4px; font-size: var(--text-lg);">
-                                        Statistical Analysis
-                                    </div>
-                                    <div style="font-size: var(--text-sm); color: var(--accent-color);">
-                                        Advanced statistics and trends
-                                    </div>
+                            </div>
+                        </label>
+                        
+                        <label class="radio-option" data-value="statistical">
+                            <input type="radio" name="analysisType" value="statistical" />
+                            <div style="font-size: clamp(16px, 4vw, 20px);">📊</div>
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: clamp(2px, 1vw, 4px); font-size: clamp(14px, 3.5vw, 16px);">
+                                    Statistical Analysis
                                 </div>
-                            </label>
+                                <div style="font-size: clamp(12px, 3vw, 14px); color: var(--text-secondary);">
+                                    Advanced statistics and trends
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </form>
+            
+            <!-- Processing Status -->
+                <div id="processingStatus" class="processing-status" style="display: none;">
+                    <div style="font-size: clamp(16px, 4vw, 18px); margin-bottom: 8px;">
+                        ⏳ Processing...
+                    </div>
+                    <div style="font-size: clamp(14px, 3.5vw, 16px);" id="statusText">
+                        Analyzing your data file...
+                    </div>
+                </div>
+                
+                <!-- Results -->
+                <div id="analysisResults" class="results-card" style="display: none;">
+                    <div class="results-header">
+                        <div style="font-size: 24px;">✅</div>
+                        <h3 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">
+                            Data Analysis Results
+                        </h3>
+                        <div style="
+                            background: var(--success-green);
+                            color: white;
+                            padding: 6px 12px;
+                            border-radius: 6px;
+                            font-size: 14px;
+                            font-weight: 600;
+                            margin-left: auto;
+                        ">
+                            ✅ Complete
                         </div>
                     </div>
-                </form>
-            </div>
-            <!-- Wallet Sidebar -->
+                    
+                    <div class="results-content" id="analysisContent">
+                        <!-- Analysis data will be displayed here -->
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button onclick="copyAnalysisReport()" class="btn btn-primary">
+                            📋 Copy Report
+                        </button>
+                        <button onclick="downloadAnalysisReport()" class="btn btn-secondary">
+                            💾 Download Report
+                        </button>
+                    </div>
+                </div>
+        </div>
+        
+        <!-- Wallet Sidebar -->
         <div class="wallet-section">
             <div class="card">
                 <h3 class="section-title">💳 Your Wallet</h3>
                 
-                <div class="wallet-balance" data-wallet-balance>
-                    {% if user.is_authenticated %}
-                        {{ user.wallet_balance|floatformat:2 }} AED
-                    {% else %}
-                        0.00 AED
-                    {% endif %}
-                </div>
+                <div class="wallet-balance" data-wallet-balance>{{ user.wallet_balance|floatformat:2 }} AED</div>
                 <div class="balance-label">Available Balance</div>
                 
-                {% if user.is_authenticated %}
-                    {% if user.wallet_balance >= 5.00 %}
-                        <button type="submit" form="dataAnalyzerForm" class="btn btn-primary process-btn" id="processButton">
-                            📊 Analyze Data (5.00 AED)
-                        </button>
-                    {% else %}
-                        <div class="insufficient-balance">
-                            Insufficient balance! You need 5.00 AED.
-                        </div>
-                        <a href="{% url 'core:wallet' %}" class="btn btn-primary process-btn" style="text-decoration: none;">
-                            💰 Top Up Wallet
-                        </a>
-                    {% endif %}
-                {% else %}
-                    <a href="{% url 'authentication:login' %}" class="btn btn-primary process-btn" style="text-decoration: none;">
-                        🔑 Login to Continue
-                    </a>
-                {% endif %}
+                <button 
+                    type="submit" 
+                    form="dataAnalyzerForm"
+                    class="btn btn-primary process-btn"
+                    id="processButton"
+                >
+                    📊 Analyze Data (5.00 AED)
+                </button>
             </div>
             
             <div class="usage-info">
                 <h4>💡 How it works</h4>
                 <ul>
-                    <li>Upload your data file (PDF, CSV, Excel)</li>
-                    <li>Choose analysis type</li>
-                    <li>Get comprehensive insights</li>
-                    <li>Download detailed report</li>
+                    <li>Upload PDF, CSV, or Excel files</li>
+                    <li>Choose your analysis depth</li>
+                    <li>Get AI-powered insights</li>
+                    <li>Download comprehensive reports</li>
                 </ul>
             </div>
         </div>
-            <!-- Processing Status -->
-            <div id="processingStatus" class="processing-status">
-                <div class="status-icon">📊</div>
-                <div style="font-weight: 600; color: var(--primary-color);">Analyzing Your Data...</div>
-                <div style="font-size: 14px; color: var(--text-secondary); margin-top: 8px;" id="statusText">Processing data file...</div>
-            </div>
-            
-            <!-- Results -->
-            <div id="analysisResults" class="results-card">
-                <div class="results-header">
-                    <div style="font-size: 24px;">✅</div>
-                    <h3 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">Data Analysis Complete</h3>
-                    <div style="background: var(--primary-color); color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-left: auto;">✅ Complete</div>
-                </div>
-                
-                <div class="results-content" id="analysisContent">
-                    <!-- Analysis results will be displayed here -->
-                </div>
-                
-                <div class="action-buttons">
-                    <button onclick="copyAnalysisReport()" class="btn btn-primary">📋 Copy Analysis</button>
-                    <button onclick="downloadAnalysisReport()" class="btn btn-secondary">💾 Download Report</button>
-                </div>
-            </div>
-        </div>
-        
-        
     </div>
 </div>
 {% endblock %}

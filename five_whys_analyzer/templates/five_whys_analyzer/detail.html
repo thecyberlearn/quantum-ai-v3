@@ -1,146 +1,240 @@
 {% extends "base.html" %}
-{% csrf_token %}
+{% load static %}
 
 {% block title %}5 Whys Analysis Agent - NetCop AI Hub{% endblock %}
 
+{% block extra_css %}
+<!-- Optimized Font Loading -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- External Stylesheets -->
+<link rel="stylesheet" href="{% static 'css/themes.css' %}">
+<link rel="stylesheet" href="{% static 'css/agent-base.css' %}">
+
+<!-- Five Whys Analyzer Specific Utilities -->
+<script>
+// Five Whys Analyzer - Self-contained utilities (no shared dependencies)
+const FiveWhysUtils = {
+    /**
+     * Update wallet balance display - Five Whys specific
+     */
+    updateWalletBalance(newBalance) {
+        // Update header balance (anchor tag with emoji)
+        const headerBalance = document.querySelector('a[data-wallet-balance]');
+        if (headerBalance) {
+            headerBalance.textContent = `💰 ${newBalance.toFixed(2)} AED`;
+        }
+        
+        // Update page balance (div without emoji)
+        const pageBalance = document.querySelector('div[data-wallet-balance]');
+        if (pageBalance) {
+            pageBalance.textContent = `${newBalance.toFixed(2)} AED`;
+        }
+        
+        window.currentWalletBalance = newBalance;
+    },
+
+    /**
+     * Show toast notification with duplicate prevention
+     */
+    showToast(message, type = 'info') {
+        // Prevent duplicate toasts
+        const existingToast = document.querySelector('.five-whys-toast');
+        if (existingToast) {
+            existingToast.remove();
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'five-whys-toast';
+        toast.style.cssText = `
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            color: white;
+            font-size: 13px;
+            z-index: 1000;
+            max-width: 300px;
+            font-weight: 500;
+            ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
+        `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.remove();
+            }
+        }, 2000);
+    },
+
+    /**
+     * Generate text for copy/download functionality
+     */
+    generateTextForExport(contentElementId) {
+        const content = document.getElementById(contentElementId);
+        if (content) {
+            return content.innerText || content.textContent || '';
+        }
+        return 'No content available';
+    },
+
+    /**
+     * Copy content to clipboard
+     */
+    copyToClipboard(text, successMessage = 'Content copied to clipboard!') {
+        navigator.clipboard.writeText(text).then(() => {
+            this.showToast(`📋 ${successMessage}`, 'success');
+        }).catch(() => {
+            this.showToast('Failed to copy content', 'error');
+        });
+    },
+
+    /**
+     * Download content as text file
+     */
+    downloadAsFile(text, filename, successMessage = 'File downloaded!') {
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename || `content-${Date.now()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.showToast(`💾 ${successMessage}`, 'success');
+    }
+};
+
+// For backward compatibility, create AgentUtils alias
+const AgentUtils = FiveWhysUtils;
+</script>
+{% endblock %}
+
 {% block content %}
-<div class="container" style="max-width: 1280px; margin: 0 auto; padding: clamp(20px, 5vw, 40px) clamp(16px, 4vw, 24px);">
-    <!-- Main Content Grid -->
-    <div class="main-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(350px, 100%), 1fr)); gap: clamp(16px, 4vw, 24px); align-items: start;">
-        <!-- Chat Interface -->
+<div class="agent-page theme-professional">
+    <div class="agent-container">
+        <!-- Main Content -->
         <div>
-            <!-- Agent Header -->
-            <div class="card" style="background: rgba(255, 255, 255, 0.9); border-radius: clamp(12px, 3vw, 16px); padding: clamp(16px, 4vw, 24px); border: 1px solid rgba(255, 255, 255, 0.3); backdrop-filter: blur(20px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); margin-bottom: clamp(16px, 4vw, 24px);">
-                <h1 style="font-size: clamp(20px, 5vw, 24px); font-weight: 700; color: #1f2937; margin: 0 0 8px 0; display: flex; align-items: center; gap: 12px;">
-                    🔍 {{ agent.name }}
-                </h1>
-                <p style="font-size: clamp(14px, 3.5vw, 16px); color: #6b7280; margin: 0;">
-                    {{ agent.description }}
-                </p>
+            <div class="card">
+                <h3 class="section-title">🔍 {{ agent.name }}</h3>
+                <p class="form-help">{{ agent.description }}</p>
             </div>
             
             <!-- Chat Messages Container -->
-            <div class="card" id="chatContainer" style="background: rgba(255, 255, 255, 0.9); border-radius: clamp(12px, 3vw, 16px); padding: clamp(16px, 4vw, 24px); border: 1px solid rgba(255, 255, 255, 0.3); backdrop-filter: blur(20px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); margin-bottom: clamp(16px, 4vw, 24px); min-height: 400px; max-height: 600px; overflow-y: auto;">
-                <h3 style="font-size: clamp(16px, 4vw, 18px); font-weight: 600; color: #1f2937; margin: 0 0 16px 0;">💬 Chat with 5 Whys Analyst</h3>
-                
-                <!-- Welcome Message -->
-                <div class="message assistant-message" style="margin-bottom: 16px; padding: 12px 16px; background: #f8fafc; border-radius: 12px; border-left: 4px solid #6366f1;">
-                    <div style="font-weight: 600; color: #4338ca; margin-bottom: 4px;">5 Whys Analyst</div>
-                    <div style="color: #374151; line-height: 1.5;">
-                        Hello! I'm here to help you with root cause analysis using the 5 Whys methodology. 
-                        
-                        You can ask me questions, describe your problem, and I'll guide you through the analysis process. When you're ready, I can generate a comprehensive report for 8.00 AED.
-                        
-                        How can I help you today?
+            <div class="card">
+                <div id="chatContainer" class="chat-container">
+                    <h4 class="section-subtitle">💬 Chat with 5 Whys Analyst</h4>
+                    
+                    <!-- Welcome Message -->
+                    <div class="welcome-message">
+                        <div class="message-header">5 Whys Analyst</div>
+                        <div class="message-content">
+                            Hello! I'm here to help you with root cause analysis using the 5 Whys methodology. 
+                            
+                            You can ask me questions, describe your problem, and I'll guide you through the analysis process. When you're ready, I can generate a comprehensive report for {{ agent.price }} AED.
+                            
+                            How can I help you today?
+                        </div>
                     </div>
+                    
+                    <!-- Chat messages will be dynamically added here -->
+                    <div id="chatMessages"></div>
                 </div>
                 
-                <!-- Chat messages will be dynamically added here -->
-                <div id="chatMessages"></div>
+                <!-- Chat Input Form -->
+                <form id="chatForm" class="chat-form">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <input 
+                            type="text"
+                            id="chatInput" 
+                            name="message"
+                            class="form-input"
+                            placeholder="Ask me about your problem or describe what you'd like to analyze..." 
+                            required
+                        />
+                        <button 
+                            id="sendChatBtn" 
+                            type="submit"
+                            class="btn btn-primary"
+                        >
+                            📤 Send
+                        </button>
+                    </div>
+                </form>
             </div>
             
-            <!-- Chat Input -->
-            <div class="card" style="background: rgba(255, 255, 255, 0.9); border-radius: clamp(12px, 3vw, 16px); padding: clamp(16px, 4vw, 24px); border: 1px solid rgba(255, 255, 255, 0.3); backdrop-filter: blur(20px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); margin-bottom: clamp(16px, 4vw, 24px);">
-                <div style="display: flex; gap: 12px; align-items: flex-end;">
-                    <textarea 
-                        id="chatInput" 
-                        placeholder="Ask me about your problem or describe what you'd like to analyze..." 
-                        style="flex: 1; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 14px; resize: vertical; min-height: 48px; max-height: 120px; font-family: inherit;"
-                        rows="2"
-                    ></textarea>
-                    <button 
-                        id="sendChatBtn" 
-                        onclick="sendChatMessage()" 
-                        style="padding: 12px 20px; background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; min-height: 48px; transition: transform 0.1s ease;"
-                    >
-                        Send
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Report Generation Form -->
-            <div class="card" id="reportForm" style="background: rgba(255, 255, 255, 0.9); border-radius: clamp(12px, 3vw, 16px); padding: clamp(16px, 4vw, 24px); border: 1px solid rgba(255, 255, 255, 0.3); backdrop-filter: blur(20px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); margin-bottom: clamp(16px, 4vw, 24px);">
-                <h3 style="font-size: clamp(16px, 4vw, 18px); font-weight: 600; color: #1f2937; margin: 0 0 16px 0;">📋 Generate Final Report</h3>
+            <!-- Report Generation Section -->
+            <div class="card" id="reportSection">
+                <h4 class="section-subtitle">📋 Generate Final Report</h4>
                 
-                <div id="reportNotReady" style="padding: 16px; background: #f3f4f6; border-radius: 12px; text-align: center; color: #6b7280; font-size: 14px; margin-bottom: 16px;">
+                <div id="reportNotReady" class="info-message">
                     💬 Ask 2-3 questions about your problem first, then I'll generate a comprehensive report
                 </div>
                 
-                <div id="reportReady" style="display: none; padding: 16px; background: #ecfdf5; border-radius: 12px; text-align: center; color: #059669; font-size: 14px; margin-bottom: 16px;">
+                <div id="reportReady" class="success-message" style="display: none;">
                     ✅ Ready! I can now generate a detailed 5 Whys analysis report based on our conversation
                 </div>
                 
                 <button 
                     id="generateReportBtn" 
                     onclick="generateReport()" 
+                    class="btn btn-primary"
                     disabled
-                    style="width: 100%; padding: 16px 20px; background: #9ca3af; color: white; border: none; border-radius: 12px; font-weight: 600; cursor: not-allowed; font-size: 16px; transition: all 0.3s ease;"
+                    style="width: 100%;"
                 >
                     🔍 Generate Report ({{ agent.price }} AED)
                 </button>
             </div>
             
             <!-- Generated Report Display -->
-            <div id="reportResults" class="card" style="background: rgba(255, 255, 255, 0.9); border-radius: 16px; padding: 24px; border: 1px solid rgba(255, 255, 255, 0.3); backdrop-filter: blur(20px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); margin-top: 24px; display: none;">
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                    <div style="font-size: 24px;">✅</div>
-                    <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin: 0;">5 Whys Analysis Report</h3>
-                    <div style="background: #6366f1; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-left: auto;">
-                        ✅ Complete
-                    </div>
+            <div id="reportResults" class="results-card" style="display: none;">
+                <div class="results-header">
+                    <div style="font-size: 24px;">📊</div>
+                    <h3 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">5 Whys Analysis Report</h3>
+                    <div style="background: var(--primary-color); color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-left: auto;">✅ Complete</div>
                 </div>
                 
-                <div id="reportContent" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 32px; margin-bottom: 20px; line-height: 1.7; color: #374151; font-size: 15px; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);">
+                <div class="results-content" id="reportContent">
                     <!-- Report content will be displayed here -->
                 </div>
                 
-                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                    <button onclick="copyReport()" style="padding: 12px 20px; background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: transform 0.1s ease;">
-                        📋 Copy Report
-                    </button>
-                    <button onclick="downloadReport()" style="padding: 12px 20px; background: white; color: #374151; border: 2px solid #e5e7eb; border-radius: 12px; font-weight: 600; cursor: pointer; transition: transform 0.1s ease;">
-                        💾 Download Report
-                    </button>
+                <div class="action-buttons">
+                    <button onclick="copyReport()" class="btn btn-primary">📋 Copy Report</button>
+                    <button onclick="downloadReport()" class="btn btn-secondary">💾 Download Report</button>
                 </div>
             </div>
         </div>
         
         <!-- Wallet Sidebar -->
-        <div style="position: sticky; top: 20px;">
-            <div class="card" style="background: rgba(255, 255, 255, 0.9); border-radius: clamp(12px, 3vw, 16px); padding: clamp(16px, 4vw, 24px); border: 1px solid rgba(255, 255, 255, 0.3); backdrop-filter: blur(20px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); margin-bottom: clamp(16px, 4vw, 24px);">
-                <h3 style="font-size: clamp(16px, 4vw, 18px); font-weight: 600; color: #1f2937; margin: 0 0 16px 0;">💳 Your Wallet</h3>
+        <div class="wallet-section">
+            <div class="card">
+                <h3 class="section-title">💳 Your Wallet</h3>
                 
-                <div style="font-size: clamp(24px, 6vw, 28px); font-weight: 700; color: #1f2937; margin-bottom: 8px;" data-wallet-balance>
-                    {{ user.wallet_balance|floatformat:2 }} AED
-                </div>
-                <div style="font-size: clamp(14px, 3.5vw, 16px); color: #6b7280; margin-bottom: 20px;">
-                    Available Balance
-                </div>
+                <div class="wallet-balance" data-wallet-balance>{% if user.is_authenticated %}{{ user.wallet_balance|floatformat:2 }} AED{% else %}0.00 AED{% endif %}</div>
+                <div class="balance-label">Available Balance</div>
                 
-                <a href="{% url 'core:wallet_topup' %}" style="display: block; width: 100%; padding: 16px 20px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 12px; font-weight: 600; text-decoration: none; text-align: center; margin-bottom: 12px;">
-                    💳 Top Up Wallet
-                </a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'core:wallet' %}" class="btn btn-primary" style="text-decoration: none; margin-top: 16px;">
+                        💰 Top Up Wallet
+                    </a>
+                {% else %}
+                    <a href="{% url 'authentication:login' %}" class="btn btn-primary process-btn" style="text-decoration: none;">
+                        🔑 Login to Continue
+                    </a>
+                {% endif %}
             </div>
             
-            <div style="padding: 16px; background: rgba(99, 102, 241, 0.1); border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.2);">
-                <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: #4338ca;">💡 How it works</h4>
-                <ul style="margin: 0; font-size: 12px; color: #374151; line-height: 1.4; list-style: none; padding-left: 0;">
-                    <li style="margin: 4px 0; padding-left: 16px; position: relative;">
-                        <span style="position: absolute; left: 0; color: #6366f1;">•</span>
-                        Chat freely to explore your problem
-                    </li>
-                    <li style="margin: 4px 0; padding-left: 16px; position: relative;">
-                        <span style="position: absolute; left: 0; color: #6366f1;">•</span>
-                        Get guidance and ask questions
-                    </li>
-                    <li style="margin: 4px 0; padding-left: 16px; position: relative;">
-                        <span style="position: absolute; left: 0; color: #6366f1;">•</span>
-                        Generate final report when ready
-                    </li>
-                    <li style="margin: 4px 0; padding-left: 16px; position: relative;">
-                        <span style="position: absolute; left: 0; color: #6366f1;">•</span>
-                        Pay only for the final report
-                    </li>
+            <div class="usage-info">
+                <h4>💡 How it works</h4>
+                <ul>
+                    <li>Chat freely to explore your problem</li>
+                    <li>Get guidance and ask questions</li>
+                    <li>Generate final report when ready</li>
+                    <li>Pay only for the final report</li>
                 </ul>
             </div>
         </div>
@@ -148,138 +242,186 @@
 </div>
 
 <style>
-    .container {
-        background: linear-gradient(135deg, #f6f8ff 0%, #e8f0fe 50%, #f0f7ff 100%);
-        min-height: 100vh;
-        color: #1f2937;
-    }
-    
-    .card:hover {
-        transform: translateY(-1px);
-        transition: transform 0.2s ease;
-    }
-    
-    button:hover {
-        transform: translateY(-1px);
-    }
-    
-    button:disabled {
-        background: #9ca3af !important;
-        cursor: not-allowed !important;
-        transform: none !important;
-    }
-    
-    .message {
-        margin-bottom: 16px;
-        animation: fadeIn 0.3s ease;
-    }
-    
-    .user-message {
-        margin-left: 20%;
-        padding: 12px 16px;
-        background: #6366f1;
-        color: white;
-        border-radius: 16px 16px 4px 16px;
-    }
-    
-    .assistant-message {
-        margin-right: 20%;
-        padding: 16px 20px;
-        background: #f8fafc;
-        border-radius: 16px 16px 16px 4px;
-        border-left: 4px solid #6366f1;
-        line-height: 1.6;
-    }
-    
-    .assistant-message .message-content {
-        color: #374151;
-        line-height: 1.6;
-    }
-    
-    .assistant-message .message-content h3 {
-        color: #1f2937;
-        font-size: 16px;
-        font-weight: 600;
-        margin: 16px 0 8px 0;
-    }
-    
-    .assistant-message .message-content h3:first-child {
-        margin-top: 0;
-    }
-    
-    .assistant-message .message-content ul {
-        margin: 8px 0;
-        padding-left: 20px;
-    }
-    
-    .assistant-message .message-content li {
-        margin: 4px 0;
-    }
-    
-    .assistant-message .message-content p {
-        margin: 8px 0;
-    }
-    
-    .assistant-message .message-content p:first-child {
-        margin-top: 0;
-    }
-    
-    .assistant-message .message-content p:last-child {
-        margin-bottom: 0;
-    }
-    
-    .assistant-message .message-content strong {
-        color: #1f2937;
-        font-weight: 600;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .typing-dots {
-        display: flex;
-        gap: 4px;
-        align-items: center;
-    }
-    
-    .typing-dots span {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #6366f1;
-        animation: typingDots 1.4s infinite ease-in-out;
-    }
-    
-    .typing-dots span:nth-child(1) {
-        animation-delay: 0s;
-    }
-    
-    .typing-dots span:nth-child(2) {
-        animation-delay: 0.2s;
-    }
-    
-    .typing-dots span:nth-child(3) {
-        animation-delay: 0.4s;
-    }
-    
-    @keyframes typingDots {
-        0%, 80%, 100% {
-            transform: scale(0);
-            opacity: 0.5;
-        }
-        40% {
-            transform: scale(1);
-            opacity: 1;
-        }
-    }
-    
-    @media (max-width: 768px) {
-        .main-grid {
-            grid-template-columns: 1fr !important;
-        }
-    }
+.chat-container {
+    background: var(--background-subtle);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+    min-height: 400px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.welcome-message {
+    margin-bottom: 16px;
+    padding: 16px 20px;
+    background: var(--background-subtle);
+    border-radius: 16px 16px 16px 4px;
+    border-left: 4px solid var(--primary-color);
+    line-height: 1.6;
+}
+
+.message-header {
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 8px;
+}
+
+.message-content {
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+.chat-form {
+    border-top: 1px solid var(--border-color);
+    padding-top: 16px;
+    margin-top: 16px;
+}
+
+.input-group {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+}
+
+.input-group .form-input {
+    width: 80%;
+    height: 40px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    background: var(--background-primary);
+    color: var(--text-primary);
+    box-sizing: border-box;
+}
+
+.input-group .form-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.input-group .btn {
+    height: 40px;
+    padding: 8px 12px;
+    width: 20%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    font-size: 13px;
+}
+
+.info-message {
+    padding: 16px;
+    background: var(--background-subtle);
+    border-radius: 8px;
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+.success-message {
+    padding: 16px;
+    background: #ecfdf5;
+    border-radius: 8px;
+    text-align: center;
+    color: #059669;
+    margin-bottom: 16px;
+}
+
+.message {
+    margin-bottom: 16px;
+    animation: fadeIn 0.3s ease;
+}
+
+.user-message {
+    margin-left: 20%;
+    padding: 12px 16px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 16px 16px 4px 16px;
+}
+
+.assistant-message {
+    margin-right: 20%;
+    padding: 16px 20px;
+    background: var(--background-subtle);
+    border-radius: 16px 16px 16px 4px;
+    border-left: 4px solid var(--primary-color);
+    line-height: 1.6;
+}
+
+.assistant-message .message-content {
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+.assistant-message .message-content h3 {
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 600;
+    margin: 16px 0 8px 0;
+}
+
+.assistant-message .message-content h3:first-child {
+    margin-top: 0;
+}
+
+.assistant-message .message-content ul {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.assistant-message .message-content li {
+    margin: 4px 0;
+}
+
+.assistant-message .message-content p {
+    margin: 8px 0;
+}
+
+.assistant-message .message-content p:first-child {
+    margin-top: 0;
+}
+
+.assistant-message .message-content p:last-child {
+    margin-bottom: 0;
+}
+
+.assistant-message .message-content strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.typing-dots {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.typing-dots span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+.typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typing {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+}
 </style>
 
 <script>
@@ -292,8 +434,14 @@
         // Generate new session ID
         currentSessionId = generateSessionId();
         
-        // Add Enter key support for chat input
-        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+        // Handle chat form submission
+        document.getElementById('chatForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            sendChatMessage();
+        });
+        
+        // Add Enter key support for chat input (Shift+Enter for new line)
+        document.getElementById('chatInput').addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendChatMessage();
@@ -507,8 +655,6 @@
             
             const btn = document.getElementById('generateReportBtn');
             btn.disabled = false;
-            btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
-            btn.style.cursor = 'pointer';
         }
     }
     
@@ -559,8 +705,10 @@
                 // Display the generated report
                 displayReport(data.report);
                 
-                // Update wallet balance
-                AgentUtils.updateWalletBalance(data.wallet_balance);
+                // Update wallet balance if provided
+                if (data.wallet_balance !== undefined) {
+                    AgentUtils.updateWalletBalance(data.wallet_balance);
+                }
                 
                 AgentUtils.showToast('✅ Report generated and payment processed!', 'success');
             } else {

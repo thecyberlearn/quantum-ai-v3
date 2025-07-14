@@ -13,8 +13,104 @@
 <link rel="stylesheet" href="{% static 'css/themes.css' %}">
 <link rel="stylesheet" href="{% static 'css/agent-base.css' %}">
 
-<!-- Shared JavaScript Utilities -->
-<script src="{% static 'js/agent-utils.js' %}"></script>
+<!-- Job Posting Generator Specific Utilities -->
+<script>
+// Job Posting Generator - Self-contained utilities (no shared dependencies)
+const JobPostingUtils = {
+    /**
+     * Update wallet balance display - Job Posting Generator specific
+     */
+    updateWalletBalance(newBalance) {
+        // Update header balance (anchor tag with emoji)
+        const headerBalance = document.querySelector('a[data-wallet-balance]');
+        if (headerBalance) {
+            headerBalance.textContent = `💰 ${newBalance.toFixed(2)} AED`;
+        }
+        
+        // Update page balance (div without emoji)
+        const pageBalance = document.querySelector('div[data-wallet-balance]');
+        if (pageBalance) {
+            pageBalance.textContent = `${newBalance.toFixed(2)} AED`;
+        }
+        
+        window.currentWalletBalance = newBalance;
+    },
+
+    /**
+     * Show toast notification with duplicate prevention
+     */
+    showToast(message, type = 'info') {
+        // Prevent duplicate toasts
+        const existingToast = document.querySelector('.job-posting-toast');
+        if (existingToast) {
+            existingToast.remove();
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'job-posting-toast';
+        toast.style.cssText = `
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            color: white;
+            font-size: 13px;
+            z-index: 1000;
+            max-width: 300px;
+            font-weight: 500;
+            ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
+        `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.remove();
+            }
+        }, 2000);
+    },
+
+    /**
+     * Generate text for copy/download functionality
+     */
+    generateTextForExport(contentElementId) {
+        const content = document.getElementById(contentElementId);
+        if (content) {
+            return content.innerText || content.textContent || '';
+        }
+        return 'No content available';
+    },
+
+    /**
+     * Copy content to clipboard
+     */
+    copyToClipboard(text, successMessage = 'Content copied to clipboard!') {
+        navigator.clipboard.writeText(text).then(() => {
+            this.showToast(`📋 ${successMessage}`, 'success');
+        }).catch(() => {
+            this.showToast('Failed to copy content', 'error');
+        });
+    },
+
+    /**
+     * Download content as text file
+     */
+    downloadAsFile(text, filename, successMessage = 'File downloaded!') {
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename || `content-${Date.now()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.showToast(`💾 ${successMessage}`, 'success');
+    }
+};
+
+// For backward compatibility, create AgentUtils alias
+const AgentUtils = JobPostingUtils;
+</script>
 {% endblock %}
 
 {% block content %}

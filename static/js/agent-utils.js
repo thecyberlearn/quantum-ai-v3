@@ -80,11 +80,23 @@ window.AgentUtils = {
      * Update wallet balance display across all agents
      */
     updateWalletBalance(newBalance) {
-        const balanceElement = document.querySelector('[data-wallet-balance]') || 
-                              document.getElementById('walletBalance');
-        if (balanceElement) {
-            balanceElement.textContent = `${newBalance.toFixed(2)} AED`;
+        // Update all wallet balance elements
+        document.querySelectorAll('[data-wallet-balance]').forEach(element => {
+            if (element.tagName === 'A') {
+                // Header balance with emoji (anchor tag)
+                element.textContent = `💰 ${newBalance.toFixed(2)} AED`;
+            } else {
+                // Page balance without emoji (div or other elements)
+                element.textContent = `${newBalance.toFixed(2)} AED`;
+            }
+        });
+        
+        // Fallback for old ID-based elements
+        const legacyElement = document.getElementById('walletBalance');
+        if (legacyElement) {
+            legacyElement.textContent = `${newBalance.toFixed(2)} AED`;
         }
+        
         window.currentWalletBalance = newBalance;
     },
 

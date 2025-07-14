@@ -190,6 +190,8 @@ The system uses Django templates in `agent_base/templates/agent_generator/` to g
 
 #### Example Agents (Production Ready)
 
+All agents now feature consistent architecture with standardized themes, unified CSS, and isolated JavaScript utilities for container-like functionality.
+
 **Data Analysis Agent** (Price: 5.00 AED):
 - **N8N Integration**: PDF analysis webhook processor
 - **File Upload**: PDF, CSV, Excel files with drag-and-drop interface
@@ -198,6 +200,8 @@ The system uses Django templates in `agent_base/templates/agent_generator/` to g
 - **Form Submission Pattern**: Uses unified form submission (not button click)
 - **Unified CSS**: Uses agent-base.css with professional theme
 - **Text Display**: Simple text formatting (no complex markdown parsing)
+- **Architecture**: Standard agent-container grid layout (1fr 350px) with proper wallet positioning
+- **JavaScript Isolation**: DataAnalyzerUtils with agent-specific functionality
 
 **Weather Reporter Agent** (Price: 2.00 AED):
 - **API Integration**: OpenWeatherMap API with direct calls
@@ -205,7 +209,9 @@ The system uses Django templates in `agent_base/templates/agent_generator/` to g
 - **Formatted Reports**: Both current and detailed weather reports
 - **Real-time Results**: Dynamic display below form
 - **Error Handling**: API failures and invalid locations
-- **Unified CSS**: Uses agent-base.css with minimal theme
+- **Unified CSS**: Uses agent-base.css with professional theme
+- **Architecture**: Standard agent-container grid layout with proper structure
+- **JavaScript Isolation**: WeatherUtils with agent-specific functionality
 
 **Social Ads Generator Agent** (Price: 7.00 AED):
 - **N8N Integration**: Social media ad generation via webhook
@@ -213,6 +219,8 @@ The system uses Django templates in `agent_base/templates/agent_generator/` to g
 - **Multi-language**: English, Arabic, Spanish, French, German, Chinese
 - **Real-time Results**: Dynamic content generation and display
 - **Unified CSS**: Uses agent-base.css with creative theme (glassmorphism)
+- **Architecture**: Standard agent-container grid layout with glassmorphism styling
+- **JavaScript Isolation**: SocialAdsUtils with agent-specific functionality
 
 **Job Posting Generator Agent** (Price: 4.00 AED):
 - **N8N Integration**: Professional job posting creation
@@ -220,6 +228,17 @@ The system uses Django templates in `agent_base/templates/agent_generator/` to g
 - **Multi-language Support**: Multiple output languages
 - **Enhanced UX**: Progressive form validation and real-time feedback
 - **Unified CSS**: Uses agent-base.css with professional theme
+- **Architecture**: Standard agent-container grid layout with professional styling
+- **JavaScript Isolation**: JobPostingUtils with agent-specific functionality
+
+**Five Whys Analysis Agent** (Price: 3.00 AED):
+- **N8N Integration**: Problem analysis using Five Whys methodology
+- **Comprehensive UX**: Enhanced UI with styled cards and professional layout
+- **Multi-language Support**: Multiple output languages
+- **Real-time Results**: Dynamic analysis generation and display
+- **Unified CSS**: Uses agent-base.css with professional theme
+- **Architecture**: Standard agent-container grid layout with consistent styling
+- **JavaScript Isolation**: FiveWhysUtils with agent-specific functionality
 
 ### Management Commands
 
@@ -537,7 +556,32 @@ All agents now use a unified CSS system for consistent user experience and maint
 #### Core Files
 - **`/static/css/agent-base.css`**: Unified component library for all agents
 - **`/static/css/themes.css`**: Global color variables and themes
-- **`/static/js/agent-utils.js`**: Shared JavaScript utilities for all agents
+- **Agent-specific JavaScript utilities**: Each agent has isolated JavaScript functions for container-like functionality
+
+### Agent Isolation Architecture
+
+#### Container-like Functionality
+All agents now implement true isolation to prevent cross-agent interference:
+
+**JavaScript Isolation Pattern:**
+```javascript
+// Each agent has its own utility namespace
+const DataAnalyzerUtils = { /* agent-specific functions */ };
+const WeatherUtils = { /* agent-specific functions */ };
+const SocialAdsUtils = { /* agent-specific functions */ };
+const JobPostingUtils = { /* agent-specific functions */ };
+const FiveWhysUtils = { /* agent-specific functions */ };
+
+// For backward compatibility, each agent creates AgentUtils alias
+const AgentUtils = DataAnalyzerUtils; // or appropriate agent utils
+```
+
+**Benefits of Isolation:**
+- No shared dependencies between agents
+- Changes to one agent don't affect others
+- Agent-specific functionality can be customized
+- Easier debugging and maintenance
+- Container-like isolation without containerization complexity
 
 #### Theme System
 The unified CSS supports multiple themes via CSS custom properties:
@@ -562,16 +606,56 @@ The unified CSS supports multiple themes via CSS custom properties:
 <div class="agent-page theme-professional">  <!-- or theme-creative, theme-minimal -->
     <div class="agent-container">
         <div>
-            <!-- Main content area -->
+            <!-- Main content area (first grid column) -->
             <div class="card">
                 <h3 class="section-title">Agent Title</h3>
                 <!-- Agent form and content -->
             </div>
+            <!-- Processing status and results stay within first grid column -->
         </div>
         <div class="wallet-section">
-            <!-- Wallet sidebar -->
+            <!-- Wallet sidebar (second grid column) -->
+            <div class="card">
+                <h3 class="section-title">💳 Your Wallet</h3>
+                <!-- Wallet content -->
+            </div>
         </div>
     </div>
+</div>
+```
+
+#### Standardized Layout Architecture
+
+**Grid Layout System:**
+- `agent-container`: CSS Grid with `grid-template-columns: 1fr 350px`
+- **First column**: Main content, forms, processing status, results
+- **Second column**: Wallet sidebar (350px width)
+- **Mobile responsive**: Single column on screens < 768px
+
+**Critical Structure Rules:**
+1. **Wallet positioning**: `wallet-section` must be a direct child of `agent-container` (separate grid column)
+2. **Content hierarchy**: All agent content stays in first grid column
+3. **Processing status**: Displays below form, spans full width of first column
+4. **Results display**: Shows below processing status in first column
+
+**Data Analyzer Wallet Fix Example:**
+```html
+<!-- ❌ INCORRECT: wallet-section inside main content -->
+<div class="agent-container">
+    <div>
+        <form>...</form>
+        <div class="wallet-section">...</div>  <!-- Wrong placement -->
+    </div>
+</div>
+
+<!-- ✅ CORRECT: wallet-section as separate grid column -->
+<div class="agent-container">
+    <div>
+        <form>...</form>
+        <!-- Processing Status -->
+        <!-- Results -->
+    </div>
+    <div class="wallet-section">...</div>  <!-- Correct placement -->
 </div>
 ```
 
@@ -675,6 +759,27 @@ The project uses a clean, modular individual agent architecture:
 - **Data Attributes**: Add `data-wallet-balance` to all balance elements for easy targeting
 - **Continuous Workflow**: Allow multiple requests without page refresh ("Get Another" functionality)
 - **Clear User Feedback**: Show "payment processed" vs "no charge applied" messages
+- **Standardized Layout**: Use agent-container grid layout (1fr 350px) with proper wallet positioning
+- **Theme Consistency**: Apply unified CSS themes across all agents
+- **JavaScript Isolation**: Agent-specific utilities for container-like functionality
+
+#### Recent Standardization Improvements (2024)
+
+**Agent Architecture Consistency:**
+All 5 production agents now follow standardized patterns:
+1. **Data Analyzer**: Reduced custom CSS from 400+ lines to ~78 lines, standardized HTML structure
+2. **Job Posting Generator**: Enhanced with professional theme and proper grid layout
+3. **Five Whys Analyzer**: Applied black and white theme with consistent styling
+4. **Social Ads Generator**: Maintained creative theme while standardizing structure
+5. **Weather Reporter**: Professional theme with clean weather data presentation
+
+**Key Improvements Made:**
+- **HTML Structure**: All agents use standard `agent-container` grid layout
+- **CSS Consolidation**: Removed duplicate styles, standardized on `agent-base.css`
+- **Wallet Positioning**: Fixed wallet appearing at bottom vs. right side across all agents
+- **JavaScript Isolation**: Each agent has isolated utilities (DataAnalyzerUtils, WeatherUtils, etc.)
+- **Theme Application**: Consistent theme implementation across all agents
+- **Code Reduction**: Eliminated 400+ lines of redundant CSS code
 
 #### Frontend JavaScript Requirements
 ```javascript
