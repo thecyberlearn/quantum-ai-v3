@@ -152,8 +152,19 @@ NetCop Team
                     fail_silently=False,
                 )
                 messages.success(request, 'Password reset instructions have been sent to your email.')
+                
+                # Log successful email for debugging
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.info(f"Password reset email sent successfully to {email}")
+                
             except Exception as e:
-                messages.error(request, 'Failed to send reset email. Please try again later.')
+                # Log the actual error for debugging
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Failed to send password reset email to {email}: {str(e)}")
+                
+                messages.error(request, f'Failed to send reset email: {str(e)}')
                 
         except User.DoesNotExist:
             # Don't reveal if email exists or not for security
