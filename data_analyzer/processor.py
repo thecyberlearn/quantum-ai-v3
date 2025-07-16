@@ -106,16 +106,28 @@ class DataAnalysisAgentProcessor(StandardWebhookProcessor):
             # Determine success based on N8N status
             success = status == 'success' and bool(analysis_text)
             
-            # Create response object
-            response_obj = DataAnalysisAgentResponse.objects.create(
+            # Create or update response object (prevent duplicate responses)
+            response_obj, created = DataAnalysisAgentResponse.objects.get_or_create(
                 request=request_obj,
-                success=success,
-                processing_time=response_data.get('processing_time', 0),
-                analysis_results=analysis_results,
-                insights_summary=insights_summary,
-                report_text=report_text,
-                raw_response=raw_response,
+                defaults={
+                    'success': success,
+                    'processing_time': response_data.get('processing_time', 0),
+                    'analysis_results': analysis_results,
+                    'insights_summary': insights_summary,
+                    'report_text': report_text,
+                    'raw_response': raw_response,
+                }
             )
+            
+            # If response already exists, update it
+            if not created:
+                response_obj.success = success
+                response_obj.processing_time = response_data.get('processing_time', 0)
+                response_obj.analysis_results = analysis_results
+                response_obj.insights_summary = insights_summary
+                response_obj.report_text = report_text
+                response_obj.raw_response = raw_response
+                response_obj.save()
             
             # Only deduct wallet balance after successful processing
             if success:
@@ -138,12 +150,21 @@ class DataAnalysisAgentProcessor(StandardWebhookProcessor):
             request_obj.status = 'failed'
             request_obj.save()
             
-            # Create error response
-            error_response = DataAnalysisAgentResponse.objects.create(
+            # Create or update error response (prevent duplicate responses)
+            error_response, created = DataAnalysisAgentResponse.objects.get_or_create(
                 request=request_obj,
-                success=False,
-                error_message=str(e),
-                processing_time=response_data.get('processing_time', 0) if response_data else 0
+                defaults={
+                    'success': False,
+                    'error_message': str(e),
+                    'processing_time': response_data.get('processing_time', 0) if response_data else 0
+                }
             )
+            
+            # If response already exists, update it with error info
+            if not created:
+                error_response.success = False
+                error_response.error_message = str(e)
+                error_response.processing_time = response_data.get('processing_time', 0) if response_data else 0
+                error_response.save()
             
             raise Exception(f"Failed to process Data Analysis Agent response: {e}")
