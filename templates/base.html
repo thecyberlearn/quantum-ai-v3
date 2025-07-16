@@ -52,7 +52,8 @@
         {% block content %}{% endblock %}
     </div>
     
-    <!-- Footer -->
+    <!-- Footer (hidden on agent pages) -->
+    {% if not request.resolver_match.url_name == 'agent_detail' and '/agents/' not in request.path %}
     <footer class="footer" id="footer">
         <div class="footer-container">
             <!-- Main Footer Content -->
@@ -117,6 +118,7 @@
             </div>
         </div>
     </footer>
+    {% endif %}
 
     <!-- Privacy Policy Modal -->
     <div class="modal-overlay" id="privacy-modal">
