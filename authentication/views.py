@@ -167,8 +167,8 @@ NetCop Team
                 messages.error(request, f'Failed to send reset email: {str(e)}')
                 
         except User.DoesNotExist:
-            # Don't reveal if email exists or not for security
-            messages.success(request, 'If an account with that email exists, password reset instructions have been sent.')
+            # Show helpful error message for better UX
+            messages.error(request, f'No account found with email {email}. Please check your email address or create a new account.')
     
     return render(request, 'authentication/forgot_password.html')
 
