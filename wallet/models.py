@@ -19,6 +19,8 @@ class WalletTransaction(models.Model):
     description = models.TextField()
     agent_slug = models.CharField(max_length=100, blank=True)
     stripe_session_id = models.CharField(max_length=200, blank=True)
+    # Handle stripe_payment_intent_id field if it exists in database (migration issue)
+    stripe_payment_intent_id = models.CharField(max_length=200, blank=True, null=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:

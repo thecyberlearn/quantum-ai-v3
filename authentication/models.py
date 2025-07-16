@@ -35,13 +35,24 @@ class User(AbstractUser):
             
             # Create transaction record
             from wallet.models import WalletTransaction
-            WalletTransaction.objects.create(
-                user=self,
-                amount=-Decimal(str(amount)),
-                type='agent_usage',
-                description=description,
-                agent_slug=agent_slug
-            )
+            transaction_data = {
+                'user': self,
+                'amount': -Decimal(str(amount)),
+                'type': 'agent_usage',
+                'description': description,
+                'agent_slug': agent_slug
+            }
+            
+            # Handle stripe_payment_intent_id field if it exists (for agent usage, it's empty/null)
+            try:
+                WalletTransaction.objects.create(**transaction_data)
+            except Exception as e:
+                # If there's a NOT NULL constraint for stripe_payment_intent_id, provide empty string
+                if "NOT NULL constraint failed" in str(e) and "stripe_payment_intent_id" in str(e):
+                    transaction_data['stripe_payment_intent_id'] = ""
+                    WalletTransaction.objects.create(**transaction_data)
+                else:
+                    raise e
             return True
         return False
     
@@ -51,13 +62,24 @@ class User(AbstractUser):
         
         # Create transaction record
         from wallet.models import WalletTransaction
-        WalletTransaction.objects.create(
-            user=self,
-            amount=Decimal(str(amount)),
-            type='top_up',
-            description=description,
-            stripe_session_id=stripe_session_id
-        )
+        transaction_data = {
+            'user': self,
+            'amount': Decimal(str(amount)),
+            'type': 'top_up',
+            'description': description,
+            'stripe_session_id': stripe_session_id
+        }
+        
+        # Handle stripe_payment_intent_id field if it exists (for wallet top-up, it's empty/null)
+        try:
+            WalletTransaction.objects.create(**transaction_data)
+        except Exception as e:
+            # If there's a NOT NULL constraint for stripe_payment_intent_id, provide empty string
+            if "NOT NULL constraint failed" in str(e) and "stripe_payment_intent_id" in str(e):
+                transaction_data['stripe_payment_intent_id'] = ""
+                WalletTransaction.objects.create(**transaction_data)
+            else:
+                raise e
 
 
 class PasswordResetToken(models.Model):
