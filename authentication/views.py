@@ -1,10 +1,13 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django.http import JsonResponse
-from .models import User
+from django.core.mail import send_mail
+from django.conf import settings
+from django.urls import reverse
+from .models import User, PasswordResetToken
 
 
 def login_view(request):
@@ -105,3 +108,89 @@ def profile_view(request):
     }
     
     return render(request, 'authentication/profile.html', context)
+
+
+def forgot_password_view(request):
+    """Forgot password view - request password reset"""
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        
+        try:
+            user = User.objects.get(email=email)
+            
+            # Create password reset token
+            reset_token = PasswordResetToken.objects.create(user=user)
+            
+            # Build reset URL using correct site URL
+            reset_path = reverse('authentication:reset_password', kwargs={'token': reset_token.token})
+            reset_url = f"{settings.SITE_URL}{reset_path}"
+            
+            # Send email
+            subject = 'Password Reset Request'
+            message = f'''
+Hello {user.username},
+
+You requested a password reset for your NetCop account.
+
+Click the link below to reset your password:
+{reset_url}
+
+This link will expire in 1 hour.
+
+If you didn't request this reset, please ignore this email.
+
+Best regards,
+NetCop Team
+            '''
+            
+            try:
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [email],
+                    fail_silently=False,
+                )
+                messages.success(request, 'Password reset instructions have been sent to your email.')
+            except Exception as e:
+                messages.error(request, 'Failed to send reset email. Please try again later.')
+                
+        except User.DoesNotExist:
+            # Don't reveal if email exists or not for security
+            messages.success(request, 'If an account with that email exists, password reset instructions have been sent.')
+    
+    return render(request, 'authentication/forgot_password.html')
+
+
+def reset_password_view(request, token):
+    """Reset password view - using token from email"""
+    reset_token = get_object_or_404(PasswordResetToken, token=token)
+    
+    if not reset_token.is_valid():
+        messages.error(request, 'This password reset link has expired or is invalid.')
+        return redirect('authentication:forgot_password')
+    
+    if request.method == 'POST':
+        password1 = request.POST.get('password1')
+        password2 = request.POST.get('password2')
+        
+        if password1 != password2:
+            messages.error(request, 'Passwords do not match.')
+            return render(request, 'authentication/reset_password.html', {'token': token})
+        
+        if len(password1) < 8:
+            messages.error(request, 'Password must be at least 8 characters long.')
+            return render(request, 'authentication/reset_password.html', {'token': token})
+        
+        # Reset password
+        user = reset_token.user
+        user.set_password(password1)
+        user.save()
+        
+        # Mark token as used
+        reset_token.mark_as_used()
+        
+        messages.success(request, 'Your password has been reset successfully. You can now log in.')
+        return redirect('authentication:login')
+    
+    return render(request, 'authentication/reset_password.html', {'token': token})
