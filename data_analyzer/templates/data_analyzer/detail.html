@@ -271,7 +271,7 @@ document.getElementById('simpleForm').addEventListener('submit', function(e) {
     // Check if file is selected
     const fileInput = document.getElementById('dataFile');
     if (!fileInput.files || fileInput.files.length === 0) {
-        alert('Please select a data file');
+        showMessage('Please select a data file', 'error');
         return;
     }
     
@@ -284,8 +284,10 @@ document.getElementById('simpleForm').addEventListener('submit', function(e) {
     // Check wallet balance
     const balance = {{ user.wallet_balance|default:0 }};
     if (balance < 5.00) {
-        alert('Insufficient balance! You need 5.00 AED.');
-        window.location.href = "{% url 'core:wallet' %}";
+        showMessage('Insufficient balance! You need 5.00 AED.', 'error');
+        setTimeout(() => {
+            window.location.href = "{% url 'core:wallet' %}";
+        }, 1500);
         return;
     }
     
@@ -379,8 +381,31 @@ function showError(message) {
 }
 
 function showMessage(message, type) {
-    // Simple alert for now (can be improved later)
-    alert(message);
+    // Create a toast notification instead of alert popup
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 16px 24px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        z-index: 10000;
+        max-width: 400px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    // Remove toast after 3 seconds
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.remove();
+        }
+    }, 3000);
 }
 
 function updateWalletBalance(newBalance) {
@@ -392,8 +417,8 @@ function updateWalletBalance(newBalance) {
 function copyResults() {
     if (currentResults) {
         navigator.clipboard.writeText(currentResults.replace(/<br>/g, '\n'))
-            .then(() => alert('📋 Results copied to clipboard!'))
-            .catch(() => alert('Failed to copy results'));
+            .then(() => showMessage('📋 Results copied to clipboard!', 'success'))
+            .catch(() => showMessage('Failed to copy results', 'error'));
     }
 }
 
@@ -406,7 +431,7 @@ function downloadResults() {
         a.download = `data-analysis-${Date.now()}.txt`;
         a.click();
         URL.revokeObjectURL(url);
-        alert('💾 Results downloaded!');
+        showMessage('💾 Results downloaded!', 'success');
     }
 }
 </script>
