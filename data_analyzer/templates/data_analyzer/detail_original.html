@@ -1,0 +1,744 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Data Analyzer Agent - NetCop AI Hub{% endblock %}
+
+{% block extra_css %}
+<!-- Optimized Font Loading -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- External Stylesheets -->
+<link rel="stylesheet" href="{% static 'css/themes.css' %}">
+<link rel="stylesheet" href="{% static 'css/agent-base.css' %}">
+
+<!-- Data Analyzer Specific Utilities -->
+<script>
+// Data Analyzer - Self-contained utilities (no shared dependencies)
+const DataAnalyzerUtils = {
+    /**
+     * Update wallet balance display - Data Analyzer specific
+     */
+    updateWalletBalance(newBalance) {
+        // Update header balance (anchor tag with emoji)
+        const headerBalance = document.querySelector('a[data-wallet-balance]');
+        if (headerBalance) {
+            headerBalance.textContent = `💰 ${newBalance.toFixed(2)} AED`;
+        }
+        
+        // Update page balance (div without emoji)
+        const pageBalance = document.querySelector('div[data-wallet-balance]');
+        if (pageBalance) {
+            pageBalance.textContent = `${newBalance.toFixed(2)} AED`;
+        }
+        
+        window.currentWalletBalance = newBalance;
+    },
+
+    /**
+     * Show toast notification with duplicate prevention
+     */
+    showToast(message, type = 'info') {
+        // Prevent duplicate toasts
+        const existingToast = document.querySelector('.data-analyzer-toast');
+        if (existingToast) {
+            existingToast.remove();
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'data-analyzer-toast';
+        toast.style.cssText = `
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            color: white;
+            font-size: 13px;
+            z-index: 1000;
+            max-width: 300px;
+            font-weight: 500;
+            ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
+        `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.remove();
+            }
+        }, 2000);
+    },
+
+    /**
+     * Generate text for copy/download functionality
+     */
+    generateTextForExport(contentElementId) {
+        const content = document.getElementById(contentElementId);
+        if (content) {
+            return content.innerText || content.textContent || '';
+        }
+        return 'No content available';
+    },
+
+    /**
+     * Copy content to clipboard
+     */
+    copyToClipboard(text, successMessage = 'Content copied to clipboard!') {
+        navigator.clipboard.writeText(text).then(() => {
+            this.showToast(`📋 ${successMessage}`, 'success');
+        }).catch(() => {
+            this.showToast('Failed to copy content', 'error');
+        });
+    },
+
+    /**
+     * Download content as text file
+     */
+    downloadAsFile(text, filename, successMessage = 'File downloaded!') {
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename || `content-${Date.now()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.showToast(`💾 ${successMessage}`, 'success');
+    }
+};
+
+// For backward compatibility, create AgentUtils alias
+const AgentUtils = DataAnalyzerUtils;
+</script>
+
+<style>
+/* Data Analyzer specific styles only */
+.file-upload-zone {
+    border: 2px dashed var(--agent-border);
+    border-radius: var(--radius);
+    padding: var(--space-xl);
+    text-align: center;
+    transition: all var(--transition);
+    background: var(--agent-card-bg);
+    cursor: pointer;
+    margin-bottom: var(--space-lg);
+}
+
+.file-upload-zone.dragover,
+.file-upload-zone:hover {
+    border-color: var(--agent-primary);
+    background: var(--hover-color);
+}
+
+.file-preview {
+    background: var(--agent-card-bg);
+    border: 1px solid var(--agent-border);
+    border-radius: var(--radius);
+    padding: var(--space-md);
+    margin-top: var(--space-md);
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.radio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    border: 1px solid var(--agent-border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    background: white;
+    transition: all var(--transition);
+    min-height: 60px;
+}
+
+.radio-option.selected {
+    border-color: var(--agent-primary);
+    background: var(--agent-card-bg);
+}
+
+.radio-option:hover {
+    border-color: var(--agent-primary);
+    background: var(--hover-color);
+}
+
+.radio-option input[type="radio"] {
+    margin: 0;
+}
+
+.processing-status {
+    display: none;
+    text-align: center;
+    padding: var(--space-lg);
+    margin: var(--space-lg) 0;
+    background: var(--agent-card-bg);
+    border: 1px solid var(--agent-border);
+    border-radius: var(--radius);
+}
+
+.results-card {
+    display: none;
+    margin-top: var(--space-lg);
+}
+
+/* Ensure grid layout works */
+div.agent-page div.agent-container {
+    display: grid !important;
+    grid-template-columns: 1fr 350px !important;
+    gap: 24px !important;
+    max-width: 1280px !important;
+    margin: 0 auto !important;
+    align-items: start !important;
+}
+
+@media (max-width: 768px) {
+    div.agent-page div.agent-container {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="agent-page theme-professional">
+    <div class="agent-container">
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="{% if message.tags == 'error' %}error-message{% else %}success-message{% endif %}" style="grid-column: 1 / -1;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        <!-- Main Content -->
+        <div>
+                <form method="POST" id="dataAnalyzerForm">
+                    {% csrf_token %}
+                    
+                    <!-- File Upload Section -->
+                    <div class="card">
+                        <h3 class="section-title">📁 Upload Your Data File</h3>
+                        
+                        <div class="file-upload-zone" id="fileUploadZone" onclick="document.getElementById('fileInput').click()">
+                            <div style="font-size: 48px; margin-bottom: 12px;">📊</div>
+                            <div style="font-size: var(--text-lg); font-weight: 600; color: var(--text-color); margin-bottom: 8px;">
+                                Choose or drag your data file here
+                            </div>
+                            <div style="font-size: var(--text-base); color: var(--accent-color);">
+                                Supports PDF, CSV, Excel files (up to 10MB)
+                            </div>
+                        </div>
+                        
+                        <input
+                            type="file"
+                            id="fileInput"
+                            accept=".pdf,.csv,.xlsx,.xls"
+                            style="display: none;"
+                        />
+                        
+                        <div id="filePreview" class="file-preview" style="display: none;">
+                            <div style="font-size: 24px;">📄</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: var(--text-primary);" id="fileName"></div>
+                                <div style="font-size: 14px; color: var(--text-secondary);" id="fileSize"></div>
+                            </div>
+                            <button type="button" onclick="removeFile()" class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;">
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Analysis Type Selection -->
+                    <div class="card">
+                        <h3 class="section-title">🔍 Analysis Type</h3>
+                        
+                        <div class="radio-grid">
+                            <label class="radio-option selected" data-value="summary">
+                                <input type="radio" name="analysisType" value="summary" checked />
+                                <div style="font-size: 20px;">📋</div>
+                                <div>
+                                    <div style="font-weight: 600; margin-bottom: 4px; font-size: var(--text-lg);">
+                                        Summary Analysis
+                                    </div>
+                                    <div style="font-size: var(--text-sm); color: var(--accent-color);">
+                                        Quick overview and key insights
+                                    </div>
+                                </div>
+                            </label>
+                            
+                            <label class="radio-option" data-value="detailed">
+                                <input type="radio" name="analysisType" value="detailed" />
+                                <div style="font-size: 20px;">📈</div>
+                                <div>
+                                    <div style="font-weight: 600; margin-bottom: 4px; font-size: var(--text-lg);">
+                                        Detailed Analysis
+                                    </div>
+                                    <div style="font-size: var(--text-sm); color: var(--accent-color);">
+                                        Comprehensive statistical analysis
+                                    </div>
+                                </div>
+                            </label>
+                            
+                            <label class="radio-option" data-value="statistical">
+                                <input type="radio" name="analysisType" value="statistical" />
+                                <div style="font-size: 20px;">📊</div>
+                                <div>
+                                    <div style="font-weight: 600; margin-bottom: 4px; font-size: var(--text-lg);">
+                                        Statistical Analysis
+                                    </div>
+                                    <div style="font-size: var(--text-sm); color: var(--accent-color);">
+                                        Advanced statistics and trends
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <!-- Wallet Sidebar -->
+        <div class="wallet-section">
+            <div class="card">
+                <h3 class="section-title">💳 Your Wallet</h3>
+                
+                <div class="wallet-balance" data-wallet-balance>
+                    {% if user.is_authenticated %}
+                        {{ user.wallet_balance|floatformat:2 }} AED
+                    {% else %}
+                        0.00 AED
+                    {% endif %}
+                </div>
+                <div class="balance-label">Available Balance</div>
+                
+                {% if user.is_authenticated %}
+                    {% if user.wallet_balance >= 5.00 %}
+                        <button type="submit" form="dataAnalyzerForm" class="btn btn-primary process-btn" id="processButton">
+                            📊 Analyze Data (5.00 AED)
+                        </button>
+                    {% else %}
+                        <div class="insufficient-balance">
+                            Insufficient balance! You need 5.00 AED.
+                        </div>
+                        <a href="{% url 'core:wallet' %}" class="btn btn-primary process-btn" style="text-decoration: none;">
+                            💰 Top Up Wallet
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'authentication:login' %}" class="btn btn-primary process-btn" style="text-decoration: none;">
+                        🔑 Login to Continue
+                    </a>
+                {% endif %}
+            </div>
+            
+            <div class="usage-info">
+                <h4>💡 How it works</h4>
+                <ul>
+                    <li>Upload your data file (PDF, CSV, Excel)</li>
+                    <li>Choose analysis type</li>
+                    <li>Get comprehensive insights</li>
+                    <li>Download detailed report</li>
+                </ul>
+            </div>
+        </div>
+            <!-- Processing Status -->
+            <div id="processingStatus" class="processing-status">
+                <div class="status-icon">📊</div>
+                <div style="font-weight: 600; color: var(--primary-color);">Analyzing Your Data...</div>
+                <div style="font-size: 14px; color: var(--text-secondary); margin-top: 8px;" id="statusText">Processing data file...</div>
+            </div>
+            
+            <!-- Results -->
+            <div id="analysisResults" class="results-card">
+                <div class="results-header">
+                    <div style="font-size: 24px;">✅</div>
+                    <h3 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">Data Analysis Complete</h3>
+                    <div style="background: var(--primary-color); color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-left: auto;">✅ Complete</div>
+                </div>
+                
+                <div class="results-content" id="analysisContent">
+                    <!-- Analysis results will be displayed here -->
+                </div>
+                
+                <div class="action-buttons">
+                    <button onclick="copyAnalysisReport()" class="btn btn-primary">📋 Copy Analysis</button>
+                    <button onclick="downloadAnalysisReport()" class="btn btn-secondary">💾 Download Report</button>
+                </div>
+            </div>
+        </div>
+        
+        
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedFile = null;
+    
+    // File upload handling
+    const fileInput = document.getElementById('fileInput');
+    const fileUploadZone = document.getElementById('fileUploadZone');
+    const filePreview = document.getElementById('filePreview');
+    
+    // Handle file input change
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            selectedFile = e.target.files[0];
+            showFilePreview(selectedFile);
+        }
+    });
+    
+    // Drag and drop functionality
+    fileUploadZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        fileUploadZone.classList.add('dragover');
+    });
+    
+    fileUploadZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        fileUploadZone.classList.remove('dragover');
+    });
+    
+    fileUploadZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        fileUploadZone.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (isValidFile(file)) {
+                selectedFile = file;
+                fileInput.files = files;
+                showFilePreview(file);
+            } else {
+                AgentUtils.showToast('Please select a valid data file (PDF, CSV, Excel)', 'error');
+            }
+        }
+    });
+    
+    // Show file preview
+    function showFilePreview(file) {
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = formatFileSize(file.size);
+        filePreview.style.display = 'flex';
+        fileUploadZone.style.display = 'none';
+    }
+    
+    // Remove file
+    function removeFile() {
+        selectedFile = null;
+        fileInput.value = '';
+        filePreview.style.display = 'none';
+        fileUploadZone.style.display = 'block';
+    }
+    
+    // Validate file type
+    function isValidFile(file) {
+        const validTypes = [
+            'application/pdf',
+            'text/csv',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ];
+        return validTypes.includes(file.type) || file.name.match(/\.(pdf|csv|xlsx|xls)$/i);
+    }
+    
+    // Format file size
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // Radio button handling
+    document.querySelectorAll('.radio-option').forEach(option => {
+        option.addEventListener('click', function() {
+            document.querySelectorAll('.radio-option').forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            this.querySelector('input[type="radio"]').checked = true;
+        });
+    });
+    
+    // Handle form submission
+    document.getElementById('dataAnalyzerForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (!selectedFile) {
+            AgentUtils.showToast('Please select a data file', 'error');
+            return;
+        }
+        
+        // Check user authentication
+        {% if not user.is_authenticated %}
+        window.location.href = "{% url 'authentication:login' %}";
+        return;
+        {% endif %}
+        
+        // Check wallet balance
+        const balance = {{ user.wallet_balance|default:0 }};
+        if (balance < 5.00) {
+            AgentUtils.showToast('Insufficient balance! You need 5.00 AED.', 'error');
+            setTimeout(() => {
+                window.location.href = "{% url 'core:wallet' %}";
+            }, 2000);
+            return;
+        }
+        
+        // Show processing status
+        document.getElementById('processingStatus').style.display = 'block';
+        document.getElementById('processButton').disabled = true;
+        document.getElementById('processButton').innerHTML = '⏳ Processing...';
+        document.getElementById('analysisResults').style.display = 'none';
+        
+        // Processing steps for user feedback
+        const steps = [
+            'Reading file structure...',
+            'Extracting data patterns...',
+            'Performing statistical analysis...',
+            'Generating insights...',
+            'Finalizing report...'
+        ];
+        
+        let currentStep = 0;
+        const stepInterval = setInterval(() => {
+            if (currentStep < steps.length) {
+                document.getElementById('statusText').textContent = steps[currentStep];
+                currentStep++;
+            } else {
+                clearInterval(stepInterval);
+            }
+        }, 1000);
+
+        // Submit form data to backend
+        const formData = new FormData(this);
+        if (selectedFile) {
+            formData.append('file', selectedFile);
+        }
+        
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(result => {
+            clearInterval(stepInterval);
+            if (result.success && result.request_id) {
+                // Start polling for results
+                pollForResults(result.request_id);
+            } else {
+                // Handle immediate response
+                document.getElementById('processingStatus').style.display = 'none';
+                document.getElementById('processButton').disabled = false;
+                document.getElementById('processButton').innerHTML = '📊 Analyze Data (5.00 AED)';
+                
+                if (result.error) {
+                    AgentUtils.showToast(`❌ ${result.error}`, 'error');
+                } else {
+                    displayResults(result);
+                }
+            }
+        })
+        .catch(error => {
+            clearInterval(stepInterval);
+            console.error('Error:', error);
+            document.getElementById('processingStatus').style.display = 'none';
+            document.getElementById('processButton').disabled = false;
+            document.getElementById('processButton').innerHTML = '📊 Analyze Data (5.00 AED)';
+            AgentUtils.showToast('❌ Network error - please try again', 'error');
+        });
+    });
+    
+    // Display analysis results with custom Data Analyzer formatting
+    function displayResults(result) {
+        const resultsContainer = document.getElementById('analysisResults');
+        const contentElement = document.getElementById('analysisContent');
+        
+        if (!resultsContainer || !contentElement) {
+            console.error('Results elements not found');
+            return;
+        }
+        
+        // Update wallet balance if provided
+        if (result.wallet_balance !== undefined) {
+            AgentUtils.updateWalletBalance(result.wallet_balance);
+        }
+        
+        // Handle errors
+        if (result.error) {
+            AgentUtils.showToast(`❌ ${result.error}`, 'error');
+            return;
+        }
+        
+        // Extract content with priority: report_text > insights_summary > raw_response.analysis
+        let content = '';
+        
+        if (result.report_text && typeof result.report_text === 'string') {
+            content = result.report_text;
+        } else if (result.insights_summary && typeof result.insights_summary === 'string') {
+            content = result.insights_summary;
+        } else if (result.raw_response && result.raw_response.analysis && typeof result.raw_response.analysis === 'string') {
+            content = result.raw_response.analysis;
+        } else {
+            content = 'Data analysis completed successfully!';
+        }
+        
+        // Parse markdown content to HTML
+        const formattedContent = parseMarkdownToHTML(content);
+        
+        // Update content
+        contentElement.innerHTML = formattedContent;
+        
+        // Show results
+        resultsContainer.style.display = 'block';
+        resultsContainer.scrollIntoView({ behavior: 'smooth' });
+        
+        // Show success message
+        const successMessage = result.success ? '✅ Data analysis completed and payment processed!' : '✅ Data analysis completed!';
+        AgentUtils.showToast(successMessage, 'success');
+    }
+    
+    // Enhanced markdown parser for Data Analyzer results
+    function parseMarkdownToHTML(markdown) {
+        if (!markdown || typeof markdown !== 'string') {
+            return '<p>No content available.</p>';
+        }
+        
+        let html = markdown;
+        
+        // Convert headers (### Header, ## Header, # Header)
+        html = html.replace(/^### (.*$)/gm, '<h3 style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin: 20px 0 12px 0; border-bottom: 2px solid var(--success-green); padding-bottom: 8px;">$1</h3>');
+        html = html.replace(/^## (.*$)/gm, '<h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 24px 0 16px 0; border-bottom: 2px solid var(--success-green); padding-bottom: 8px;">$1</h2>');
+        html = html.replace(/^# (.*$)/gm, '<h1 style="font-size: 22px; font-weight: 600; color: var(--text-primary); margin: 28px 0 18px 0; border-bottom: 2px solid var(--success-green); padding-bottom: 10px;">$1</h1>');
+        
+        // Convert bold text (**text** or __text__)
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight: 600; color: var(--text-primary);">$1</strong>');
+        html = html.replace(/__(.*?)__/g, '<strong style="font-weight: 600; color: var(--text-primary);">$1</strong>');
+        
+        // Convert italic text (*text* or _text_)
+        html = html.replace(/\*(.*?)\*/g, '<em style="font-style: italic; color: var(--text-secondary);">$1</em>');
+        html = html.replace(/_(.*?)_/g, '<em style="font-style: italic; color: var(--text-secondary);">$1</em>');
+        
+        // Convert bullet points (- item or * item)
+        html = html.replace(/^[\s]*[-\*]\s+(.*)$/gm, '<li style="margin: 8px 0; padding-left: 8px; color: var(--text-primary);">$1</li>');
+        
+        // Wrap consecutive list items in ul tags
+        html = html.replace(/(<li[^>]*>.*?<\/li>\s*)+/gs, function(match) {
+            return `<ul style="margin: 16px 0; padding-left: 20px; list-style-type: disc; color: var(--success-green);">${match}</ul>`;
+        });
+        
+        // Convert numbered lists (1. item, 2. item)
+        html = html.replace(/^\s*\d+\.\s+(.*)$/gm, '<li style="margin: 8px 0; padding-left: 8px; color: var(--text-primary);">$1</li>');
+        
+        // Wrap consecutive numbered list items in ol tags
+        html = html.replace(/(<li[^>]*>.*?<\/li>\s*)+/gs, function(match) {
+            if (match.includes('ul style')) return match; // Skip if already wrapped in ul
+            return `<ol style="margin: 16px 0; padding-left: 20px; list-style-type: decimal; color: var(--success-green);">${match}</ol>`;
+        });
+        
+        // Convert line breaks to paragraphs
+        const paragraphs = html.split(/\n\s*\n/);
+        html = paragraphs.map(p => {
+            const trimmed = p.trim();
+            if (trimmed === '') return '';
+            
+            // Skip if already wrapped in HTML tags
+            if (trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('<ol') || trimmed.startsWith('<li')) {
+                return trimmed;
+            }
+            
+            return `<p style="margin: 12px 0; line-height: 1.6; color: var(--text-primary);">${trimmed}</p>`;
+        }).filter(p => p !== '').join('');
+        
+        return html;
+    }
+
+    // Track polling and results to prevent duplicates
+    let resultsDisplayed = false;
+    let currentPollInterval = null;
+
+    // Poll for results
+    function pollForResults(requestId) {
+        let pollCount = 0;
+        const maxPolls = 60; // 60 seconds maximum for data analysis
+        resultsDisplayed = false; // Reset flag
+        
+        // Clear any existing polling
+        if (currentPollInterval) {
+            clearInterval(currentPollInterval);
+            currentPollInterval = null;
+        }
+        
+        currentPollInterval = setInterval(() => {
+            pollCount++;
+            
+            fetch(`/agents/data-analyzer/status/${requestId}/`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    if (result.status === 'completed' || result.status === 'failed') {
+                        // Stop polling immediately
+                        clearInterval(currentPollInterval);
+                        currentPollInterval = null;
+                        
+                        // Reset UI
+                        document.getElementById('processingStatus').style.display = 'none';
+                        document.getElementById('processButton').disabled = false;
+                        document.getElementById('processButton').innerHTML = '📊 Analyze Data (5.00 AED)';
+                        
+                        // Display results only once
+                        if (!resultsDisplayed) {
+                            resultsDisplayed = true;
+                            displayResults(result);
+                        }
+                    } else if (pollCount >= maxPolls) {
+                        clearInterval(currentPollInterval);
+                        currentPollInterval = null;
+                        document.getElementById('processingStatus').style.display = 'none';
+                        document.getElementById('processButton').disabled = false;
+                        document.getElementById('processButton').innerHTML = '📊 Analyze Data (5.00 AED)';
+                        AgentUtils.showToast('❌ Processing timeout - please try again', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error polling results:', error);
+                    clearInterval(currentPollInterval);
+                    currentPollInterval = null;
+                    document.getElementById('processingStatus').style.display = 'none';
+                    document.getElementById('processButton').disabled = false;
+                    document.getElementById('processButton').innerHTML = '📊 Analyze Data (5.00 AED)';
+                    AgentUtils.showToast('❌ Network error during processing - please try again', 'error');
+                });
+        }, 1000);
+    }
+    
+    
+    
+    function copyAnalysisReport() {
+        const reportText = AgentUtils.generateTextForExport('analysisContent');
+        AgentUtils.copyToClipboard(reportText, 'Analysis report copied to clipboard!');
+    }
+    
+    function downloadAnalysisReport() {
+        const reportText = AgentUtils.generateTextForExport('analysisContent');
+        AgentUtils.downloadAsFile(reportText, `data-analysis-report-${Date.now()}.txt`, 'Analysis report downloaded!');
+    }
+    
+</script>
+{% endblock %}
