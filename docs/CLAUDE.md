@@ -812,3 +812,122 @@ const formData = new FormData(this); // 'this' refers to form element - automati
 <span data-wallet-balance>{{ user.wallet_balance|floatformat:2 }} AED</span>
 <div data-wallet-balance>{{ user.wallet_balance|floatformat:2 }} AED</div>
 ```
+
+## 🔐 Password Reset System (Implemented July 2024)
+
+### Overview
+A comprehensive forgot password system has been implemented with secure token-based authentication, professional UI, and Railway deployment support.
+
+### Key Features
+- **Secure Token System**: UUID-based tokens with 1-hour expiration
+- **Email Integration**: Gmail SMTP with production-ready configuration
+- **Professional UI**: Responsive design matching existing authentication pages
+- **Railway Deployment**: Automatic environment detection and proper URL generation
+- **User Experience**: Clear error messages and helpful navigation
+- **Security**: Single-use tokens, no email enumeration, comprehensive logging
+
+### Database Schema
+```python
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='password_reset_tokens')
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    
+    def is_valid(self):
+        return not self.is_used and timezone.now() < self.expires_at
+    
+    def mark_as_used(self):
+        self.is_used = True
+        self.save()
+```
+
+### URL Configuration
+```python
+# authentication/urls.py
+urlpatterns = [
+    path('forgot-password/', views.forgot_password_view, name='forgot_password'),
+    path('reset-password/<uuid:token>/', views.reset_password_view, name='reset_password'),
+]
+```
+
+### User Experience Flow
+1. **Request Reset**: User clicks "Forgot your password?" on login page
+2. **Email Validation**: System shows helpful error if user doesn't exist
+3. **Token Generation**: Secure UUID token created with 1-hour expiration
+4. **Email Delivery**: Professional email sent with reset instructions
+5. **Password Reset**: User clicks link, enters new password
+6. **Completion**: Token marked as used, user redirected to login
+
+### Railway Deployment Configuration
+```python
+# Automatic environment detection
+if config('RAILWAY_ENVIRONMENT', default=''):
+    SITE_URL = 'https://netcop.up.railway.app'
+else:
+    SITE_URL = config('SITE_URL', default='http://localhost:8000')
+```
+
+### Required Environment Variables (Railway)
+```bash
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_PASSWORD=your-gmail-app-password
+DEFAULT_FROM_EMAIL=NetCop <your-email@gmail.com>
+```
+
+### Security Features
+- **Token Expiration**: All tokens expire after 1 hour
+- **Single-Use**: Tokens are marked as used after password reset
+- **No Email Enumeration**: Helpful error messages without revealing account existence
+- **Secure URLs**: HTTPS links in production environment
+- **Logging**: Comprehensive error logging for debugging
+
+### Error Handling
+- **Clear Messages**: "No account found with email X. Please check your email or create account"
+- **Helpful Navigation**: Direct links to registration page
+- **Email Failures**: Detailed error messages for debugging
+- **Token Validation**: Proper handling of expired/invalid tokens
+
+### Testing
+```bash
+# Test email configuration
+python manage.py test_email --email=user@example.com
+
+# Manual testing flow
+1. Go to /auth/forgot-password/
+2. Enter registered user email
+3. Check email inbox (including spam)
+4. Click reset link
+5. Set new password
+6. Login with new credentials
+```
+
+### Files Created/Modified
+- `authentication/models.py` - Added PasswordResetToken model
+- `authentication/views.py` - Added forgot_password_view and reset_password_view
+- `authentication/urls.py` - Added password reset URL patterns
+- `templates/authentication/forgot_password.html` - Professional forgot password form
+- `templates/authentication/reset_password.html` - Password reset form
+- `templates/authentication/login.html` - Added forgot password link
+- `netcop_hub/settings.py` - Email and site URL configuration
+- `authentication/management/commands/test_email.py` - Email testing utility
+- `docs/FORGOT_PASSWORD_IMPLEMENTATION.md` - Comprehensive documentation
+
+### Common Issues & Solutions
+1. **Email not received**: Check spam folder, verify Railway environment variables
+2. **Link not working**: Ensure SITE_URL is correctly configured for Railway
+3. **Token expired**: Tokens expire after 1 hour, request new reset
+4. **User not found**: Register user first, then request password reset
+
+### Implementation Notes
+- The system uses Django's built-in password validation
+- Email templates are plain text for maximum compatibility
+- Token cleanup can be implemented via periodic task if needed
+- System is production-ready and deployed on Railway
+
+This implementation provides a secure, user-friendly password reset system that integrates seamlessly with the existing NetCop authentication flow.
