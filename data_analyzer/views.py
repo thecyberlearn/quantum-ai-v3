@@ -70,14 +70,25 @@ def data_analyzer_detail(request):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
     
+    # Handle non-AJAX POST requests (redirect to prevent resubmission popup)
+    elif request.method == 'POST':
+        messages.info(request, 'Please use the analyze button to process your data.')
+        return redirect('data_analyzer:detail')
+    
     # Regular GET request - show the form page
     user_requests = DataAnalysisAgentRequest.objects.filter(
         user=request.user
     ).select_related('agent').prefetch_related('response').order_by('-created_at')[:10]
     
+    # Get other available agents for quick access
+    available_agents = BaseAgent.objects.filter(
+        is_active=True
+    ).exclude(slug='data-analyzer').order_by('name')
+    
     context = {
         'agent': agent,
-        'user_requests': user_requests
+        'user_requests': user_requests,
+        'available_agents': available_agents
     }
     return render(request, 'data_analyzer/detail.html', context)
 

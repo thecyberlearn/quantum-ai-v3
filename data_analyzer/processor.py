@@ -14,6 +14,21 @@ class DataAnalysisAgentProcessor(StandardWebhookProcessor):
     webhook_url = settings.N8N_WEBHOOK_DATA_ANALYZER
     agent_id = 'data-analysis-001'
     
+    def _extract_text_from_sections(self, sections):
+        """Extract plain text from structured sections for legacy compatibility"""
+        text_parts = []
+        
+        for section in sections:
+            heading = section.get('heading', '')
+            content = section.get('content', '')
+            
+            if heading and content:
+                text_parts.append(f"### {heading}")
+                text_parts.append(content)
+                text_parts.append("")  # Add empty line between sections
+        
+        return "\n".join(text_parts).strip()
+    
     def make_request(self, data, timeout=60):
         """Override to send PDF file as binary data instead of JSON"""
         try:
@@ -86,10 +101,19 @@ class DataAnalysisAgentProcessor(StandardWebhookProcessor):
             request_obj.status = 'processing'
             request_obj.save()
             
-            # Extract N8N response data based on workflow format
-            analysis_text = response_data.get('analysis', '')
-            status = response_data.get('status', 'unknown')
-            processed_at = response_data.get('processed_at', '')
+            # Handle new structured format vs legacy format
+            if 'sections' in response_data:
+                # New structured format from webhook
+                analysis_text = self._extract_text_from_sections(response_data['sections'])
+                status = 'success'  # If we got sections, it's successful
+                processed_at = response_data.get('timestamp', '')
+                print(f"{self.agent_slug}: Processing new structured format with {len(response_data['sections'])} sections")
+            else:
+                # Legacy format
+                analysis_text = response_data.get('analysis', '')
+                status = response_data.get('status', 'unknown')
+                processed_at = response_data.get('processed_at', '')
+                print(f"{self.agent_slug}: Processing legacy format")
             
             # Map N8N response to Django fields
             analysis_results = {
@@ -103,8 +127,10 @@ class DataAnalysisAgentProcessor(StandardWebhookProcessor):
             report_text = analysis_text
             raw_response = response_data
             
-            # Determine success based on N8N status
-            success = status == 'success' and bool(analysis_text)
+            # Determine success based on content
+            success = bool(analysis_text) and (status == 'success' or 'sections' in response_data)
+            
+            print(f"{self.agent_slug}: Success: {success}, Analysis length: {len(analysis_text)}")
             
             # Create or update response object (prevent duplicate responses)
             response_obj, created = DataAnalysisAgentResponse.objects.get_or_create(
