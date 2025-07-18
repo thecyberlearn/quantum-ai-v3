@@ -710,7 +710,17 @@ const JobPostingUtils = {
      */
     updateWalletBalance(newBalance) {
         if (newBalance !== undefined) {
-            document.getElementById('walletBalance').textContent = newBalance.toFixed(2);
+            // Update header balance (anchor tag with emoji)
+            const headerBalance = document.querySelector('a[data-wallet-balance]');
+            if (headerBalance) {
+                headerBalance.textContent = `💰 ${newBalance.toFixed(2)} AED`;
+            }
+            
+            // Update page balance (span without emoji)
+            const pageBalance = document.getElementById('walletBalance');
+            if (pageBalance) {
+                pageBalance.textContent = newBalance.toFixed(2);
+            }
         }
     },
 
