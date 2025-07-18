@@ -709,19 +709,9 @@ const JobPostingUtils = {
      * Update wallet balance display - Job Posting Generator specific
      */
     updateWalletBalance(newBalance) {
-        // Update header balance (anchor tag with emoji)
-        const headerBalance = document.querySelector('a[data-wallet-balance]');
-        if (headerBalance) {
-            headerBalance.textContent = `💰 ${newBalance.toFixed(2)} AED`;
+        if (newBalance !== undefined) {
+            document.getElementById('walletBalance').textContent = newBalance.toFixed(2);
         }
-        
-        // Update page balance (div without emoji)
-        const pageBalance = document.querySelector('div[data-wallet-balance]');
-        if (pageBalance) {
-            pageBalance.textContent = `${newBalance.toFixed(2)} AED`;
-        }
-        
-        window.currentWalletBalance = newBalance;
     },
 
     /**
