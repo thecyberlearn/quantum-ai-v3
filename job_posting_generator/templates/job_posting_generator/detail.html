@@ -1285,51 +1285,65 @@ document.addEventListener('keydown', function(e) {
     }
     
 
-    // Enhanced form validation with visual feedback
-    function validateField(field) {
+    // Enhanced form validation with visual feedback and debouncing
+    const debouncedValidateField = createDebouncer(function(field) {
         const isValid = field.value.trim() !== '';
         const container = field.closest('.form-group') || field.parentElement;
         
         if (isValid) {
-            field.style.borderColor = 'var(--success-color)';
+            field.style.borderColor = 'var(--success)';
             field.style.boxShadow = '0 0 0 2px rgba(16, 185, 129, 0.1)';
             container.classList.remove('error');
         } else {
-            field.style.borderColor = 'var(--error-color)';
+            field.style.borderColor = 'var(--error)';
             field.style.boxShadow = '0 0 0 2px rgba(239, 68, 68, 0.1)';
             container.classList.add('error');
         }
         
         return isValid;
+    }, 300);
+    
+    function validateField(field) {
+        return debouncedValidateField(field);
     }
 
-    // Progressive form enhancement
+    // Progressive form enhancement with debouncing
     function initializeFormEnhancements() {
         const requiredFields = document.querySelectorAll('[required]');
         
+        // Debounced textarea auto-resize
+        const debouncedResize = createDebouncer(function(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.max(120, textarea.scrollHeight) + 'px';
+        }, 100);
+        
         requiredFields.forEach(field => {
-            // Real-time validation
+            // Real-time validation with debouncing
+            field.addEventListener('input', () => {
+                if (field.value.trim()) {
+                    debouncedValidateField(field);
+                }
+            });
+            
             field.addEventListener('blur', () => validateField(field));
             
             // Reset validation on focus
             field.addEventListener('focus', () => {
-                field.style.borderColor = 'var(--primary-color)';
+                field.style.borderColor = 'var(--primary)';
                 field.style.boxShadow = '0 0 0 2px rgba(0, 0, 0, 0.1)';
                 field.closest('.form-group')?.classList.remove('error');
             });
             
-            // Auto-resize textareas
+            // Auto-resize textareas with debouncing
             if (field.tagName === 'TEXTAREA') {
                 field.addEventListener('input', function() {
-                    this.style.height = 'auto';
-                    this.style.height = Math.max(120, this.scrollHeight) + 'px';
+                    debouncedResize(this);
                 });
             }
         });
     }
 
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', initializeFormEnhancements);
+    // Form enhancements are initialized in the main DOMContentLoaded listener above
 
 
 
@@ -1378,8 +1392,8 @@ document.addEventListener('keydown', function(e) {
         // Format job posting content with professional styling
         const formattedContent = formatJobPostingContent(content);
         
-        // Update content
-        contentElement.innerHTML = formattedContent;
+        // Update content with safe HTML
+        safeSetHTML(contentElement, formattedContent);
         
         // Show results
         resultsContainer.style.display = 'block';
