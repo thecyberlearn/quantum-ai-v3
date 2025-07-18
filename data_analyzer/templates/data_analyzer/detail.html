@@ -819,7 +819,7 @@ body {
     position: fixed;
     top: 0;
     right: 0;
-    width: 400px;
+    width: min(400px, 90vw);
     height: 100vh;
     background: var(--surface);
     border-left: 1px solid var(--outline);
@@ -1161,38 +1161,26 @@ body {
         font-size: 28px;
     }
 }
-
-/* Toast Notifications */
-.toast {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: var(--surface);
-    border: 1px solid var(--outline);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-md) var(--spacing-lg);
-    box-shadow: var(--shadow-lg);
-    z-index: 1000;
-    max-width: 400px;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.toast.success {
-    border-color: var(--success);
-    background: #f0fdf4;
-    color: #16a34a;
-}
-
-.toast.error {
-    border-color: var(--error);
-    background: #fef2f2;
-    color: #dc2626;
-}
 </style>
 {% endblock %}
 
 {% block content %}
+<script>
+// Consolidated DOMContentLoaded initialization
+document.addEventListener('DOMContentLoaded', function() {
+    // Set data for JavaScript access
+    document.body.setAttribute('data-user-authenticated', '{{ user.is_authenticated|yesno:"true,false" }}');
+    document.body.setAttribute('data-login-url', '{% url "authentication:login" %}');
+    document.body.setAttribute('data-wallet-balance', '{{ user.wallet_balance|default:0 }}');
+    document.body.setAttribute('data-wallet-url', '{% url "core:wallet" %}');
+    
+    // Initialize radio selection
+    selectRadio('summary');
+    
+    // Initialize agent widgets
+    initializeAgent();
+});
+</script>
 <div class="agent-container">
     <!-- Agent Header -->
     <div class="agent-header">
@@ -1201,13 +1189,7 @@ body {
             <p class="agent-subtitle">Upload your data file and get AI-powered analysis with advanced insights</p>
         </div>
         <div class="header-controls">
-            <!-- Quick Agent Access Toggle -->
-            <button class="quick-agent-toggle" onclick="toggleQuickAgents()" title="Quick access to other agents">
-                <span class="toggle-icon">🚀</span>
-                <span class="toggle-text">Other Agents</span>
-            </button>
-            
-            <div class="wallet-card" style="margin-bottom: 0; min-width: 280px; max-width: 280px;">
+            <div class="wallet-card widget-small" style="margin-bottom: 0;">
                 <div class="wallet-header">
                     <h3 class="wallet-title">Your Wallet</h3>
                     <div class="wallet-icon">💳</div>
@@ -1223,11 +1205,11 @@ body {
     </div>
 
     <!-- Quick Agent Access Panel -->
-    <div class="quick-agents-overlay" id="quickAgentsOverlay" onclick="closeQuickAgents()"></div>
-    <div class="quick-agents-panel" id="quickAgentsPanel">
+    <div class="quick-agents-overlay" id="quickAgentsOverlay" onclick="closeQuickAgents()" aria-hidden="true"></div>
+    <div class="quick-agents-panel" id="quickAgentsPanel" role="dialog" aria-labelledby="quickAgentsTitle" aria-hidden="true">
         <div class="quick-agents-header">
-            <h3>Quick Access to Other Agents</h3>
-            <button class="close-panel" onclick="toggleQuickAgents()">×</button>
+            <h3 id="quickAgentsTitle">Quick Access to Other Agents</h3>
+            <button class="close-panel" onclick="toggleQuickAgents()" aria-label="Close quick agents panel">×</button>
         </div>
         <div class="quick-agents-grid">
             <a href="/agents/weather-reporter/" class="quick-agent-card">
@@ -1274,7 +1256,7 @@ body {
     <!-- Agent Grid -->
     <div class="agent-grid">
         <!-- Upload Widget -->
-        <div class="agent-widget widget-large" style="flex: 1; margin-right: var(--spacing-lg);">
+        <div class="agent-widget widget-large" style="flex: 1; margin-right: clamp(0px, var(--spacing-lg), 2vw);">
             <div class="widget-header">
                 <h3 class="widget-title">
                     <span class="widget-icon">📤</span>
@@ -1288,12 +1270,14 @@ body {
                     <!-- File Upload -->
                     <div class="form-group">
                         <label class="form-label">Upload Data File</label>
-                        <div class="file-upload-area" onclick="document.getElementById('dataFile').click()">
-                            <div class="upload-icon">📄</div>
+                        <div class="file-upload-area" onclick="document.getElementById('dataFile').click()"
+                             role="button" tabindex="0" aria-label="Click to upload data file or drag and drop"
+                             onkeydown="if(event.key==='Enter'||event.key===' '){document.getElementById('dataFile').click()}">
+                            <div class="upload-icon" aria-hidden="true">📄</div>
                             <div class="upload-text">Click to upload or drag and drop</div>
-                            <div class="upload-hint">Supports PDF, CSV, Excel files (max 10MB)</div>
+                            <div class="upload-hint" id="uploadHint">Supports PDF, CSV, Excel files (max 10MB)</div>
                             <input type="file" id="dataFile" name="file" accept=".pdf,.csv,.xlsx,.xls" 
-                                   style="display: none;" required>
+                                   style="display: none;" required aria-describedby="uploadHint">
                         </div>
                     </div>
                     
@@ -1345,7 +1329,7 @@ body {
         </div>
 
         <!-- How It Works Widget - Positioned on the right -->
-        <div class="agent-widget widget-small" style="min-width: 280px; max-width: 280px; margin-left: auto;">
+        <div class="agent-widget widget-small" style="min-width: min(280px, 100%); max-width: min(280px, 100%); margin-left: auto;">
             <div class="widget-header">
                 <h3 class="widget-title">
                     <span class="widget-icon">ℹ️</span>
@@ -1359,10 +1343,23 @@ body {
                     <li>Get AI-powered insights</li>
                     <li>Copy or download results</li>
                 </ol>
+                
+                <!-- Other Agents Button -->
+                <button class="quick-agent-toggle btn btn-secondary btn-full" onclick="toggleQuickAgents()" 
+                        title="Quick access to other agents"
+                        aria-label="Open quick access panel for other AI agents"
+                        aria-expanded="false"
+                        aria-controls="quickAgentsPanel"
+                        style="margin-top: var(--spacing-md);">
+                    <span class="toggle-icon" aria-hidden="true">🚀</span>
+                    <span class="toggle-text">Explore Other Agents</span>
+                </button>
             </div>
         </div>
+    </div>
 
-
+    <!-- Main Content Grid -->
+    <div class="agent-grid">
         <!-- Processing Status -->
         <div id="processingStatus" class="agent-widget widget-wide processing-status">
             <div class="widget-header">
@@ -1406,6 +1403,59 @@ body {
 // Simple JavaScript - beginner friendly
 let currentResults = '';
 
+// HTML sanitization function
+function sanitizeHTML(str) {
+    const temp = document.createElement('div');
+    temp.textContent = str;
+    return temp.innerHTML;
+}
+
+// Debounce function for performance optimization
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Safe HTML insertion with allowed tags
+function safeSetHTML(element, htmlString) {
+    // Allow specific HTML tags that are safe for results display
+    const allowedTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'div', 'span', 'code'];
+    const allowedClasses = ['summary', 'key-points', 'insights'];
+    
+    // Create a temporary container
+    const temp = document.createElement('div');
+    temp.innerHTML = htmlString;
+    
+    // Remove any script tags and event handlers
+    const scripts = temp.querySelectorAll('script');
+    scripts.forEach(script => script.remove());
+    
+    // Remove dangerous attributes
+    const allElements = temp.querySelectorAll('*');
+    allElements.forEach(el => {
+        // Remove event handlers
+        for (let attr of el.attributes) {
+            if (attr.name.startsWith('on')) {
+                el.removeAttribute(attr.name);
+            }
+        }
+        
+        // Only allow specific classes
+        if (el.className && !allowedClasses.some(cls => el.className.includes(cls))) {
+            el.removeAttribute('class');
+        }
+    });
+    
+    element.innerHTML = temp.innerHTML;
+}
+
 // Form submission
 document.getElementById('agentForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -1418,17 +1468,18 @@ document.getElementById('agentForm').addEventListener('submit', function(e) {
     }
     
     // Check authentication
-    {% if not user.is_authenticated %}
-    window.location.href = "{% url 'authentication:login' %}";
-    return;
-    {% endif %}
+    const isAuthenticated = document.body.getAttribute('data-user-authenticated') === 'true';
+    if (!isAuthenticated) {
+        window.location.href = document.body.getAttribute('data-login-url');
+        return;
+    }
     
     // Check wallet balance
-    const balance = {{ user.wallet_balance|default:0 }};
+    const balance = parseFloat(document.body.getAttribute('data-wallet-balance') || 0);
     if (balance < 5.00) {
         showMessage('Insufficient balance! You need 5.00 AED.', 'error');
         setTimeout(function() {
-            window.location.href = "{% url 'core:wallet' %}";
+            window.location.href = document.body.getAttribute('data-wallet-url');
         }, 1500);
         return;
     }
@@ -1524,7 +1575,7 @@ function showResults(result) {
     }
     
     currentResults = rawText; // For copy/download functionality
-    document.getElementById('resultsContent').innerHTML = content;
+    safeSetHTML(document.getElementById('resultsContent'), content);
     document.getElementById('resultsContainer').style.display = 'block';
     
     // Show success message
@@ -1780,8 +1831,8 @@ function selectRadio(value) {
     document.getElementById(value).checked = true;
 }
 
-// File Upload Interactions
-document.getElementById('dataFile').addEventListener('change', function(e) {
+// File Upload Interactions with debouncing
+const handleFileChange = debounce(function(e) {
     const uploadArea = document.querySelector('.file-upload-area');
     const uploadText = document.querySelector('.upload-text');
     const uploadHint = document.querySelector('.upload-hint');
@@ -1796,22 +1847,24 @@ document.getElementById('dataFile').addEventListener('change', function(e) {
         uploadHint.textContent = 'Supports PDF, CSV, Excel files (max 10MB)';
         uploadArea.classList.remove('active');
     }
-});
+}, 150);
 
-// Drag and Drop
+document.getElementById('dataFile').addEventListener('change', handleFileChange);
+
+// Drag and Drop with debouncing
 const uploadArea = document.querySelector('.file-upload-area');
 
-uploadArea.addEventListener('dragover', function(e) {
+const handleDragOver = debounce(function(e) {
     e.preventDefault();
     uploadArea.classList.add('active');
-});
+}, 50);
 
-uploadArea.addEventListener('dragleave', function(e) {
+const handleDragLeave = debounce(function(e) {
     e.preventDefault();
     uploadArea.classList.remove('active');
-});
+}, 100);
 
-uploadArea.addEventListener('drop', function(e) {
+const handleDrop = function(e) {
     e.preventDefault();
     uploadArea.classList.remove('active');
     
@@ -1822,12 +1875,13 @@ uploadArea.addEventListener('drop', function(e) {
         const event = new Event('change', { bubbles: true });
         document.getElementById('dataFile').dispatchEvent(event);
     }
-});
+};
 
-// Initialize radio selection
-document.addEventListener('DOMContentLoaded', function() {
-    selectRadio('summary'); // Set default selection
-});
+uploadArea.addEventListener('dragover', handleDragOver);
+uploadArea.addEventListener('dragleave', handleDragLeave);
+uploadArea.addEventListener('drop', handleDrop);
+
+// Radio selection initialization moved to consolidated DOMContentLoaded
 
 function showMessage(message, type) {
     // Create modern toast notification
@@ -1872,13 +1926,7 @@ function downloadResults() {
 }
 
 
-// Initialize agent
-document.addEventListener('DOMContentLoaded', function() {
-    selectRadio('summary'); // Set default selection
-    
-    // Initialize agent widgets
-    initializeAgent();
-});
+// Agent initialization moved to consolidated DOMContentLoaded
 
 function initializeAgent() {
     // Any agent-specific initialization can go here
@@ -1898,12 +1946,20 @@ function toggleQuickAgents() {
         panel.classList.remove('active');
         overlay.classList.remove('active');
         toggle.classList.remove('active');
+        // Update ARIA attributes
+        toggle.setAttribute('aria-expanded', 'false');
+        panel.setAttribute('aria-hidden', 'true');
+        overlay.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = 'auto';
     } else {
         // Open panel
         panel.classList.add('active');
         overlay.classList.add('active');
         toggle.classList.add('active');
+        // Update ARIA attributes
+        toggle.setAttribute('aria-expanded', 'true');
+        panel.setAttribute('aria-hidden', 'false');
+        overlay.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
     }
 }
@@ -1916,6 +1972,10 @@ function closeQuickAgents() {
     panel.classList.remove('active');
     overlay.classList.remove('active');
     toggle.classList.remove('active');
+    // Update ARIA attributes
+    toggle.setAttribute('aria-expanded', 'false');
+    panel.setAttribute('aria-hidden', 'true');
+    overlay.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = 'auto';
 }
 
