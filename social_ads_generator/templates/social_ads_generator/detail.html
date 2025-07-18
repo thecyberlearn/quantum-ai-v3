@@ -4,156 +4,1343 @@
 {% block title %}Social Ads Generator Agent - NetCop AI Hub{% endblock %}
 
 {% block extra_css %}
-<!-- Optimized Font Loading -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Social Ads Generator - Optimized Styles */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-<!-- External Stylesheets -->
-<link rel="stylesheet" href="{% static 'css/themes.css' %}">
-<link rel="stylesheet" href="{% static 'css/agent-base.css' %}">
+* {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    box-sizing: border-box;
+}
 
-<!-- Social Ads Generator Specific Utilities -->
+:root {
+    --primary: #000000;
+    --surface: #ffffff;
+    --surface-variant: #f8fafc;
+    --background: #f3f4f6;
+    --outline: #e4e7eb;
+    --outline-variant: #e1e4e7;
+    --on-surface: #1a1a1a;
+    --on-surface-variant: #6b7280;
+    --success: #10b981;
+    --error: #ef4444;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+body {
+    background: var(--background);
+    color: var(--on-surface);
+    line-height: 1.5;
+    font-weight: 400;
+    margin: 0;
+    padding: 0;
+}
+
+/* Layout */
+.agent-container {
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+    max-width: 1600px;
+}
+
+.agent-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+}
+
+.agent-grid {
+    display: flex;
+    gap: var(--spacing-lg);
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+/* Typography */
+.agent-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--on-surface);
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.agent-subtitle {
+    font-size: 16px;
+    color: var(--on-surface-variant);
+    margin: 4px 0 0 0;
+}
+
+/* Widgets */
+.agent-widget {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    border: 1px solid var(--outline-variant);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.agent-widget:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.widget-large {
+    min-width: 600px;
+    flex: 1;
+}
+
+.widget-small {
+    min-width: 280px;
+    flex: 0 0 auto;
+}
+
+.widget-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--outline-variant);
+}
+
+.widget-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--on-surface);
+    margin: 0;
+}
+
+.widget-icon {
+    font-size: 24px;
+}
+
+.widget-content {
+    flex: 1;
+}
+
+/* Wallet Card */
+.wallet-card {
+    background: linear-gradient(135deg, #000000 0%, #333333 100%);
+    color: white;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    border: none;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 0;
+    min-height: auto;
+}
+
+.wallet-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    transform: translate(30px, -30px);
+}
+
+.wallet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.wallet-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+    opacity: 0.9;
+}
+
+.wallet-icon {
+    font-size: 20px;
+}
+
+.balance-display {
+    margin-bottom: 0;
+}
+
+.balance-amount {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 0;
+    letter-spacing: -0.5px;
+}
+
+.balance-label {
+    font-size: 12px;
+    opacity: 0.8;
+    font-weight: 400;
+}
+
+/* Form Styles */
+.section-container {
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background: var(--surface-variant);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--outline-variant);
+}
+
+.section-subtitle {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--on-surface);
+    margin: 0 0 var(--spacing-md) 0;
+}
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-label {
+    display: block;
+    font-weight: 500;
+    color: var(--on-surface);
+    margin-bottom: var(--spacing-sm);
+    font-size: 14px;
+}
+
+.form-input, .form-textarea {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: 1px solid var(--outline);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    background: var(--surface);
+    color: var(--on-surface);
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.form-control {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: 1px solid var(--outline);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    background: var(--surface);
+    color: var(--on-surface);
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.form-input:focus, .form-textarea:focus, .form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.form-input:hover, .form-textarea:hover, .form-control:hover {
+    border-color: var(--on-surface-variant);
+}
+
+.form-input.is-invalid, .form-textarea.is-invalid, .form-control.is-invalid {
+    border-color: var(--error);
+}
+
+.form-input.is-valid, .form-textarea.is-valid, .form-control.is-valid {
+    border-color: var(--success);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-error {
+    color: var(--error);
+    font-size: 0.875rem;
+    margin-top: var(--spacing-xs);
+}
+
+.form-help {
+    color: var(--on-surface-variant);
+    font-size: 0.875rem;
+    margin-top: var(--spacing-xs);
+}
+
+.required::after {
+    content: " *";
+    color: var(--error);
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.25;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: var(--surface);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #333;
+}
+
+.btn-secondary {
+    background: var(--surface);
+    color: var(--on-surface);
+    border: 2px solid var(--outline);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--surface-variant);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-outline:hover:not(:disabled) {
+    background: var(--primary);
+    color: var(--surface);
+}
+
+.btn-sm {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.875rem;
+}
+
+.btn-full {
+    width: 100%;
+    justify-content: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.btn-loading {
+    position: relative;
+    color: transparent;
+}
+
+.btn-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Wallet Widget */
+.wallet-widget {
+    text-align: center;
+}
+
+.wallet-balance {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin: var(--spacing-md) 0;
+}
+
+.balance-label {
+    font-size: 0.875rem;
+    color: var(--on-surface-variant);
+    margin-bottom: var(--spacing-md);
+}
+
+.insufficient-balance {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error);
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--spacing-md);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Processing Status */
+.processing-status {
+    background: var(--surface);
+    border: 1px solid var(--outline);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-xl);
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    display: none;
+}
+
+.status-icon {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-md);
+}
+
+/* Results */
+.results-card {
+    background: var(--surface);
+    border: 1px solid var(--outline);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-sm);
+    display: none;
+}
+
+.results-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--outline);
+}
+
+.results-content {
+    margin-bottom: var(--spacing-lg);
+}
+
+.action-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+/* Other Agents Widget */
+.other-agents-widget {
+    text-align: center;
+}
+
+.other-agents-widget p {
+    margin: 0 0 var(--spacing-md) 0;
+    color: var(--on-surface-variant);
+}
+
+/* Quick Agent Panel */
+.quick-agent-panel {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100vh;
+    background: var(--surface);
+    border-left: 1px solid var(--outline);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    transition: right 0.3s ease;
+    overflow-y: auto;
+}
+
+.quick-agent-panel.active {
+    right: 0;
+}
+
+.panel-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--outline);
+}
+
+.panel-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--on-surface-variant);
+}
+
+.panel-content {
+    padding: var(--spacing-lg);
+}
+
+.agent-grid-panel {
+    display: grid;
+    gap: var(--spacing-md);
+}
+
+.agent-card {
+    background: var(--surface-variant);
+    border: 1px solid var(--outline);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.agent-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.agent-emoji {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.agent-card h4 {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--on-surface);
+}
+
+.agent-card p {
+    margin: 0 0 var(--spacing-md) 0;
+    font-size: 0.875rem;
+    color: var(--on-surface-variant);
+}
+
+/* Quick Agent Access Panel */
+.quick-agent-toggle {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.quick-agent-toggle:hover {
+    border-color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.quick-agent-toggle.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.toggle-icon {
+    font-size: 16px;
+    transition: transform 0.2s ease;
+}
+
+.quick-agent-toggle.active .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.quick-agents-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.quick-agents-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.quick-agents-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(400px, 90vw);
+    height: 100vh;
+    background: var(--surface);
+    border-left: 1px solid var(--outline);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+}
+
+.quick-agents-panel.active {
+    transform: translateX(0);
+}
+
+.quick-agents-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--outline-variant);
+    background: var(--surface-variant);
+}
+
+.quick-agents-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--on-surface);
+}
+
+.close-panel {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--on-surface-variant);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+}
+
+.close-panel:hover {
+    background: var(--surface);
+    color: var(--on-surface);
+}
+
+.quick-agents-grid {
+    padding: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.quick-agent-card {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: var(--on-surface);
+    transition: all 0.2s ease;
+    background: var(--surface);
+}
+
+.quick-agent-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.agent-icon {
+    font-size: 24px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-variant);
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+}
+
+.agent-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.agent-info h4 {
+    margin: 0 0 4px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--on-surface);
+}
+
+.agent-info p {
+    margin: 0;
+    font-size: 12px;
+    color: var(--on-surface-variant);
+    line-height: 1.4;
+}
+
+.agent-price {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary);
+    background: rgba(0, 0, 0, 0.05);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    margin-top: 4px;
+    display: inline-block;
+}
+
+.quick-agents-footer {
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-top: 1px solid var(--outline-variant);
+    background: var(--surface-variant);
+}
+
+.view-all-agents {
+    display: block;
+    text-align: center;
+    padding: var(--spacing-md);
+    background: var(--primary);
+    color: white;
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.view-all-agents:hover {
+    background: #333333;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .agent-container {
+        padding: var(--spacing-md);
+    }
+    
+    .agent-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+    
+    .header-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .agent-title {
+        font-size: 24px;
+    }
+    
+    .agent-grid {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+    
+    .widget-large,
+    .widget-small {
+        min-width: auto;
+        flex: none;
+    }
+    
+    .balance-amount {
+        font-size: 20px;
+    }
+    
+    .widget-large {
+        margin-right: 0 !important;
+    }
+    
+    .quick-agent-toggle {
+        flex: 1;
+        margin-right: var(--spacing-md);
+        justify-content: center;
+    }
+    
+    .quick-agents-panel {
+        width: 100%;
+        max-width: 100%;
+        right: 0;
+        left: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .agent-container {
+        padding: var(--spacing-sm);
+    }
+    
+    .agent-grid {
+        gap: var(--spacing-md);
+    }
+    
+    .agent-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .wallet-balance {
+        font-size: 1.5rem;
+    }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Focus styles for accessibility */
+.btn:focus-visible,
+.form-control:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* Screen reader only */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Form Sections */
+.form-section {
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background: var(--surface-variant);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--outline);
+}
+
+.form-section h3 {
+    margin: 0 0 var(--spacing-md) 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--on-surface);
+}
+
+/* Alert Messages */
+.alert {
+    padding: var(--spacing-md);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--spacing-md);
+    border: 1px solid transparent;
+}
+
+.alert-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+    border-color: var(--success);
+}
+
+.alert-error {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error);
+    border-color: var(--error);
+}
+</style>
+
 <script>
-// Social Ads Generator - Self-contained utilities (no shared dependencies)
-const SocialAdsUtils = {
-    /**
-     * Update wallet balance display - Social Ads specific
-     */
-    updateWalletBalance(newBalance) {
-        // Update header balance (anchor tag with emoji)
-        const headerBalance = document.querySelector('a[data-wallet-balance]');
-        if (headerBalance) {
-            headerBalance.textContent = `💰 ${newBalance.toFixed(2)} AED`;
-        }
+// Social Ads Generator - Optimized JavaScript with Security
+const SocialAdsModule = (function() {
+    'use strict';
+    
+    // Private variables
+    let isInitialized = false;
+    let eventListeners = [];
+    let currentPollInterval = null;
+    let resultsDisplayed = false;
+    
+    // HTML Sanitization Function
+    function safeSetHTML(element, htmlString) {
+        const temp = document.createElement('div');
+        temp.innerHTML = htmlString;
         
-        // Update page balance (div without emoji)
-        const pageBalance = document.querySelector('div[data-wallet-balance]');
-        if (pageBalance) {
-            pageBalance.textContent = `${newBalance.toFixed(2)} AED`;
-        }
+        // Remove script tags
+        const scripts = temp.querySelectorAll('script');
+        scripts.forEach(script => script.remove());
         
-        window.currentWalletBalance = newBalance;
-    },
-
-    /**
-     * Show toast notification with duplicate prevention
-     */
-    showToast(message, type = 'info') {
-        // Prevent duplicate toasts
-        const existingToast = document.querySelector('.social-ads-toast');
-        if (existingToast) {
-            existingToast.remove();
-        }
-
-        const toast = document.createElement('div');
-        toast.className = 'social-ads-toast';
-        toast.style.cssText = `
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            padding: 8px 12px;
-            border-radius: 4px;
-            color: white;
-            font-size: 13px;
-            z-index: 1000;
-            max-width: 300px;
-            font-weight: 500;
-            ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
-        `;
-        toast.textContent = message;
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.remove();
+        // Remove dangerous attributes
+        const allElements = temp.querySelectorAll('*');
+        allElements.forEach(el => {
+            const attrs = el.attributes;
+            for (let i = attrs.length - 1; i >= 0; i--) {
+                const attr = attrs[i];
+                if (attr.name.startsWith('on') || 
+                    attr.name === 'javascript:' || 
+                    (attr.value && attr.value.toLowerCase().includes('javascript:'))) {
+                    el.removeAttribute(attr.name);
+                }
             }
-        }, 2000);
-    },
-
-    /**
-     * Generate text for copy/download functionality
-     */
-    generateTextForExport(contentElementId) {
-        const content = document.getElementById(contentElementId);
-        if (content) {
-            return content.innerText || content.textContent || '';
-        }
-        return 'No content available';
-    },
-
-    /**
-     * Copy content to clipboard
-     */
-    copyToClipboard(text, successMessage = 'Content copied to clipboard!') {
-        navigator.clipboard.writeText(text).then(() => {
-            this.showToast(`📋 ${successMessage}`, 'success');
-        }).catch(() => {
-            this.showToast('Failed to copy content', 'error');
         });
-    },
-
-    /**
-     * Download content as text file
-     */
-    downloadAsFile(text, filename, successMessage = 'File downloaded!') {
-        const blob = new Blob([text], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename || `content-${Date.now()}.txt`;
-        a.click();
-        URL.revokeObjectURL(url);
-        this.showToast(`💾 ${successMessage}`, 'success');
-    },
-
-    /**
-     * Reset UI to initial state - Social Ads specific
-     */
-    resetUI(config) {
-        const elements = {
-            processingStatus: document.getElementById(config.processingStatusId || 'processingStatus'),
-            processButton: document.getElementById(config.processButtonId || 'processButton'),
-            results: document.getElementById(config.resultsId)
-        };
-
-        if (elements.processingStatus) {
-            elements.processingStatus.style.display = 'none';
-        }
         
-        if (elements.processButton) {
-            elements.processButton.disabled = false;
-            elements.processButton.innerHTML = config.buttonText || 'Process';
-            elements.processButton.classList.remove('loading');
-        }
+        element.innerHTML = temp.innerHTML;
+    }
+    
+    // Debounce function
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+    
+    // Public API
+    const SocialAdsUtils = {
+        // Update wallet balance display
+        updateWalletBalance(newBalance) {
+            if (newBalance !== undefined) {
+                // Update header balance
+                const headerBalance = document.querySelector('a[data-wallet-balance]');
+                if (headerBalance) {
+                    headerBalance.textContent = `💰 ${newBalance.toFixed(2)} AED`;
+                }
+                
+                // Update page balance
+                const pageBalance = document.getElementById('walletBalance');
+                if (pageBalance) {
+                    pageBalance.textContent = newBalance.toFixed(2);
+                }
+                
+                window.currentWalletBalance = newBalance;
+            }
+        },
 
-        if (elements.results) {
-            elements.results.style.display = 'none';
+        // Show toast notification
+        showToast(message, type = 'info') {
+            const existingToast = document.querySelector('.toast-notification');
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 16px;
+                border-radius: 8px;
+                color: white;
+                font-size: 14px;
+                font-weight: 500;
+                z-index: 1000;
+                max-width: 350px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
+            `;
+            
+            // Sanitize message
+            const sanitizedMessage = message.replace(/[<>"'&]/g, function(match) {
+                const entities = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '&': '&amp;' };
+                return entities[match];
+            });
+            
+            toast.textContent = sanitizedMessage;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 3000);
+        },
+
+        // Generate text for export
+        generateTextForExport(contentElementId) {
+            const content = document.getElementById(contentElementId);
+            if (content) {
+                return content.innerText || content.textContent || '';
+            }
+            return 'No content available';
+        },
+
+        // Copy to clipboard
+        copyToClipboard(text, successMessage = 'Content copied to clipboard!') {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    this.showToast(`📋 ${successMessage}`, 'success');
+                }).catch(() => {
+                    this.showToast('Failed to copy content', 'error');
+                });
+            } else {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    this.showToast(`📋 ${successMessage}`, 'success');
+                } catch (err) {
+                    this.showToast('Failed to copy content', 'error');
+                }
+                document.body.removeChild(textArea);
+            }
+        },
+
+        // Download as file
+        downloadAsFile(text, filename, successMessage = 'File downloaded!') {
+            try {
+                const blob = new Blob([text], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename || `social-ads-${Date.now()}.txt`;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                this.showToast(`💾 ${successMessage}`, 'success');
+            } catch (error) {
+                this.showToast('Failed to download file', 'error');
+            }
+        },
+
+        // Reset UI to initial state
+        resetUI(config) {
+            const elements = {
+                processingStatus: document.getElementById(config.processingStatusId || 'processingStatus'),
+                processButton: document.getElementById(config.processButtonId || 'processButton'),
+                results: document.getElementById(config.resultsId)
+            };
+
+            if (elements.processingStatus) {
+                elements.processingStatus.style.display = 'none';
+            }
+            
+            if (elements.processButton) {
+                elements.processButton.disabled = false;
+                elements.processButton.innerHTML = config.buttonText || 'Process';
+                elements.processButton.classList.remove('btn-loading');
+            }
+
+            if (elements.results) {
+                elements.results.style.display = 'none';
+            }
+        },
+        
+        // Validate wallet balance dynamically
+        validateWalletBalance() {
+            const walletBalanceElement = document.getElementById('walletBalance');
+            const currentBalance = walletBalanceElement ? 
+                parseFloat(walletBalanceElement.textContent) : 0;
+            
+            if (currentBalance < 7.00) {
+                this.showToast('Insufficient wallet balance. Please top up your wallet.', 'error');
+                return false;
+            }
+            return true;
+        }
+    };
+    
+    // Initialize module
+    function init() {
+        if (isInitialized) return;
+        
+        setupEventListeners();
+        setupAccessibility();
+        
+        isInitialized = true;
+    }
+    
+    function setupEventListeners() {
+        // Add event listeners with cleanup tracking
+        const form = document.getElementById('socialAdsForm');
+        if (form) {
+            const submitHandler = handleFormSubmit.bind(null);
+            form.addEventListener('submit', submitHandler);
+            eventListeners.push({ element: form, event: 'submit', handler: submitHandler });
         }
     }
-};
+    
+    function setupAccessibility() {
+        // Add keyboard navigation support
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.querySelector('.quick-agent-panel.active')) {
+                hideQuickAgentAccess();
+            }
+        });
+    }
+    
+    function handleFormSubmit(e) {
+        // Form submission logic will be handled in the main script
+    }
+    
+    // Cleanup function
+    function cleanup() {
+        eventListeners.forEach(({ element, event, handler }) => {
+            if (element) {
+                element.removeEventListener(event, handler);
+            }
+        });
+        eventListeners = [];
+        
+        if (currentPollInterval) {
+            clearInterval(currentPollInterval);
+            currentPollInterval = null;
+        }
+        
+        isInitialized = false;
+    }
+    
+    // Public API
+    return {
+        init,
+        cleanup,
+        SocialAdsUtils,
+        
+        // Expose internal functions for use in template
+        setCurrentPollInterval(interval) {
+            currentPollInterval = interval;
+        },
+        
+        clearCurrentPollInterval() {
+            if (currentPollInterval) {
+                clearInterval(currentPollInterval);
+                currentPollInterval = null;
+            }
+        },
+        
+        setResultsDisplayed(value) {
+            resultsDisplayed = value;
+        },
+        
+        getResultsDisplayed() {
+            return resultsDisplayed;
+        }
+    };
+})();
 
-// For backward compatibility, create AgentUtils alias
-const AgentUtils = SocialAdsUtils;
+// For backward compatibility
+const AgentUtils = SocialAdsModule.SocialAdsUtils;
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', SocialAdsModule.init);
+} else {
+    SocialAdsModule.init();
+}
+
+// Quick Agent Access Functions
+function showQuickAgentAccess() {
+    const panel = document.getElementById('quickAgentPanel');
+    const overlay = document.createElement('div');
+    overlay.className = 'panel-overlay';
+    overlay.onclick = hideQuickAgentAccess;
+    document.body.appendChild(overlay);
+    
+    panel.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    // Load agents if not already loaded
+    if (!panel.dataset.loaded) {
+        loadQuickAgents();
+        panel.dataset.loaded = 'true';
+    }
+}
+
+function hideQuickAgentAccess() {
+    const panel = document.getElementById('quickAgentPanel');
+    const overlay = document.querySelector('.panel-overlay');
+    
+    panel.classList.remove('active');
+    document.body.style.overflow = '';
+    
+    if (overlay) {
+        overlay.remove();
+    }
+}
+
+function loadQuickAgents() {
+    const agents = [
+        {
+            name: 'Data Analyzer',
+            description: 'Analyze and interpret your data files with AI precision',
+            url: '/agents/data-analyzer/',
+            emoji: '📊'
+        },
+        {
+            name: 'Job Posting Generator',
+            description: 'Create professional job postings in minutes',
+            url: '/agents/job-posting-generator/',
+            emoji: '💼'
+        },
+        {
+            name: 'Five Whys Analyzer',
+            description: 'Root cause analysis using the Five Whys technique',
+            url: '/agents/five-whys-analyzer/',
+            emoji: '🔍'
+        },
+        {
+            name: 'Weather Reporter',
+            description: 'Get detailed weather reports and forecasts',
+            url: '/agents/weather-reporter/',
+            emoji: '🌤️'
+        }
+    ];
+    
+    const container = document.querySelector('#quickAgentPanel .agent-grid-panel');
+    if (container) {
+        container.innerHTML = agents.map(agent => `
+            <div class="agent-card">
+                <div class="agent-emoji">${agent.emoji}</div>
+                <h4>${agent.name}</h4>
+                <p>${agent.description}</p>
+                <a href="${agent.url}" class="btn btn-primary btn-sm">
+                    Try Now
+                </a>
+            </div>
+        `).join('');
+    }
+}
 </script>
 {% endblock %}
 
 {% block content %}
-<div class="agent-page theme-professional">
-    <div class="agent-container">
-        <!-- Messages -->
-        {% if messages %}
-            {% for message in messages %}
-                <div class="{% if message.tags == 'error' %}error-message{% else %}success-message{% endif %}" style="grid-column: 1 / -1;">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-        
-        <!-- Main Content -->
+<div class="agent-container">
+    <!-- Agent Header -->
+    <div class="agent-header">
         <div>
-            <div class="card">
-                <h3 class="section-title">📢 Social Ads Generator</h3>
+            <h1 class="agent-title">Social Ads Generator</h1>
+            <p class="agent-subtitle">Create compelling social media advertisements optimized for different platforms</p>
+        </div>
+        <div class="header-controls">
+            <div class="wallet-card widget-small" style="margin-bottom: 0;">
+                <div class="wallet-header">
+                    <h3 class="wallet-title">Your Wallet</h3>
+                    <div class="wallet-icon">💳</div>
+                </div>
+                <div class="balance-display">
+                    <div class="balance-amount">
+                        <span id="walletBalance">{{ user.wallet_balance|floatformat:2 }}</span> AED
+                    </div>
+                    <div class="balance-label">Available Balance</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Agent Access Panel -->
+    <div class="quick-agents-overlay" id="quickAgentsOverlay" onclick="closeQuickAgents()" aria-hidden="true"></div>
+    <div class="quick-agents-panel" id="quickAgentsPanel" role="dialog" aria-labelledby="quickAgentsTitle" aria-hidden="true">
+        <div class="quick-agents-header">
+            <h3 id="quickAgentsTitle">Quick Access to Other Agents</h3>
+            <button class="close-panel" onclick="toggleQuickAgents()" aria-label="Close quick agents panel">×</button>
+        </div>
+        <div class="quick-agents-grid">
+            <a href="/agents/weather-reporter/" class="quick-agent-card">
+                <div class="agent-icon">🌤️</div>
+                <div class="agent-info">
+                    <h4>Weather Reporter</h4>
+                    <p>Real-time weather info</p>
+                    <span class="agent-price">2.0 AED</span>
+                </div>
+            </a>
+            
+            <a href="/agents/data-analyzer/" class="quick-agent-card">
+                <div class="agent-icon">📊</div>
+                <div class="agent-info">
+                    <h4>Data Analyzer</h4>
+                    <p>AI-powered data analysis</p>
+                    <span class="agent-price">5.0 AED</span>
+                </div>
+            </a>
+            
+            <a href="/agents/job-posting-generator/" class="quick-agent-card">
+                <div class="agent-icon">💼</div>
+                <div class="agent-info">
+                    <h4>Job Posting Generator</h4>
+                    <p>Professional job postings</p>
+                    <span class="agent-price">4.0 AED</span>
+                </div>
+            </a>
+            
+            <a href="/agents/five-whys-analyzer/" class="quick-agent-card">
+                <div class="agent-icon">🔍</div>
+                <div class="agent-info">
+                    <h4>Five Whys Analyzer</h4>
+                    <p>Root cause analysis</p>
+                    <span class="agent-price">8.0 AED</span>
+                </div>
+            </a>
+        </div>
+        <div class="quick-agents-footer">
+            <a href="{% url 'core:marketplace' %}" class="view-all-agents">View All Agents →</a>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="{% if message.tags == 'error' %}alert alert-error{% else %}alert{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <!-- Agent Grid -->
+    <div class="agent-grid">
+        <!-- Social Ads Form Widget -->
+        <div class="agent-widget widget-large" style="flex: 1; margin-right: clamp(0px, var(--spacing-lg), 2vw);">
+            <div class="widget-header">
+                <h3 class="widget-title">
+                    <span class="widget-icon">📢</span>
+                    Social Ads Details
+                </h3>
+            </div>
+            <div class="widget-content">
                 
                 <form method="POST" id="socialAdsForm">
                     {% csrf_token %}
@@ -162,115 +1349,150 @@ const AgentUtils = SocialAdsUtils;
                     <div class="section-container content-info">
                         <h4 class="section-subtitle">📝 Content Information</h4>
                         
-                        <label class="form-label">Describe what you'd like to generate *</label>
-                        <textarea name="description" id="description" class="form-textarea" placeholder="Describe the product, service, or campaign you want to create an ad for. Include key features, target audience, and any specific messaging you want to emphasize." required></textarea>
+                        <div class="form-group">
+                            <label class="form-label" for="description">📝 Describe what you'd like to generate *</label>
+                            <textarea name="description" id="description" class="form-textarea" placeholder="Describe the product, service, or campaign you want to create an ad for. Include key features, target audience, and any specific messaging you want to emphasize." required aria-describedby="description_help" rows="4"></textarea>
+                            <div id="description_help" class="form-help">Provide clear, specific information about your product or service for better ad copy</div>
+                            <div id="description-error" class="form-error" role="alert"></div>
+                        </div>
                         
-                        <label class="form-label">Language</label>
-                        <select name="language" id="language" class="form-input">
-                            <option value="English">English</option>
-                            <option value="Arabic">Arabic (العربية)</option>
-                            <option value="Spanish">Spanish (Español)</option>
-                            <option value="French">French (Français)</option>
-                            <option value="German">German (Deutsch)</option>
-                            <option value="Chinese">Chinese (中文)</option>
-                        </select>
+                        <div class="form-group">
+                            <label class="form-label" for="language">🌐 Language</label>
+                            <select name="language" id="language" class="form-input" aria-describedby="language_help">
+                                <option value="English">English</option>
+                                <option value="Arabic">Arabic (العربية)</option>
+                                <option value="Spanish">Spanish (Español)</option>
+                                <option value="French">French (Français)</option>
+                                <option value="German">German (Deutsch)</option>
+                                <option value="Chinese">Chinese (中文)</option>
+                            </select>
+                            <div id="language_help" class="form-help">Select the primary language for the ad copy</div>
+                        </div>
                     </div>
                     
                     <!-- Platform & Formatting Section -->
                     <div class="section-container platform-info">
                         <h4 class="section-subtitle">📱 Platform & Formatting</h4>
                         
-                        <label class="form-label">For Social Media Platform *</label>
-                        <select name="social_platform" id="social_platform" class="form-input" required>
-                            <option value="">Select a platform...</option>
-                            <option value="facebook">Facebook</option>
-                            <option value="instagram">Instagram</option>
-                            <option value="linkedin">LinkedIn</option>
-                            <option value="twitter">X (Twitter)</option>
-                            <option value="tiktok">TikTok</option>
-                            <option value="youtube">YouTube</option>
-                        </select>
+                        <div class="form-group">
+                            <label class="form-label" for="social_platform">📱 For Social Media Platform *</label>
+                            <select name="social_platform" id="social_platform" class="form-input" required aria-describedby="social_platform_help">
+                                <option value="">Select a platform...</option>
+                                <option value="facebook">Facebook</option>
+                                <option value="instagram">Instagram</option>
+                                <option value="linkedin">LinkedIn</option>
+                                <option value="twitter">X (Twitter)</option>
+                                <option value="tiktok">TikTok</option>
+                                <option value="youtube">YouTube</option>
+                            </select>
+                            <div id="social_platform_help" class="form-help">Choose the social media platform for optimization</div>
+                            <div id="social_platform-error" class="form-error" role="alert"></div>
+                        </div>
                         
-                        <label class="form-label">Include Emoji *</label>
-                        <select name="include_emoji" id="include_emoji" class="form-input" required>
-                            <option value="">Select an option...</option>
-                            <option value="yes">Yes</option>
-                            <option value="no">No</option>
-                        </select>
+                        <div class="form-group">
+                            <label class="form-label" for="include_emoji">😊 Include Emoji *</label>
+                            <select name="include_emoji" id="include_emoji" class="form-input" required aria-describedby="include_emoji_help">
+                                <option value="">Select an option...</option>
+                                <option value="yes">Yes</option>
+                                <option value="no">No</option>
+                            </select>
+                            <div id="include_emoji_help" class="form-help">Whether to include emojis in the ad copy</div>
+                            <div id="include_emoji-error" class="form-error" role="alert"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Button -->
+                    <div style="margin-top: var(--spacing-lg);">
+                        {% if user.is_authenticated %}
+                            {% if user.wallet_balance >= 7.00 %}
+                                <button type="submit" class="btn btn-primary btn-full" id="processButton">
+                                    📢 Generate Social Ads (7.00 AED)
+                                </button>
+                            {% else %}
+                                <div style="background: #fef2f2; color: #dc2626; padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); font-size: 14px; font-weight: 500; text-align: center;">
+                                    Insufficient balance! You need 7.00 AED.
+                                </div>
+                                <a href="{% url 'core:wallet' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
+                                    💰 Top Up Wallet
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'authentication:login' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
+                                🔑 Login to Continue
+                            </a>
+                        {% endif %}
                     </div>
                 </form>
-            </div>
-            
-            <!-- Processing Status -->
-            <div id="processingStatus" class="processing-status">
-                <div class="status-icon">📢</div>
-                <div style="font-weight: 600; color: rgba(190, 24, 93, 1);">Creating Social Ads...</div>
-                <div style="font-size: 14px; color: rgba(162, 28, 175, 1); margin-top: 8px;" id="statusText">Generating engaging ad content...</div>
-            </div>
-            
-            <!-- Results -->
-            <div id="adResults" class="results-card">
-                <div class="results-header">
-                    <div style="font-size: 24px;">✅</div>
-                    <h3 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">Generated Social Ads</h3>
-                    <div style="background: rgba(236, 72, 153, 1); color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-left: auto;">✅ Complete</div>
-                </div>
                 
-                <div class="results-content" id="adContent">
-                    <!-- Ad content will be displayed here -->
-                </div>
-                
-                <div class="action-buttons">
-                    <button onclick="copySocialAds()" class="btn btn-primary">📋 Copy Ads</button>
-                    <button onclick="downloadSocialAds()" class="btn btn-secondary">💾 Download Ads</button>
-                    <button onclick="resetForm()" class="btn btn-secondary">🔄 Create Another</button>
-                </div>
             </div>
         </div>
         
-        <!-- Wallet Sidebar -->
-        <div class="wallet-section">
-            <div class="card">
-                <h3 class="section-title">💳 Your Wallet</h3>
-                
-                <div class="wallet-balance" data-wallet-balance>
-                    {% if user.is_authenticated %}
-                        {{ user.wallet_balance|floatformat:2 }} AED
-                    {% else %}
-                        0.00 AED
-                    {% endif %}
-                </div>
-                <div class="balance-label">Available Balance</div>
-                
-                {% if user.is_authenticated %}
-                    {% if user.wallet_balance >= 7.00 %}
-                        <button type="submit" form="socialAdsForm" class="btn btn-primary process-btn" id="processButton">
-                            📢 Generate Social Ads (7.00 AED)
-                        </button>
-                    {% else %}
-                        <div class="insufficient-balance">
-                            Insufficient balance! You need 7.00 AED.
-                        </div>
-                        <a href="{% url 'core:wallet' %}" class="btn btn-primary process-btn" style="text-decoration: none;">
-                            💰 Top Up Wallet
-                        </a>
-                    {% endif %}
-                {% else %}
-                    <a href="{% url 'authentication:login' %}" class="btn btn-primary process-btn" style="text-decoration: none;">
-                        🔑 Login to Continue
-                    </a>
-                {% endif %}
+        <!-- How It Works Widget - Positioned on the right -->
+        <div class="agent-widget widget-small" style="min-width: min(280px, 100%); max-width: min(280px, 100%); margin-left: auto;">
+            <div class="widget-header">
+                <h3 class="widget-title">
+                    <span class="widget-icon">💡</span>
+                    How It Works
+                </h3>
             </div>
-            
-            <div class="usage-info">
-                <h4>💡 How it works</h4>
-                <ul>
-                    <li>Describe your product/service</li>
-                    <li>Select target platforms</li>
-                    <li>Choose campaign objective & tone</li>
-                    <li>Get platform-optimized ad copy</li>
-                </ul>
+            <div class="widget-content">
+                <ol class="info-list" style="list-style: none; padding: 0; margin: 0; gap: var(--spacing-md); display: flex; flex-direction: column;">
+                    <li style="padding: var(--spacing-sm); background: var(--surface-variant); border-radius: var(--radius-sm); font-size: 14px; line-height: 1.4;">📝 Describe your product/service</li>
+                    <li style="padding: var(--spacing-sm); background: var(--surface-variant); border-radius: var(--radius-sm); font-size: 14px; line-height: 1.4;">📱 Select target platforms</li>
+                    <li style="padding: var(--spacing-sm); background: var(--surface-variant); border-radius: var(--radius-sm); font-size: 14px; line-height: 1.4;">🎯 Choose campaign objective & tone</li>
+                    <li style="padding: var(--spacing-sm); background: var(--surface-variant); border-radius: var(--radius-sm); font-size: 14px; line-height: 1.4;">✨ Get platform-optimized ad copy</li>
+                </ol>
+                
+                <!-- Other Agents Button -->
+                <button class="quick-agent-toggle btn btn-secondary btn-full" onclick="toggleQuickAgents()" 
+                        title="Quick access to other agents"
+                        aria-label="Open quick access panel for other AI agents"
+                        aria-expanded="false"
+                        aria-controls="quickAgentsPanel"
+                        style="margin-top: var(--spacing-md);">
+                    <span class="toggle-icon" aria-hidden="true">🚀</span>
+                    <span class="toggle-text">Explore Other Agents</span>
+                </button>
             </div>
+        </div>
+    </div>
+    
+    <!-- Processing Status -->
+    <div id="processingStatus" class="processing-status" aria-live="polite" aria-label="Processing request">
+        <div class="status-icon">📢</div>
+        <div style="font-weight: 600; color: var(--primary);">Creating Social Ads...</div>
+        <div style="font-size: 14px; color: var(--on-surface-variant); margin-top: 8px;" id="statusText">
+            Generating engaging ad content...
+        </div>
+        <span class="sr-only">Processing your request...</span>
+    </div>
+    
+    <!-- Results -->
+    <div id="adResults" class="results-card" role="region" aria-labelledby="resultsTitle">
+        <div class="results-header">
+            <div style="font-size: 24px;">✅</div>
+            <h3 id="resultsTitle" style="font-size: 20px; font-weight: 600; color: var(--on-surface); margin: 0;">
+                Generated Social Ads
+            </h3>
+            <div style="background: var(--success); color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-left: auto;">
+                ✅ Complete
+            </div>
+        </div>
+        
+        <div class="results-content" id="adContent">
+            <!-- Ad content will be displayed here -->
+        </div>
+        
+        <div class="action-buttons">
+            <button onclick="copySocialAds()" class="btn btn-primary" type="button">
+                📋 Copy Ads
+            </button>
+            <button onclick="downloadSocialAds()" class="btn btn-secondary" type="button">
+                💾 Download Ads
+            </button>
+            <button onclick="resetForm()" class="btn btn-secondary" type="button">
+                🔄 Create Another
+            </button>
         </div>
     </div>
 </div>
@@ -278,13 +1500,54 @@ const AgentUtils = SocialAdsUtils;
 
 {% block extra_js %}
 <script>
-    // Form validation
+    // Form validation with visual feedback
     function isFormValid() {
         const description = document.getElementById('description').value.trim();
         const socialPlatform = document.getElementById('social_platform').value;
         const includeEmoji = document.getElementById('include_emoji').value;
         
-        return description && socialPlatform && includeEmoji;
+        let isValid = true;
+        
+        // Clear previous errors
+        document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
+        document.querySelectorAll('.form-control').forEach(el => el.classList.remove('is-invalid'));
+        
+        // Validate description
+        if (!description) {
+            showFieldError('description', 'Please provide a description of your product or service');
+            isValid = false;
+        } else if (description.length < 10) {
+            showFieldError('description', 'Description must be at least 10 characters long');
+            isValid = false;
+        }
+        
+        // Validate social platform
+        if (!socialPlatform) {
+            showFieldError('social_platform', 'Please select a social media platform');
+            isValid = false;
+        }
+        
+        // Validate emoji preference
+        if (!includeEmoji) {
+            showFieldError('include_emoji', 'Please select whether to include emojis');
+            isValid = false;
+        }
+        
+        return isValid;
+    }
+    
+    // Show field-specific error
+    function showFieldError(fieldName, message) {
+        const field = document.getElementById(fieldName);
+        const errorElement = document.getElementById(`${fieldName}-error`);
+        
+        if (field) {
+            field.classList.add('is-invalid');
+        }
+        
+        if (errorElement) {
+            errorElement.textContent = message;
+        }
     }
     
     // Copy social ads to clipboard
@@ -302,14 +1565,16 @@ const AgentUtils = SocialAdsUtils;
     // Reset form for creating another ad
     function resetForm() {
         // Clear any active polling
-        if (currentPollInterval) {
-            clearInterval(currentPollInterval);
-            currentPollInterval = null;
-        }
-        resultsDisplayed = false;
+        SocialAdsModule.clearCurrentPollInterval();
+        SocialAdsModule.setResultsDisplayed(false);
         
         // Reset form and UI
         document.getElementById('socialAdsForm').reset();
+        
+        // Clear validation errors
+        document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
+        document.querySelectorAll('.form-control').forEach(el => el.classList.remove('is-invalid'));
+        
         AgentUtils.resetUI({
             processingStatusId: 'processingStatus',
             processButtonId: 'processButton',
@@ -320,9 +1585,34 @@ const AgentUtils = SocialAdsUtils;
         AgentUtils.showToast('Form reset! Ready for another ad campaign.', 'success');
     }
 
+    // HTML sanitization function
+    function safeSetHTML(element, htmlString) {
+        const temp = document.createElement('div');
+        temp.innerHTML = htmlString;
+        
+        // Remove script tags
+        const scripts = temp.querySelectorAll('script');
+        scripts.forEach(script => script.remove());
+        
+        // Remove dangerous attributes
+        const allElements = temp.querySelectorAll('*');
+        allElements.forEach(el => {
+            const attrs = el.attributes;
+            for (let i = attrs.length - 1; i >= 0; i--) {
+                const attr = attrs[i];
+                if (attr.name.startsWith('on') || 
+                    attr.name === 'javascript:' || 
+                    (attr.value && attr.value.toLowerCase().includes('javascript:'))) {
+                    el.removeAttribute(attr.name);
+                }
+            }
+        });
+        
+        element.innerHTML = temp.innerHTML;
+    }
+
     // Display social ads results with engaging ad copy formatting
     function displayResults(result) {
-        
         const resultsContainer = document.getElementById('adResults');
         const contentElement = document.getElementById('adContent');
         
@@ -370,8 +1660,8 @@ const AgentUtils = SocialAdsUtils;
         // Format ad copy content with engaging styling
         const formattedContent = formatSocialAdContent(content);
         
-        // Update content
-        contentElement.innerHTML = formattedContent;
+        // Update content safely
+        safeSetHTML(contentElement, formattedContent);
         
         // Show results
         resultsContainer.style.display = 'block';
@@ -388,15 +1678,21 @@ const AgentUtils = SocialAdsUtils;
             return '<p>No ad content available.</p>';
         }
         
-        let html = content;
+        // Sanitize content first
+        const sanitizedContent = content.replace(/[<>"'&]/g, function(match) {
+            const entities = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '&': '&amp;' };
+            return entities[match];
+        });
+        
+        let html = sanitizedContent;
         
         // Enhanced header formatting for ad titles and platform sections
-        html = html.replace(/^# (.*$)/gm, '<h1 style="font-size: 22px; font-weight: 700; color: rgba(236, 72, 153, 1); margin: 20px 0 14px 0; border-bottom: 3px solid rgba(236, 72, 153, 0.3); padding-bottom: 10px; text-align: center;">$1</h1>');
-        html = html.replace(/^## (.*$)/gm, '<h2 style="font-size: 18px; font-weight: 600; color: rgba(190, 24, 93, 1); margin: 16px 0 10px 0; padding: 8px 12px; background: rgba(236, 72, 153, 0.1); border-radius: 8px; border-left: 4px solid rgba(236, 72, 153, 1);">$1</h2>');
-        html = html.replace(/^### (.*$)/gm, '<h3 style="font-size: 16px; font-weight: 600; color: rgba(162, 28, 175, 1); margin: 14px 0 8px 0; padding-bottom: 4px;">$1</h3>');
+        html = html.replace(/^# (.*$)/gm, '<h1 style="font-size: 22px; font-weight: 700; color: var(--primary); margin: 20px 0 14px 0; border-bottom: 3px solid var(--outline); padding-bottom: 10px; text-align: center;">$1</h1>');
+        html = html.replace(/^## (.*$)/gm, '<h2 style="font-size: 18px; font-weight: 600; color: var(--primary); margin: 16px 0 10px 0; padding: 8px 12px; background: var(--surface-variant); border-radius: 8px; border-left: 4px solid var(--primary);">$1</h2>');
+        html = html.replace(/^### (.*$)/gm, '<h3 style="font-size: 16px; font-weight: 600; color: var(--on-surface); margin: 14px 0 8px 0; padding-bottom: 4px;">$1</h3>');
         
         // Eye-catching bold text for call-to-actions and key phrases
-        html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight: 700; color: rgba(190, 24, 93, 1); background: rgba(236, 72, 153, 0.1); padding: 2px 6px; border-radius: 4px;">$1</strong>');
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight: 700; color: var(--primary); background: var(--surface-variant); padding: 2px 6px; border-radius: 4px;">$1</strong>');
         
         // Engaging bullet point formatting for ad features
         const lines = html.split('\n');
@@ -412,7 +1708,7 @@ const AgentUtils = SocialAdsUtils;
                     inList = true;
                 }
                 const listContent = line.substring(2).trim();
-                processedLines.push(`<li style="margin: 8px 0; line-height: 1.5; color: var(--text-primary); position: relative; padding-left: 24px;"><span style="position: absolute; left: 0; color: rgba(236, 72, 153, 1); font-weight: bold;">✨</span>${listContent}</li>`);
+                processedLines.push(`<li style="margin: 8px 0; line-height: 1.5; color: var(--on-surface); position: relative; padding-left: 24px;"><span style="position: absolute; left: 0; color: var(--primary); font-weight: bold;">✨</span>${listContent}</li>`);
             } else {
                 if (inList) {
                     processedLines.push('</ul>');
@@ -438,36 +1734,31 @@ const AgentUtils = SocialAdsUtils;
                 if (trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('</ul>') || trimmed.includes('<li')) {
                     return trimmed;
                 }
-                return `<p style="margin: 12px 0; line-height: 1.6; color: var(--text-primary); font-size: 15px;">${trimmed}</p>`;
+                return `<p style="margin: 12px 0; line-height: 1.6; color: var(--on-surface); font-size: 15px;">${trimmed}</p>`;
             })
             .join('');
         
-        // Add creative wrapper with glassmorphism effect
-        html = `<div style="font-family: 'Inter', sans-serif; max-width: 100%; overflow-wrap: break-word; background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(236, 72, 153, 0.2);">${html}</div>`;
+        // Add creative wrapper
+        html = `<div style="font-family: 'Inter', sans-serif; max-width: 100%; overflow-wrap: break-word; background: var(--surface); border-radius: 12px; padding: 20px; border: 1px solid var(--outline);">${html}</div>`;
         
         return html;
     }
-
-    // Track polling and results to prevent duplicates
-    let resultsDisplayed = false;
-    let currentPollInterval = null;
 
     // Poll for results
     function pollForResults(requestId) {
         let pollCount = 0;
         const maxPolls = 30; // 30 seconds maximum
-        resultsDisplayed = false; // Reset flag
+        SocialAdsModule.setResultsDisplayed(false);
         
         // Clear any existing polling
-        if (currentPollInterval) {
-            clearInterval(currentPollInterval);
-            currentPollInterval = null;
-        }
+        SocialAdsModule.clearCurrentPollInterval();
         
-        currentPollInterval = setInterval(() => {
+        const pollInterval = setInterval(() => {
             pollCount++;
             
-            fetch(`/agents/social-ads-generator/status/${requestId}/`)
+            fetch(`/agents/social-ads-generator/status/${requestId}/`, {
+                credentials: 'same-origin'
+            })
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}`);
@@ -477,38 +1768,50 @@ const AgentUtils = SocialAdsUtils;
                 .then(result => {
                     if (result.status === 'completed' || result.status === 'failed') {
                         // Stop polling immediately
-                        clearInterval(currentPollInterval);
-                        currentPollInterval = null;
+                        clearInterval(pollInterval);
+                        SocialAdsModule.setCurrentPollInterval(null);
                         
                         // Reset UI
                         document.getElementById('processingStatus').style.display = 'none';
-                        document.getElementById('processButton').disabled = false;
-                        document.getElementById('processButton').innerHTML = '📢 Generate Social Ads (7.00 AED)';
+                        const processButton = document.getElementById('processButton');
+                        processButton.disabled = false;
+                        processButton.classList.remove('btn-loading');
+                        processButton.innerHTML = '📢 Generate Social Ads (7.00 AED)';
                         
                         // Display results only once
-                        if (!resultsDisplayed) {
-                            resultsDisplayed = true;
+                        if (!SocialAdsModule.getResultsDisplayed()) {
+                            SocialAdsModule.setResultsDisplayed(true);
                             displayResults(result);
                         }
                     } else if (pollCount >= maxPolls) {
-                        clearInterval(currentPollInterval);
-                        currentPollInterval = null;
+                        clearInterval(pollInterval);
+                        SocialAdsModule.setCurrentPollInterval(null);
+                        
                         document.getElementById('processingStatus').style.display = 'none';
-                        document.getElementById('processButton').disabled = false;
-                        document.getElementById('processButton').innerHTML = '📢 Generate Social Ads (7.00 AED)';
+                        const processButton = document.getElementById('processButton');
+                        processButton.disabled = false;
+                        processButton.classList.remove('btn-loading');
+                        processButton.innerHTML = '📢 Generate Social Ads (7.00 AED)';
+                        
                         AgentUtils.showToast('❌ Processing timeout - please try again', 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error polling results:', error);
-                    clearInterval(currentPollInterval);
-                    currentPollInterval = null;
+                    clearInterval(pollInterval);
+                    SocialAdsModule.setCurrentPollInterval(null);
+                    
                     document.getElementById('processingStatus').style.display = 'none';
-                    document.getElementById('processButton').disabled = false;
-                    document.getElementById('processButton').innerHTML = '📢 Generate Social Ads (7.00 AED)';
+                    const processButton = document.getElementById('processButton');
+                    processButton.disabled = false;
+                    processButton.classList.remove('btn-loading');
+                    processButton.innerHTML = '📢 Generate Social Ads (7.00 AED)';
+                    
                     AgentUtils.showToast('❌ Network error during processing - please try again', 'error');
                 });
         }, 1000);
+        
+        SocialAdsModule.setCurrentPollInterval(pollInterval);
     }
     
     // Handle form submission
@@ -526,10 +1829,8 @@ const AgentUtils = SocialAdsUtils;
         return;
         {% endif %}
         
-        // Check wallet balance
-        const balance = {{ user.wallet_balance|default:0 }};
-        if (balance < 7.00) {
-            AgentUtils.showToast('Insufficient balance! You need 7.00 AED.', 'error');
+        // Check wallet balance dynamically
+        if (!AgentUtils.validateWalletBalance()) {
             setTimeout(() => {
                 window.location.href = "{% url 'core:wallet' %}";
             }, 2000);
@@ -537,16 +1838,15 @@ const AgentUtils = SocialAdsUtils;
         }
 
         // Clear any existing polling and reset flags
-        if (currentPollInterval) {
-            clearInterval(currentPollInterval);
-            currentPollInterval = null;
-        }
-        resultsDisplayed = false;
+        SocialAdsModule.clearCurrentPollInterval();
+        SocialAdsModule.setResultsDisplayed(false);
 
         // Show processing status with steps
         document.getElementById('processingStatus').style.display = 'block';
-        document.getElementById('processButton').disabled = true;
-        document.getElementById('processButton').innerHTML = '⏳ Processing...';
+        const processButton = document.getElementById('processButton');
+        processButton.disabled = true;
+        processButton.classList.add('btn-loading');
+        processButton.innerHTML = '⏳ Processing...';
         document.getElementById('adResults').style.display = 'none';
         
         const steps = [
@@ -567,17 +1867,25 @@ const AgentUtils = SocialAdsUtils;
             }
         }, 800);
 
-        // Submit form via AJAX
+        // Submit form via AJAX with CSRF token
         const formData = new FormData(this);
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
         
         fetch(window.location.href, {
             method: 'POST',
             body: formData,
             headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
+            },
+            credentials: 'same-origin'
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(result => {
             clearInterval(stepInterval);
             if (result.success && result.request_id) {
@@ -586,8 +1894,9 @@ const AgentUtils = SocialAdsUtils;
             } else {
                 // Handle immediate response
                 document.getElementById('processingStatus').style.display = 'none';
-                document.getElementById('processButton').disabled = false;
-                document.getElementById('processButton').innerHTML = '📢 Generate Social Ads (7.00 AED)';
+                processButton.disabled = false;
+                processButton.classList.remove('btn-loading');
+                processButton.innerHTML = '📢 Generate Social Ads (7.00 AED)';
                 
                 if (result.error) {
                     AgentUtils.showToast(`❌ ${result.error}`, 'error');
@@ -600,10 +1909,68 @@ const AgentUtils = SocialAdsUtils;
             clearInterval(stepInterval);
             console.error('Error:', error);
             document.getElementById('processingStatus').style.display = 'none';
-            document.getElementById('processButton').disabled = false;
-            document.getElementById('processButton').innerHTML = '📢 Generate Social Ads (7.00 AED)';
+            processButton.disabled = false;
+            processButton.classList.remove('btn-loading');
+            processButton.innerHTML = '📢 Generate Social Ads (7.00 AED)';
             AgentUtils.showToast('❌ Network error - please try again', 'error');
         });
+    });
+    
+    // Quick Agent Access Toggle Functions
+    function toggleQuickAgents() {
+        const panel = document.getElementById('quickAgentsPanel');
+        const overlay = document.getElementById('quickAgentsOverlay');
+        const toggle = document.querySelector('.quick-agent-toggle');
+        
+        const isActive = panel.classList.contains('active');
+        
+        if (isActive) {
+            // Close panel
+            panel.classList.remove('active');
+            overlay.classList.remove('active');
+            toggle.classList.remove('active');
+            // Update ARIA attributes
+            toggle.setAttribute('aria-expanded', 'false');
+            panel.setAttribute('aria-hidden', 'true');
+            overlay.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = 'auto';
+        } else {
+            // Open panel
+            panel.classList.add('active');
+            overlay.classList.add('active');
+            toggle.classList.add('active');
+            // Update ARIA attributes
+            toggle.setAttribute('aria-expanded', 'true');
+            panel.setAttribute('aria-hidden', 'false');
+            overlay.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeQuickAgents() {
+        const panel = document.getElementById('quickAgentsPanel');
+        const overlay = document.getElementById('quickAgentsOverlay');
+        const toggle = document.querySelector('.quick-agent-toggle');
+        
+        if (panel && overlay && toggle) {
+            panel.classList.remove('active');
+            overlay.classList.remove('active');
+            toggle.classList.remove('active');
+            toggle.setAttribute('aria-expanded', 'false');
+            panel.setAttribute('aria-hidden', 'true');
+            overlay.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = 'auto';
+        }
+    }
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const panel = document.getElementById('quickAgentsPanel');
+            if (panel && panel.classList.contains('active')) {
+                closeQuickAgents();
+            }
+        }
     });
 </script>
 {% endblock %}
