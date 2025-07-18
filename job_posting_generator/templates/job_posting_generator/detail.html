@@ -1560,9 +1560,10 @@ document.addEventListener('keydown', function(e) {
         return;
         {% endif %}
         
-        // Check wallet balance
-        const balance = {{ user.wallet_balance|default:0 }};
-        if (balance < 4.00) {
+        // Check wallet balance dynamically from DOM
+        const walletBalanceElement = document.getElementById('walletBalance');
+        const currentBalance = walletBalanceElement ? parseFloat(walletBalanceElement.textContent) : 0;
+        if (currentBalance < 4.00) {
             AgentUtils.showToast('Insufficient balance! You need 4.00 AED.', 'error');
             setTimeout(() => {
                 window.location.href = "{% url 'core:wallet' %}";
