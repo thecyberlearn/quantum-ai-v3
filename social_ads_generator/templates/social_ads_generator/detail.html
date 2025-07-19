@@ -37,6 +37,11 @@
     --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
 }
 
+html {
+    /* Prevent page shake by maintaining consistent scrollbar space */
+    scrollbar-gutter: stable;
+}
+
 body {
     background: var(--background);
     color: var(--on-surface);
@@ -105,13 +110,13 @@ body {
 }
 
 .widget-large {
-    min-width: 600px;
+    min-width: 400px;
     flex: 1;
 }
 
 .widget-small {
     min-width: 280px;
-    flex: 0 0 auto;
+    flex: 0 0 280px;
 }
 
 .widget-header {
@@ -124,18 +129,27 @@ body {
 }
 
 .widget-title {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 600;
     color: var(--on-surface);
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
 }
 
 .widget-icon {
-    font-size: 24px;
+    font-size: 20px;
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-variant);
 }
 
 .widget-content {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
 }
 
 /* Wallet Card */
@@ -213,7 +227,18 @@ body {
     font-size: 16px;
     font-weight: 600;
     color: var(--on-surface);
-    margin: 0 0 var(--spacing-md) 0;
+    margin: 0 0 var(--spacing-lg) 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.section-subtitle::before {
+    content: '';
+    width: 3px;
+    height: 16px;
+    background: var(--primary);
+    border-radius: 2px;
 }
 
 .form-group {
@@ -230,10 +255,11 @@ body {
 
 .form-input, .form-textarea {
     width: 100%;
-    padding: var(--spacing-md);
-    border: 1px solid var(--outline);
-    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    border: 2px solid var(--outline-variant);
+    border-radius: var(--radius-md);
     font-size: 14px;
+    line-height: 1.5;
     background: var(--surface);
     color: var(--on-surface);
     transition: all 0.2s ease;
@@ -242,10 +268,11 @@ body {
 
 .form-control {
     width: 100%;
-    padding: var(--spacing-md);
-    border: 1px solid var(--outline);
-    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    border: 2px solid var(--outline-variant);
+    border-radius: var(--radius-md);
     font-size: 14px;
+    line-height: 1.5;
     background: var(--surface);
     color: var(--on-surface);
     transition: all 0.2s ease;
@@ -272,7 +299,7 @@ body {
 
 .form-textarea {
     resize: vertical;
-    min-height: 100px;
+    min-height: 120px;
 }
 
 .form-error {
@@ -297,17 +324,18 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: 12px 24px;
     border: 1px solid transparent;
-    border-radius: var(--radius-sm);
-    font-size: 1rem;
-    font-weight: 500;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
     line-height: 1.25;
     text-decoration: none;
     cursor: pointer;
     transition: all 0.2s ease;
     user-select: none;
     white-space: nowrap;
+    min-height: 44px;
 }
 
 .btn:focus {
@@ -361,8 +389,8 @@ body {
 .btn-full {
     width: 100%;
     justify-content: center;
-    padding: var(--spacing-md) var(--spacing-lg);
-    font-size: 16px;
+    padding: 12px 24px;
+    font-size: 14px;
     font-weight: 600;
 }
 
@@ -401,11 +429,6 @@ body {
     margin: var(--spacing-md) 0;
 }
 
-.balance-label {
-    font-size: 0.875rem;
-    color: var(--on-surface-variant);
-    margin-bottom: var(--spacing-md);
-}
 
 .insufficient-balance {
     background: rgba(239, 68, 68, 0.1);
@@ -429,7 +452,7 @@ body {
 }
 
 .status-icon {
-    font-size: 2rem;
+    font-size: 48px;
     margin-bottom: var(--spacing-md);
 }
 
@@ -437,7 +460,7 @@ body {
 .results-card {
     background: var(--surface);
     border: 1px solid var(--outline);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     padding: var(--spacing-xl);
     box-shadow: var(--shadow-sm);
     display: none;
@@ -445,21 +468,178 @@ body {
 
 .results-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: var(--spacing-md);
     margin-bottom: var(--spacing-lg);
     padding-bottom: var(--spacing-md);
     border-bottom: 1px solid var(--outline);
 }
 
 .results-content {
+    background: var(--surface-variant);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-xl);
     margin-bottom: var(--spacing-lg);
+    line-height: 1.7;
+    color: var(--on-surface);
+    font-size: 15px;
+}
+
+/* Enhanced Results Typography - From Data Analyzer */
+.results-content h1,
+.results-content h2,
+.results-content h3 {
+    color: var(--primary);
+    font-weight: 700;
+    margin: var(--spacing-xl) 0 var(--spacing-md) 0;
+    line-height: 1.3;
+}
+
+.results-content h1 {
+    font-size: 24px;
+    border-bottom: 3px solid var(--primary);
+    padding-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+.results-content h2 {
+    font-size: 20px;
+    margin-top: var(--spacing-xl);
+    position: relative;
+    padding-left: var(--spacing-md);
+}
+
+.results-content h2::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--primary);
+    border-radius: 2px;
+}
+
+.results-content h3 {
+    font-size: 18px;
+    color: var(--on-surface);
+    font-weight: 600;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--radius-sm);
+    border-left: 4px solid var(--primary);
+    margin: var(--spacing-lg) 0 var(--spacing-md) 0;
+}
+
+.results-content p {
+    margin: var(--spacing-md) 0;
+    text-align: justify;
+}
+
+.results-content ul,
+.results-content ol {
+    margin: var(--spacing-md) 0;
+    padding-left: var(--spacing-xl);
+}
+
+.results-content li {
+    margin: var(--spacing-sm) 0;
+    position: relative;
+}
+
+.results-content ul li::marker {
+    color: var(--primary);
+    font-weight: bold;
+}
+
+.results-content ol li::marker {
+    color: var(--primary);
+    font-weight: bold;
+}
+
+/* Modern Info Boxes */
+.results-content .key-points,
+.results-content .insights,
+.results-content .summary {
+    background: var(--surface);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    margin: var(--spacing-lg) 0;
+    box-shadow: var(--shadow-sm);
+}
+
+.results-content .key-points {
+    border-left: 4px solid #3b82f6;
+}
+
+.results-content .insights {
+    border-left: 4px solid #10b981;
+}
+
+.results-content .summary {
+    border-left: 4px solid #f59e0b;
+}
+
+/* Strong text styling */
+.results-content strong {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Code and technical terms */
+.results-content code {
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    font-size: 14px;
+    color: #1e293b;
 }
 
 .action-buttons {
     display: flex;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-md);
     flex-wrap: wrap;
+}
+
+/* Info List - From Data Analyzer */
+.info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: step-counter;
+}
+
+.info-list li {
+    padding: var(--spacing-sm) 0;
+    color: var(--on-surface-variant);
+    font-size: 14px;
+    border-bottom: 1px solid var(--outline-variant);
+    position: relative;
+    padding-left: var(--spacing-lg);
+}
+
+.info-list li:last-child {
+    border-bottom: none;
+}
+
+.info-list li::before {
+    content: counter(step-counter);
+    counter-increment: step-counter;
+    position: absolute;
+    left: 0;
+    top: var(--spacing-sm);
+    width: 20px;
+    height: 20px;
+    background: var(--primary);
+    color: var(--surface);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
 }
 
 /* Other Agents Widget */
@@ -1173,78 +1353,6 @@ if (document.readyState === 'loading') {
     SocialAdsModule.init();
 }
 
-// Quick Agent Access Functions
-function showQuickAgentAccess() {
-    const panel = document.getElementById('quickAgentPanel');
-    const overlay = document.createElement('div');
-    overlay.className = 'panel-overlay';
-    overlay.onclick = hideQuickAgentAccess;
-    document.body.appendChild(overlay);
-    
-    panel.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    // Load agents if not already loaded
-    if (!panel.dataset.loaded) {
-        loadQuickAgents();
-        panel.dataset.loaded = 'true';
-    }
-}
-
-function hideQuickAgentAccess() {
-    const panel = document.getElementById('quickAgentPanel');
-    const overlay = document.querySelector('.panel-overlay');
-    
-    panel.classList.remove('active');
-    document.body.style.overflow = '';
-    
-    if (overlay) {
-        overlay.remove();
-    }
-}
-
-function loadQuickAgents() {
-    const agents = [
-        {
-            name: 'Data Analyzer',
-            description: 'Analyze and interpret your data files with AI precision',
-            url: '/agents/data-analyzer/',
-            emoji: '📊'
-        },
-        {
-            name: 'Job Posting Generator',
-            description: 'Create professional job postings in minutes',
-            url: '/agents/job-posting-generator/',
-            emoji: '💼'
-        },
-        {
-            name: 'Five Whys Analyzer',
-            description: 'Root cause analysis using the Five Whys technique',
-            url: '/agents/five-whys-analyzer/',
-            emoji: '🔍'
-        },
-        {
-            name: 'Weather Reporter',
-            description: 'Get detailed weather reports and forecasts',
-            url: '/agents/weather-reporter/',
-            emoji: '🌤️'
-        }
-    ];
-    
-    const container = document.querySelector('#quickAgentPanel .agent-grid-panel');
-    if (container) {
-        container.innerHTML = agents.map(agent => `
-            <div class="agent-card">
-                <div class="agent-emoji">${agent.emoji}</div>
-                <h4>${agent.name}</h4>
-                <p>${agent.description}</p>
-                <a href="${agent.url}" class="btn btn-primary btn-sm">
-                    Try Now
-                </a>
-            </div>
-        `).join('');
-    }
-}
 </script>
 {% endblock %}
 
@@ -1431,16 +1539,16 @@ function loadQuickAgents() {
         <div class="agent-widget widget-small" style="min-width: min(280px, 100%); max-width: min(280px, 100%); margin-left: auto;">
             <div class="widget-header">
                 <h3 class="widget-title">
-                    <span class="widget-icon">💡</span>
+                    <span class="widget-icon">ℹ️</span>
                     How It Works
                 </h3>
             </div>
             <div class="widget-content">
-                <ol class="info-list" style="list-style: none; padding: 0; margin: 0; gap: var(--spacing-md); display: flex; flex-direction: column;">
-                    <li style="padding: var(--spacing-sm); background: var(--surface-variant); border-radius: var(--radius-sm); font-size: 14px; line-height: 1.4;">📝 Describe your product/service</li>
-                    <li style="padding: var(--spacing-sm); background: var(--surface-variant); border-radius: var(--radius-sm); font-size: 14px; line-height: 1.4;">📱 Select target platforms</li>
-                    <li style="padding: var(--spacing-sm); background: var(--surface-variant); border-radius: var(--radius-sm); font-size: 14px; line-height: 1.4;">🎯 Choose campaign objective & tone</li>
-                    <li style="padding: var(--spacing-sm); background: var(--surface-variant); border-radius: var(--radius-sm); font-size: 14px; line-height: 1.4;">✨ Get platform-optimized ad copy</li>
+                <ol class="info-list">
+                    <li>Describe your product/service</li>
+                    <li>Select target platforms</li>
+                    <li>Choose language preferences</li>
+                    <li>Get platform-optimized ad copy</li>
                 </ol>
                 
                 <!-- Other Agents Button -->
@@ -1672,76 +1780,114 @@ function loadQuickAgents() {
         AgentUtils.showToast(successMessage, 'success');
     }
     
-    // Engaging social ad copy formatter
+    // Enhanced social ad formatter - From Data Analyzer 
     function formatSocialAdContent(content) {
         if (!content || typeof content !== 'string') {
             return '<p>No ad content available.</p>';
         }
         
-        // Sanitize content first
-        const sanitizedContent = content.replace(/[<>"'&]/g, function(match) {
-            const entities = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '&': '&amp;' };
-            return entities[match];
+        // Convert markdown-style headers to HTML
+        content = content.replace(/### (.+)/g, '<h3>$1</h3>');
+        content = content.replace(/## (.+)/g, '<h2>$1</h2>');
+        content = content.replace(/# (.+)/g, '<h1>$1</h1>');
+        
+        // First, handle numbered lists that are embedded in paragraphs
+        content = content.replace(/(\d+\.\s[^\.]+\.)\s*/g, '$1\n');
+        
+        // Convert line breaks to proper paragraphs
+        let paragraphs = content.split('\n\n');
+        let formattedContent = '';
+        
+        paragraphs.forEach(paragraph => {
+            paragraph = paragraph.trim();
+            if (paragraph) {
+                // Check if it's a header
+                if (paragraph.includes('<h1>') || paragraph.includes('<h2>') || paragraph.includes('<h3>')) {
+                    formattedContent += paragraph;
+                }
+                // Check if paragraph contains numbered list items
+                else if (/\d+\.\s/.test(paragraph)) {
+                    // Split the paragraph by numbered items
+                    let parts = paragraph.split(/(?=\d+\.\s)/);
+                    let beforeList = parts[0].trim();
+                    
+                    // Handle any content before the list
+                    if (beforeList && !beforeList.match(/^\d+\./)) {
+                        if (beforeList.toLowerCase().includes('ad copy') || beforeList.toLowerCase().includes('posts')) {
+                            formattedContent += `<div class="key-points"><p>${beforeList}</p>`;
+                        } else if (beforeList.toLowerCase().includes('captions') || beforeList.toLowerCase().includes('hashtags')) {
+                            formattedContent += `<div class="insights"><p>${beforeList}</p>`;
+                        } else if (beforeList.toLowerCase().includes('strategy') || beforeList.toLowerCase().includes('tips')) {
+                            formattedContent += `<div class="summary"><p>${beforeList}</p>`;
+                        } else {
+                            formattedContent += `<p>${beforeList}</p>`;
+                        }
+                    }
+                    
+                    // Process the numbered items
+                    let hasNumberedItems = false;
+                    let listItems = [];
+                    
+                    for (let i = 0; i < parts.length; i++) {
+                        let part = parts[i].trim();
+                        if (part && part.match(/^\d+\./)) {
+                            hasNumberedItems = true;
+                            let cleanItem = part.replace(/^\d+\.\s*/, '').trim();
+                            listItems.push(cleanItem);
+                        }
+                    }
+                    
+                    if (hasNumberedItems && listItems.length > 0) {
+                        formattedContent += '<ol>';
+                        listItems.forEach(item => {
+                            formattedContent += `<li>${item}</li>`;
+                        });
+                        formattedContent += '</ol>';
+                    }
+                    
+                    // Close the special div if we opened one
+                    if (beforeList && (beforeList.toLowerCase().includes('ad copy') || 
+                                     beforeList.toLowerCase().includes('captions') || 
+                                     beforeList.toLowerCase().includes('strategy'))) {
+                        formattedContent += '</div>';
+                    }
+                }
+                // Check for bullet lists
+                else if (paragraph.includes('- ') || paragraph.includes('• ')) {
+                    let listItems = paragraph.split('\n').filter(item => item.trim().startsWith('-') || item.trim().startsWith('•'));
+                    if (listItems.length > 0) {
+                        formattedContent += '<ul>';
+                        listItems.forEach(item => {
+                            let cleanItem = item.replace(/^[•-] /, '').trim();
+                            formattedContent += `<li>${cleanItem}</li>`;
+                        });
+                        formattedContent += '</ul>';
+                    }
+                }
+                // Regular paragraph
+                else {
+                    // Convert single line breaks to <br>
+                    paragraph = paragraph.replace(/\n/g, '<br>');
+                    
+                    // Add special styling for social ad sections
+                    if (paragraph.toLowerCase().includes('ad copy') || paragraph.toLowerCase().includes('posts')) {
+                        formattedContent += `<div class="key-points">${paragraph}</div>`;
+                    } else if (paragraph.toLowerCase().includes('captions') || paragraph.toLowerCase().includes('hashtags')) {
+                        formattedContent += `<div class="insights">${paragraph}</div>`;
+                    } else if (paragraph.toLowerCase().includes('strategy') || paragraph.toLowerCase().includes('tips')) {
+                        formattedContent += `<div class="summary">${paragraph}</div>`;
+                    } else {
+                        formattedContent += `<p>${paragraph}</p>`;
+                    }
+                }
+            }
         });
         
-        let html = sanitizedContent;
+        // Enhance strong text
+        formattedContent = formattedContent.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        formattedContent = formattedContent.replace(/\*(.+?)\*/g, '<em>$1</em>');
         
-        // Enhanced header formatting for ad titles and platform sections
-        html = html.replace(/^# (.*$)/gm, '<h1 style="font-size: 22px; font-weight: 700; color: var(--primary); margin: 20px 0 14px 0; border-bottom: 3px solid var(--outline); padding-bottom: 10px; text-align: center;">$1</h1>');
-        html = html.replace(/^## (.*$)/gm, '<h2 style="font-size: 18px; font-weight: 600; color: var(--primary); margin: 16px 0 10px 0; padding: 8px 12px; background: var(--surface-variant); border-radius: 8px; border-left: 4px solid var(--primary);">$1</h2>');
-        html = html.replace(/^### (.*$)/gm, '<h3 style="font-size: 16px; font-weight: 600; color: var(--on-surface); margin: 14px 0 8px 0; padding-bottom: 4px;">$1</h3>');
-        
-        // Eye-catching bold text for call-to-actions and key phrases
-        html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight: 700; color: var(--primary); background: var(--surface-variant); padding: 2px 6px; border-radius: 4px;">$1</strong>');
-        
-        // Engaging bullet point formatting for ad features
-        const lines = html.split('\n');
-        let inList = false;
-        let processedLines = [];
-        
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-            
-            if (line.startsWith('- ') || line.startsWith('• ')) {
-                if (!inList) {
-                    processedLines.push('<ul style="margin: 12px 0; padding-left: 20px; list-style: none;">');
-                    inList = true;
-                }
-                const listContent = line.substring(2).trim();
-                processedLines.push(`<li style="margin: 8px 0; line-height: 1.5; color: var(--on-surface); position: relative; padding-left: 24px;"><span style="position: absolute; left: 0; color: var(--primary); font-weight: bold;">✨</span>${listContent}</li>`);
-            } else {
-                if (inList) {
-                    processedLines.push('</ul>');
-                    inList = false;
-                }
-                processedLines.push(line);
-            }
-        }
-        
-        if (inList) {
-            processedLines.push('</ul>');
-        }
-        
-        html = processedLines.join('\n');
-        
-        // Convert line breaks to engaging paragraphs
-        const paragraphs = html.split(/\n\s*\n/);
-        html = paragraphs
-            .filter(p => p.trim() !== '')
-            .map(p => {
-                const trimmed = p.trim();
-                // Don't wrap headers or lists in paragraphs
-                if (trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('</ul>') || trimmed.includes('<li')) {
-                    return trimmed;
-                }
-                return `<p style="margin: 12px 0; line-height: 1.6; color: var(--on-surface); font-size: 15px;">${trimmed}</p>`;
-            })
-            .join('');
-        
-        // Add creative wrapper
-        html = `<div style="font-family: 'Inter', sans-serif; max-width: 100%; overflow-wrap: break-word; background: var(--surface); border-radius: 12px; padding: 20px; border: 1px solid var(--outline);">${html}</div>`;
-        
-        return html;
+        return formattedContent;
     }
 
     // Poll for results
