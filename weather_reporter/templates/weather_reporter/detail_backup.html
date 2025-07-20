@@ -1,0 +1,1394 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Weather Reporter Agent - NetCop AI Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+/* CSS Variables - Unified Design System */
+:root {
+    /* Color System */
+    --primary: #1a1a1a;
+    --primary-variant: #2d2d2d;
+    --secondary: #4a5568;
+    --secondary-variant: #718096;
+    --background: #ffffff;
+    --surface: #ffffff;
+    --surface-variant: #f7fafc;
+    --error: #e53e3e;
+    --warning: #d69e2e;
+    --success: #38a169;
+    --info: #3182ce;
+    
+    /* Text Colors */
+    --on-primary: #ffffff;
+    --on-secondary: #ffffff;
+    --on-background: #1a202c;
+    --on-surface: #1a202c;
+    --on-surface-variant: #4a5568;
+    --on-error: #ffffff;
+    
+    /* Border Colors */
+    --outline: #e2e8f0;
+    --outline-variant: #cbd5e0;
+    
+    /* Spacing System */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-2xl: 48px;
+    
+    /* Border Radius */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+html {
+    /* Prevent page shake by maintaining consistent scrollbar space */
+    scrollbar-gutter: stable;
+}
+
+body {
+    background: var(--background);
+    color: var(--on-surface);
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    line-height: 1.6;
+}
+
+/* Agent Layout System */
+.agent-page {
+    min-height: 100vh;
+    padding: var(--spacing-lg) 0;
+}
+
+.agent-container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-lg);
+}
+
+.agent-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+}
+
+.agent-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--on-surface);
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.agent-subtitle {
+    font-size: 16px;
+    color: var(--on-surface-variant);
+    margin: 4px 0 0 0;
+}
+
+.wallet-card {
+    background: linear-gradient(135deg, #000000 0%, #333333 100%);
+    color: white;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    border: none;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+}
+
+.wallet-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    transform: translate(40px, -40px);
+}
+
+.wallet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.wallet-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+    opacity: 0.9;
+}
+
+.wallet-icon {
+    font-size: 20px;
+}
+
+.balance-display {
+    margin-bottom: 0;
+}
+
+.balance-amount {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 0;
+    letter-spacing: -0.5px;
+}
+
+.balance-label {
+    font-size: 12px;
+    opacity: 0.8;
+    font-weight: 400;
+}
+
+/* Widget System */
+.agent-grid {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.agent-widget {
+    background: var(--surface);
+    border: 1px solid var(--outline);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-sm);
+}
+
+.widget-wide {
+    grid-column: 1 / -1;
+}
+
+.widget-large {
+    min-width: 400px;
+    flex: 1;
+}
+
+.widget-small {
+    min-width: 280px;
+    flex: 0 0 280px;
+}
+
+.widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--outline-variant);
+}
+
+.widget-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--on-surface);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.widget-icon {
+    font-size: 20px;
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-variant);
+}
+
+.widget-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+/* Standard Form Elements */
+.form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--on-surface);
+    margin-bottom: var(--spacing-sm);
+}
+
+.form-input, .form-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--outline-variant);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    line-height: 1.5;
+    transition: all 0.2s ease;
+    background: var(--surface);
+    color: var(--on-surface);
+    font-family: inherit;
+}
+
+.form-input:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.form-input:hover, .form-textarea:hover {
+    border-color: var(--on-surface-variant);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.form-help {
+    color: var(--on-surface-variant);
+    font-size: 12px;
+    margin-top: var(--spacing-xs);
+}
+
+.form-error {
+    color: var(--error);
+    font-size: 12px;
+    margin-top: var(--spacing-xs);
+}
+
+.required::after {
+    content: " *";
+    color: var(--error);
+}
+
+/* Radio Buttons */
+.radio-grid {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.radio-card {
+    position: relative;
+    padding: var(--spacing-md);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.radio-card:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.radio-card.selected {
+    border-color: var(--primary);
+}
+
+.radio-card input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.radio-button {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--outline);
+    border-radius: 50%;
+    position: relative;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.radio-card:hover .radio-button,
+.radio-card.selected .radio-button {
+    border-color: var(--primary);
+}
+
+.radio-card.selected .radio-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    background: var(--primary);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.radio-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--on-surface);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    cursor: pointer;
+}
+
+/* Buttons */
+.btn {
+    padding: 12px 24px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    text-decoration: none;
+    min-height: 44px;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #333333;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary {
+    background: var(--surface);
+    color: var(--on-surface);
+    border: 2px solid var(--outline);
+}
+
+.btn-secondary:hover {
+    background: var(--surface-variant);
+    border-color: var(--outline);
+}
+
+.btn-full {
+    width: 100%;
+}
+
+.btn.loading {
+    pointer-events: none;
+}
+
+/* Processing Status */
+.processing-status {
+    background: var(--surface);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    text-align: center;
+    display: none;
+}
+
+.status-icon {
+    font-size: 48px;
+    margin-bottom: var(--spacing-md);
+    animation: pulse 2s infinite;
+}
+
+.status-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--on-surface);
+    margin-bottom: var(--spacing-sm);
+}
+
+.status-text {
+    color: var(--on-surface-variant);
+    font-size: 14px;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Results Display */
+.results-container {
+    background: var(--surface);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    display: none;
+}
+
+.results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--outline-variant);
+}
+
+.results-content {
+    background: var(--surface-variant);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.7;
+    color: var(--on-surface);
+    font-size: 15px;
+}
+
+/* Enhanced Results Typography */
+.results-content h1,
+.results-content h2,
+.results-content h3 {
+    color: var(--primary);
+    font-weight: 700;
+    margin: var(--spacing-xl) 0 var(--spacing-md) 0;
+    line-height: 1.3;
+}
+
+.results-content h1 {
+    font-size: 24px;
+    border-bottom: 3px solid var(--primary);
+    padding-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+.results-content h2 {
+    font-size: 20px;
+    margin-top: var(--spacing-xl);
+    position: relative;
+    padding-left: var(--spacing-md);
+}
+
+.results-content h2::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--primary);
+    border-radius: 2px;
+}
+
+.results-content h3 {
+    font-size: 18px;
+    color: var(--on-surface);
+    font-weight: 600;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--radius-sm);
+    border-left: 4px solid var(--primary);
+    margin: var(--spacing-lg) 0 var(--spacing-md) 0;
+}
+
+.results-content p {
+    margin: var(--spacing-md) 0;
+    text-align: justify;
+}
+
+.results-content ul,
+.results-content ol {
+    margin: var(--spacing-md) 0;
+    padding-left: var(--spacing-xl);
+}
+
+.results-content li {
+    margin: var(--spacing-sm) 0;
+    position: relative;
+}
+
+.results-content ul li::marker {
+    color: var(--primary);
+    font-weight: bold;
+}
+
+.results-content ol li::marker {
+    color: var(--primary);
+    font-weight: bold;
+}
+
+/* Weather Info Boxes */
+.results-content .current-weather,
+.results-content .forecast-day,
+.results-content .weather-details {
+    background: var(--surface);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    margin: var(--spacing-lg) 0;
+    box-shadow: var(--shadow-sm);
+}
+
+.results-content .current-weather {
+    border-left: 4px solid #3b82f6;
+}
+
+.results-content .forecast-day {
+    border-left: 4px solid #10b981;
+}
+
+.results-content .weather-details {
+    border-left: 4px solid #f59e0b;
+}
+
+/* Strong text styling */
+.results-content strong {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Code and technical terms */
+.results-content code {
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    font-size: 14px;
+    color: #1e293b;
+}
+
+.action-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+/* Info List */
+.info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: step-counter;
+}
+
+.info-list li {
+    padding: var(--spacing-sm) 0;
+    color: var(--on-surface-variant);
+    font-size: 14px;
+    border-bottom: 1px solid var(--outline-variant);
+    position: relative;
+    padding-left: var(--spacing-lg);
+}
+
+.info-list li:last-child {
+    border-bottom: none;
+}
+
+.info-list li::before {
+    content: counter(step-counter);
+    counter-increment: step-counter;
+    position: absolute;
+    left: 0;
+    top: var(--spacing-sm);
+    width: 20px;
+    height: 20px;
+    background: var(--primary);
+    color: var(--surface);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Insufficient Balance */
+.insufficient-balance {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+    font-weight: 500;
+}
+
+/* Loading States */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+/* Quick Agent Toggle Button */
+.quick-agent-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--surface);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-md);
+    color: var(--on-surface);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.quick-agent-toggle:hover {
+    background: var(--surface-variant);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.quick-agent-toggle.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.toggle-icon {
+    font-size: 16px;
+    transition: transform 0.2s ease;
+}
+
+.quick-agent-toggle.active .toggle-icon {
+    transform: rotate(180deg);
+}
+
+/* Quick Agent Access Panel */
+.quick-agents-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(400px, 90vw);
+    height: 100vh;
+    background: var(--surface);
+    border-left: 1px solid var(--outline);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+}
+
+.quick-agents-panel.active {
+    transform: translateX(0);
+}
+
+.quick-agents-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--outline-variant);
+    background: var(--surface-variant);
+}
+
+.quick-agents-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--on-surface);
+}
+
+.close-panel {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--on-surface-variant);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+}
+
+.close-panel:hover {
+    background: var(--surface-variant);
+    color: var(--on-surface);
+}
+
+.quick-agents-grid {
+    padding: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.quick-agent-card {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: var(--on-surface);
+    transition: all 0.2s ease;
+    background: var(--surface);
+}
+
+.quick-agent-card:hover {
+    background: var(--surface-variant);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.agent-icon {
+    font-size: 24px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-variant);
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+}
+
+.agent-info {
+    flex: 1;
+}
+
+.agent-info h4 {
+    margin: 0 0 4px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--on-surface);
+}
+
+.agent-info p {
+    margin: 0;
+    font-size: 12px;
+    color: var(--on-surface-variant);
+    line-height: 1.4;
+}
+
+.agent-price {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary);
+    background: rgba(0, 0, 0, 0.05);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    margin-top: 4px;
+    display: inline-block;
+}
+
+.quick-agents-footer {
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-top: 1px solid var(--outline-variant);
+    background: var(--surface-variant);
+}
+
+.view-all-agents {
+    display: block;
+    text-align: center;
+    padding: var(--spacing-md);
+    background: var(--primary);
+    color: white;
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.view-all-agents:hover {
+    background: var(--primary-variant);
+    text-decoration: none;
+    color: white;
+}
+
+.quick-agents-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.quick-agents-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .agent-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .agent-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+    
+    .header-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .quick-agent-toggle {
+        flex: 1;
+        margin-right: var(--spacing-md);
+        justify-content: center;
+    }
+    
+    .quick-agents-panel {
+        width: 100%;
+        max-width: 100%;
+        right: 0;
+        left: 0;
+    }
+    
+    .agent-title {
+        font-size: 24px;
+    }
+    
+    .wallet-card {
+        padding: var(--spacing-lg);
+    }
+    
+    .balance-amount {
+        font-size: 28px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="agent-page theme-professional">
+    <div class="agent-container">
+        <!-- Agent Header -->
+        <div class="agent-header">
+            <div>
+                <h1 class="agent-title">Weather Reporter</h1>
+                <p class="agent-subtitle">Get detailed weather reports and forecasts for any location worldwide</p>
+            </div>
+            <div class="header-controls">
+                <div class="wallet-card widget-small" style="margin-bottom: 0;">
+                    <div class="wallet-header">
+                        <h3 class="wallet-title">Your Wallet</h3>
+                        <div class="wallet-icon">💳</div>
+                    </div>
+                    <div class="balance-display">
+                        <div class="balance-amount">
+                            <span id="walletBalance">{{ user.wallet_balance|floatformat:2 }}</span> AED
+                        </div>
+                        <div class="balance-label">Available Balance</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="{% if message.tags == 'error' %}error-message{% else %}success-message{% endif %}" style="grid-column: 1 / -1;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Main Content Grid -->
+        <div class="agent-grid">
+            <!-- Weather Form Widget -->
+            <div class="agent-widget widget-large" style="flex: 1; margin-right: clamp(0px, var(--spacing-lg), 2vw);">
+                <div class="widget-header">
+                    <h3 class="widget-title">
+                        <span class="widget-icon">🌤️</span>
+                        Weather Report Configuration
+                    </h3>
+                </div>
+                <div class="widget-content">
+                    <form method="POST" id="weatherForm">
+                        {% csrf_token %}
+                        
+                        <!-- Location Input -->
+                        <div class="form-group">
+                            <label for="location" class="form-label required">📍 Enter Location</label>
+                            <input type="text" name="location" id="location" class="form-input" 
+                                   placeholder="Enter city name, address, or coordinates..." required>
+                            <div class="form-help">Examples: "New York", "London, UK", "Tokyo, Japan", "37.7749,-122.4194"</div>
+                        </div>
+                        
+                        <!-- Report Type Selection -->
+                        <div class="form-group">
+                            <label class="form-label required">📊 Report Type</label>
+                            <div class="radio-grid">
+                                <div class="radio-card selected" onclick="selectRadio('current')">
+                                    <input type="radio" id="current" name="report_type" value="current" checked>
+                                    <div class="radio-button"></div>
+                                    <label for="current" class="radio-label">🌡️ Current Weather</label>
+                                </div>
+                                <div class="radio-card" onclick="selectRadio('forecast')">
+                                    <input type="radio" id="forecast" name="report_type" value="forecast">
+                                    <div class="radio-button"></div>
+                                    <label for="forecast" class="radio-label">📅 5-Day Forecast</label>
+                                </div>
+                                <div class="radio-card" onclick="selectRadio('detailed')">
+                                    <input type="radio" id="detailed" name="report_type" value="detailed">
+                                    <div class="radio-button"></div>
+                                    <label for="detailed" class="radio-label">📋 Detailed Report</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        {% if user.is_authenticated %}
+                            {% if user.wallet_balance >= 2.00 %}
+                                <button type="submit" class="btn btn-primary btn-full process-btn" id="processButton">
+                                    🌤️ Get Weather Report (2.00 AED)
+                                </button>
+                            {% else %}
+                                <div class="insufficient-balance">
+                                    Insufficient balance! You need 2.00 AED.
+                                </div>
+                                <a href="{% url 'core:wallet' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
+                                    💰 Top Up Wallet
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'authentication:login' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
+                                🔑 Login to Continue
+                            </a>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+
+            <!-- How It Works Widget - Positioned on the right -->
+            <div class="agent-widget widget-small" style="min-width: min(280px, 100%); max-width: min(280px, 100%); margin-left: auto;">
+                <div class="widget-header">
+                    <h3 class="widget-title">
+                        <span class="widget-icon">ℹ️</span>
+                        How It Works
+                    </h3>
+                </div>
+                <div class="widget-content">
+                    <ol class="info-list">
+                        <li>Enter any city name worldwide</li>
+                        <li>Choose your preferred report type</li>
+                        <li>Get real-time weather data</li>
+                        <li>Copy or download detailed reports</li>
+                    </ol>
+                    
+                    <!-- Other Agents Button -->
+                    <button class="quick-agent-toggle btn btn-secondary btn-full" onclick="toggleQuickAgents()" 
+                            title="Quick access to other agents"
+                            aria-label="Open quick access panel for other AI agents"
+                            aria-expanded="false"
+                            aria-controls="quickAgentsPanel"
+                            style="margin-top: var(--spacing-md);">
+                        <span class="toggle-icon" aria-hidden="true">🚀</span>
+                        <span class="toggle-text">Explore Other Agents</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Processing Status -->
+        <div class="agent-grid">
+            <div class="agent-widget widget-wide processing-status" id="processingStatus">
+                <div class="status-icon">⏳</div>
+                <div style="font-weight: 600; color: var(--on-surface);">Getting Weather Data...</div>
+                <div style="font-size: 14px; color: var(--on-surface-variant); margin-top: 8px;" id="statusText">Fetching latest weather information for your location</div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="agent-grid">
+            <div class="agent-widget widget-wide results-container" id="weatherResults">
+                <div class="results-header">
+                    <div style="font-size: 24px;">✅</div>
+                    <h3 style="font-size: 20px; font-weight: 600; color: var(--on-surface); margin: 0;">Weather Report</h3>
+                    <div style="background: var(--primary); color: var(--on-primary); padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-left: auto;">✅ Complete</div>
+                </div>
+                
+                <div class="results-content" id="weatherContent">
+                    <!-- Weather data will be displayed here -->
+                </div>
+                
+                <div class="action-buttons">
+                    <button onclick="copyWeatherReport()" class="btn btn-primary">📋 Copy Report</button>
+                    <button onclick="downloadWeatherReport()" class="btn btn-secondary">💾 Download Report</button>
+                    <button onclick="resetForm()" class="btn btn-primary">🔄 Get Another</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Agent Access Panel -->
+<div class="quick-agents-overlay" id="quickAgentsOverlay" onclick="closeQuickAgents()" aria-hidden="true"></div>
+<div class="quick-agents-panel" id="quickAgentsPanel" role="dialog" aria-labelledby="quickAgentsTitle" aria-hidden="true">
+    <div class="quick-agents-header">
+        <h3 id="quickAgentsTitle">Quick Access to Other Agents</h3>
+        <button class="close-panel" onclick="toggleQuickAgents()" aria-label="Close quick agents panel">×</button>
+    </div>
+    <div class="quick-agents-grid">
+        <a href="/agents/data-analyzer/" class="quick-agent-card">
+            <div class="agent-icon">📊</div>
+            <div class="agent-info">
+                <h4>Data Analyzer</h4>
+                <p>AI-powered data analysis</p>
+                <span class="agent-price">5.0 AED</span>
+            </div>
+        </a>
+        
+        <a href="/agents/job-posting-generator/" class="quick-agent-card">
+            <div class="agent-icon">💼</div>
+            <div class="agent-info">
+                <h4>Job Posting Generator</h4>
+                <p>Create professional job posts</p>
+                <span class="agent-price">4.0 AED</span>
+            </div>
+        </a>
+        
+        <a href="/agents/social-ads-generator/" class="quick-agent-card">
+            <div class="agent-icon">📱</div>
+            <div class="agent-info">
+                <h4>Social Ads Generator</h4>
+                <p>Engaging social media ads</p>
+                <span class="agent-price">7.0 AED</span>
+            </div>
+        </a>
+        
+        <a href="/agents/five-whys-analyzer/" class="quick-agent-card">
+            <div class="agent-icon">🔍</div>
+            <div class="agent-info">
+                <h4>Five Whys Analyzer</h4>
+                <p>Root cause analysis</p>
+                <span class="agent-price">3.0 AED</span>
+            </div>
+        </a>
+    </div>
+    <div class="quick-agents-footer">
+        <a href="{% url 'core:marketplace' %}" class="view-all-agents">View All Agents →</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Weather Reporter Utils - Self-contained with Data Analyzer structure
+const WeatherUtils = {
+    updateWalletBalance(newBalance) {
+        // Update wallet balance display (span element only)
+        const walletBalance = document.getElementById('walletBalance');
+        if (walletBalance) {
+            walletBalance.textContent = newBalance.toFixed(2);
+        }
+        
+        // Update any other data-wallet-balance elements
+        document.querySelectorAll('[data-wallet-balance]').forEach(element => {
+            if (element.id === 'walletBalance') {
+                element.textContent = newBalance.toFixed(2);
+            } else {
+                element.textContent = `${newBalance.toFixed(2)} AED`;
+            }
+        });
+        
+        window.currentWalletBalance = newBalance;
+    },
+
+    showToast(message, type = 'info') {
+        // Remove existing toast
+        const existingToast = document.querySelector('.weather-toast');
+        if (existingToast) existingToast.remove();
+
+        const toast = document.createElement('div');
+        toast.className = 'weather-toast';
+        toast.style.cssText = `
+            position: fixed; top: 16px; right: 16px; padding: 8px 12px;
+            border-radius: 4px; color: white; font-size: 13px; z-index: 1000;
+            max-width: 300px; font-weight: 500;
+            ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
+        `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentNode) toast.remove();
+        }, 2000);
+    },
+
+    copyToClipboard(text, successMessage = 'Content copied to clipboard!') {
+        navigator.clipboard.writeText(text).then(() => {
+            this.showToast(`📋 ${successMessage}`, 'success');
+        }).catch(() => {
+            this.showToast('Failed to copy content', 'error');
+        });
+    },
+
+    downloadAsFile(text, filename, successMessage = 'File downloaded!') {
+        try {
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename || `weather-report-${Date.now()}.txt`;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            this.showToast(`💾 ${successMessage}`, 'success');
+        } catch (error) {
+            this.showToast('Failed to download file', 'error');
+        }
+    }
+};
+
+// For backward compatibility
+const AgentUtils = WeatherUtils;
+
+// Modern Radio Selection
+function selectRadio(value) {
+    // Remove selected class from all cards
+    document.querySelectorAll('.radio-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked card
+    const selectedCard = document.querySelector(`input[value="${value}"]`).closest('.radio-card');
+    selectedCard.classList.add('selected');
+    
+    // Select the radio button
+    document.getElementById(value).checked = true;
+}
+
+// Form validation
+function isFormValid() {
+    const location = document.getElementById('location').value.trim();
+    const reportType = document.querySelector('input[name="report_type"]:checked');
+    
+    return location && reportType;
+}
+
+// Copy weather report
+function copyWeatherReport() {
+    const content = document.getElementById('weatherContent');
+    if (content) {
+        const text = content.innerText || content.textContent || '';
+        WeatherUtils.copyToClipboard(text, 'Weather report copied!');
+    }
+}
+
+// Download weather report
+function downloadWeatherReport() {
+    const content = document.getElementById('weatherContent');
+    if (content) {
+        const text = content.innerText || content.textContent || '';
+        const location = document.getElementById('location').value || 'location';
+        const filename = `weather-report-${location.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}.txt`;
+        WeatherUtils.downloadAsFile(text, filename, 'Weather report downloaded!');
+    }
+}
+
+// Reset form
+function resetForm() {
+    document.getElementById('weatherForm').reset();
+    document.getElementById('weatherResults').style.display = 'none';
+    document.getElementById('processingStatus').style.display = 'none';
+    
+    // Reset radio selection
+    document.querySelectorAll('.radio-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    document.querySelector('.radio-card').classList.add('selected');
+    document.querySelector('input[value="current"]').checked = true;
+    
+    WeatherUtils.showToast('🔄 Form reset - ready for new request', 'success');
+}
+
+// Quick Agent Access Functions
+function toggleQuickAgents() {
+    const panel = document.getElementById('quickAgentsPanel');
+    const overlay = document.getElementById('quickAgentsOverlay');
+    const toggle = document.querySelector('.quick-agent-toggle');
+    
+    const isActive = panel.classList.contains('active');
+    
+    if (isActive) {
+        // Close panel
+        panel.classList.remove('active');
+        overlay.classList.remove('active');
+        toggle.classList.remove('active');
+        // Update ARIA attributes
+        toggle.setAttribute('aria-expanded', 'false');
+        panel.setAttribute('aria-hidden', 'true');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = 'auto';
+    } else {
+        // Open panel
+        panel.classList.add('active');
+        overlay.classList.add('active');
+        toggle.classList.add('active');
+        // Update ARIA attributes
+        toggle.setAttribute('aria-expanded', 'true');
+        panel.setAttribute('aria-hidden', 'false');
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        
+        // Panel is now using static HTML - no need to load dynamically
+    }
+}
+
+function closeQuickAgents() {
+    const panel = document.getElementById('quickAgentsPanel');
+    const overlay = document.getElementById('quickAgentsOverlay');
+    const toggle = document.querySelector('.quick-agent-toggle');
+    
+    panel.classList.remove('active');
+    overlay.classList.remove('active');
+    toggle.classList.remove('active');
+    // Update ARIA attributes
+    toggle.setAttribute('aria-expanded', 'false');
+    panel.setAttribute('aria-hidden', 'true');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = 'auto';
+}
+
+
+// Form submission handler
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('weatherForm');
+    
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validation
+            if (!isFormValid()) {
+                WeatherUtils.showToast('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            // Check authentication and balance
+            const isAuthenticated = document.body.getAttribute('data-user-authenticated') === 'true';
+            if (!isAuthenticated) {
+                WeatherUtils.showToast('Please login to continue', 'error');
+                window.location.href = "{% url 'authentication:login' %}";
+                return;
+            }
+            
+            const walletBalance = parseFloat(document.getElementById('walletBalance').textContent) || 0;
+            if (walletBalance < 2.00) {
+                WeatherUtils.showToast('Insufficient wallet balance', 'error');
+                setTimeout(() => {
+                    window.location.href = "{% url 'core:wallet' %}";
+                }, 2000);
+                return;
+            }
+            
+            // Show processing status
+            document.getElementById('processingStatus').style.display = 'block';
+            document.getElementById('weatherResults').style.display = 'none';
+            
+            // Submit form
+            const formData = new FormData(this);
+            
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                document.getElementById('processingStatus').style.display = 'none';
+                
+                if (result.success) {
+                    // Display results
+                    const weatherContent = document.getElementById('weatherContent');
+                    if (weatherContent && result.weather_report) {
+                        weatherContent.innerHTML = formatWeatherContent(result.weather_report);
+                    }
+                    
+                    document.getElementById('weatherResults').style.display = 'block';
+                    
+                    // Update wallet balance
+                    if (result.wallet_balance !== undefined) {
+                        WeatherUtils.updateWalletBalance(result.wallet_balance);
+                    }
+                    
+                    WeatherUtils.showToast('✅ Weather report generated successfully!', 'success');
+                } else {
+                    WeatherUtils.showToast(result.error || 'Failed to generate weather report', 'error');
+                }
+            })
+            .catch(error => {
+                document.getElementById('processingStatus').style.display = 'none';
+                WeatherUtils.showToast('Network error occurred', 'error');
+            });
+        });
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && document.querySelector('.quick-agents-panel.active')) {
+            toggleQuickAgents();
+        }
+    });
+});
+
+// Format weather content
+function formatWeatherContent(content) {
+    if (!content || typeof content !== 'string') {
+        return '<p>No weather data available.</p>';
+    }
+    
+    // Simple markdown-like formatting
+    let formatted = content
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/### (.*)/g, '<h3>$1</h3>')
+        .replace(/## (.*)/g, '<h2>$1</h2>')
+        .replace(/# (.*)/g, '<h1>$1</h1>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+    
+    return `<p>${formatted}</p>`;
+}
+</script>
+{% endblock %}

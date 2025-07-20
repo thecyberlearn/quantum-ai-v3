@@ -4,9 +4,9 @@
 {% block title %}Job Posting Generator Agent - NetCop AI Hub{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/agent-base.css' %}?v={{ timestamp }}">
 <style>
-/* Job Posting Generator - Optimized Styles */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* Job Posting Generator - Additional Styles */
 
 * {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -1112,75 +1112,10 @@ document.addEventListener('keydown', function(e) {
 </script>
 <div class="agent-container">
     <!-- Agent Header -->
-    <div class="agent-header">
-        <div>
-            <h1 class="agent-title">Job Posting Generator</h1>
-            <p class="agent-subtitle">Create professional job postings with AI-powered content generation</p>
-        </div>
-        <div class="header-controls">
-            <div class="wallet-card widget-small" style="margin-bottom: 0;">
-                <div class="wallet-header">
-                    <h3 class="wallet-title">Your Wallet</h3>
-                    <div class="wallet-icon">💳</div>
-                </div>
-                <div class="balance-display">
-                    <div class="balance-amount">
-                        <span id="walletBalance">{{ user.wallet_balance|floatformat:2 }}</span> AED
-                    </div>
-                    <div class="balance-label">Available Balance</div>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% include "components/agent_header.html" with agent_title="Job Posting Generator" agent_subtitle="Create professional job postings with AI-powered content generation" %}
 
     <!-- Quick Agent Access Panel -->
-    <div class="quick-agents-overlay" id="quickAgentsOverlay" onclick="closeQuickAgents()" aria-hidden="true"></div>
-    <div class="quick-agents-panel" id="quickAgentsPanel" role="dialog" aria-labelledby="quickAgentsTitle" aria-hidden="true">
-        <div class="quick-agents-header">
-            <h3 id="quickAgentsTitle">Quick Access to Other Agents</h3>
-            <button class="close-panel" onclick="toggleQuickAgents()" aria-label="Close quick agents panel">×</button>
-        </div>
-        <div class="quick-agents-grid">
-            <a href="/agents/weather-reporter/" class="quick-agent-card">
-                <div class="agent-icon">🌤️</div>
-                <div class="agent-info">
-                    <h4>Weather Reporter</h4>
-                    <p>Real-time weather info</p>
-                    <span class="agent-price">2.0 AED</span>
-                </div>
-            </a>
-            
-            <a href="/agents/data-analyzer/" class="quick-agent-card">
-                <div class="agent-icon">📊</div>
-                <div class="agent-info">
-                    <h4>Data Analyzer</h4>
-                    <p>AI-powered data analysis</p>
-                    <span class="agent-price">5.0 AED</span>
-                </div>
-            </a>
-            
-            <a href="/agents/social-ads-generator/" class="quick-agent-card">
-                <div class="agent-icon">📱</div>
-                <div class="agent-info">
-                    <h4>Social Ads Generator</h4>
-                    <p>Engaging social media ads</p>
-                    <span class="agent-price">4.0 AED</span>
-                </div>
-            </a>
-            
-            <a href="/agents/five-whys-analyzer/" class="quick-agent-card">
-                <div class="agent-icon">🔍</div>
-                <div class="agent-info">
-                    <h4>Five Whys Analyzer</h4>
-                    <p>Root cause analysis</p>
-                    <span class="agent-price">8.0 AED</span>
-                </div>
-            </a>
-        </div>
-        <div class="quick-agents-footer">
-            <a href="{% url 'core:marketplace' %}" class="view-all-agents">View All Agents →</a>
-        </div>
-    </div>
+    {% include "components/quick_agents_panel.html" %}
 
     <!-- Messages -->
     {% if messages %}

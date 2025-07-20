@@ -4,618 +4,532 @@
 {% block title %}Weather Reporter Agent - NetCop AI Hub{% endblock %}
 
 {% block extra_css %}
-<!-- Optimized Font Loading -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/agent-base.css' %}?v={{ timestamp }}">
+{% endblock %}
 
-<!-- External Stylesheets -->
-<link rel="stylesheet" href="{% static 'css/themes.css' %}">
-<link rel="stylesheet" href="{% static 'css/agent-base.css' %}">
-
-<!-- Weather Reporter Specific Utilities -->
+{% block content %}
 <script>
-// Weather Reporter - Self-contained utilities (no shared dependencies)
+// Consolidated DOMContentLoaded initialization
+document.addEventListener('DOMContentLoaded', function() {
+    // Set data for JavaScript access
+    document.body.setAttribute('data-user-authenticated', '{{ user.is_authenticated|yesno:"true,false" }}');
+    document.body.setAttribute('data-agent-price', '2.00');
+    
+    // Initialize form submission
+    const form = document.getElementById('weatherForm');
+    if (form) {
+        form.addEventListener('submit', handleFormSubmission);
+    }
+    
+    // Set initial radio selection
+    const firstRadio = document.querySelector('.radio-card');
+    if (firstRadio && !document.querySelector('.radio-card.selected')) {
+        firstRadio.classList.add('selected');
+        const input = firstRadio.querySelector('input[type="radio"]');
+        if (input) input.checked = true;
+    }
+});
+
+// Weather Reporter Utils
 const WeatherUtils = {
-    /**
-     * Update wallet balance display - Weather Reporter specific
-     */
+    // Update wallet balance display
     updateWalletBalance(newBalance) {
-        // Update header balance (anchor tag with emoji)
-        const headerBalance = document.querySelector('a[data-wallet-balance]');
-        if (headerBalance) {
-            headerBalance.textContent = `💰 ${newBalance.toFixed(2)} AED`;
+        if (newBalance !== undefined) {
+            // Update header balance
+            const headerBalance = document.querySelector('a[data-wallet-balance]');
+            if (headerBalance) {
+                headerBalance.textContent = `💰 ${newBalance.toFixed(2)} AED`;
+            }
+            
+            // Update page balance
+            const pageBalance = document.getElementById('walletBalance');
+            if (pageBalance) {
+                pageBalance.textContent = newBalance.toFixed(2);
+            }
+            
+            // Update all data attributes
+            document.querySelectorAll('[data-wallet-balance]').forEach(element => {
+                element.textContent = `${newBalance.toFixed(2)} AED`;
+            });
+            
+            // Store current balance globally
+            window.currentWalletBalance = newBalance;
         }
-        
-        // Update page balance (div without emoji)
-        const pageBalance = document.querySelector('div[data-wallet-balance]');
-        if (pageBalance) {
-            pageBalance.textContent = `${newBalance.toFixed(2)} AED`;
-        }
-        
-        window.currentWalletBalance = newBalance;
     },
-
-    /**
-     * Show toast notification with duplicate prevention
-     */
+    
+    // Show toast notification
     showToast(message, type = 'info') {
-        // Prevent duplicate toasts
-        const existingToast = document.querySelector('.weather-toast');
-        if (existingToast) {
-            existingToast.remove();
-        }
-
+        // Remove existing toasts
+        document.querySelectorAll('.toast').forEach(toast => toast.remove());
+        
+        // Create new toast
         const toast = document.createElement('div');
-        toast.className = 'weather-toast';
-        toast.style.cssText = `
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            padding: 8px 12px;
-            border-radius: 4px;
-            color: white;
-            font-size: 13px;
-            z-index: 1000;
-            max-width: 300px;
-            font-weight: 500;
-            ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
-        `;
+        toast.className = `toast ${type}`;
         toast.textContent = message;
+        
+        // Add to page
         document.body.appendChild(toast);
         
+        // Show toast
+        setTimeout(() => toast.classList.add('show'), 100);
+        
+        // Auto remove after 3 seconds
         setTimeout(() => {
-            if (toast.parentNode) {
-                toast.remove();
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    },
+    
+    // Display weather results (API-based immediate response)
+    displayResults(result) {
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsContent = document.getElementById('resultsContent');
+        const processingStatus = document.getElementById('processingStatus');
+        
+        if (result.success) {
+            // Hide processing status
+            if (processingStatus) processingStatus.style.display = 'none';
+            
+            // Show results using API response fields
+            const weatherReport = result.formatted_report || result.content || 'Weather data received successfully.';
+            resultsContent.innerHTML = this.parseMarkdown(weatherReport);
+            resultsContainer.style.display = 'block';
+            
+            // Update wallet balance if provided
+            if (result.wallet_balance !== undefined) {
+                this.updateWalletBalance(result.wallet_balance);
             }
-        }, 2000);
-    },
-
-    /**
-     * Generate text for copy/download functionality
-     */
-    generateTextForExport(contentElementId) {
-        const content = document.getElementById(contentElementId);
-        if (content) {
-            return content.innerText || content.textContent || '';
+            
+            this.showToast('✅ Weather report generated successfully!', 'success');
+        } else if (result.error) {
+            if (processingStatus) processingStatus.style.display = 'none';
+            this.showToast(`❌ Error: ${result.error}`, 'error');
+        } else {
+            if (processingStatus) processingStatus.style.display = 'none';
+            this.showToast('❌ Failed to get weather data. Please try again.', 'error');
         }
-        return 'No content available';
     },
+    
+    // Simple text formatting
+    parseMarkdown(text) {
+        if (!text) return '';
+        return text
+            .replace(/\*\*/g, '') // Remove markdown bold syntax
+            .replace(/\#{1,3}\s/g, '') // Remove header syntax
+            .replace(/\n{3,}/g, '\n\n') // Reduce excessive line breaks
+            .replace(/\n/g, '<br>') // Convert line breaks to HTML
+            .trim();
+    },
+    
+    // Weather Reporter uses immediate API response - no polling needed
+};
 
-    /**
-     * Copy content to clipboard
-     */
-    copyToClipboard(text, successMessage = 'Content copied to clipboard!') {
+// For backward compatibility
+const AgentUtils = WeatherUtils;
+
+// Modern Radio Selection
+function selectRadio(value) {
+    // Remove selected class from all cards
+    document.querySelectorAll('.radio-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked card
+    const selectedCard = document.querySelector(`input[value="${value}"]`).closest('.radio-card');
+    if (selectedCard) {
+        selectedCard.classList.add('selected');
+    }
+    
+    // Select the radio button
+    const radioInput = document.getElementById(value);
+    if (radioInput) {
+        radioInput.checked = true;
+    }
+}
+
+// Form validation
+function isFormValid() {
+    const location = document.getElementById('location')?.value?.trim();
+    const reportType = document.querySelector('input[name="report_type"]:checked');
+    
+    return location && reportType;
+}
+
+// Copy weather report
+function copyResults() {
+    const content = document.getElementById('resultsContent');
+    if (content) {
+        const text = content.innerText || content.textContent || '';
         navigator.clipboard.writeText(text).then(() => {
-            this.showToast(`📋 ${successMessage}`, 'success');
+            WeatherUtils.showToast('📋 Weather report copied to clipboard!', 'success');
         }).catch(() => {
-            this.showToast('Failed to copy content', 'error');
+            WeatherUtils.showToast('❌ Failed to copy to clipboard', 'error');
         });
-    },
+    }
+}
 
-    /**
-     * Download content as text file
-     */
-    downloadAsFile(text, filename, successMessage = 'File downloaded!') {
+// Download weather report
+function downloadResults() {
+    const content = document.getElementById('resultsContent');
+    if (content) {
+        const text = content.innerText || content.textContent || '';
         const blob = new Blob([text], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = filename || `content-${Date.now()}.txt`;
+        a.download = 'weather-report.txt';
         a.click();
         URL.revokeObjectURL(url);
-        this.showToast(`💾 ${successMessage}`, 'success');
+        WeatherUtils.showToast('💾 Weather report downloaded!', 'success');
     }
-};
+}
 
-// For backward compatibility, create AgentUtils alias
-const AgentUtils = WeatherUtils;
+// Reset form for new request
+function resetForm() {
+    const form = document.getElementById('weatherForm');
+    if (form) {
+        form.reset();
+    }
+    
+    const resultsContainer = document.getElementById('resultsContainer');
+    const processingStatus = document.getElementById('processingStatus');
+    
+    if (resultsContainer) resultsContainer.style.display = 'none';
+    if (processingStatus) processingStatus.style.display = 'none';
+    
+    // Reset radio selection
+    document.querySelectorAll('.radio-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    const firstCard = document.querySelector('.radio-card');
+    if (firstCard) {
+        firstCard.classList.add('selected');
+        const input = firstCard.querySelector('input[type="radio"]');
+        if (input) input.checked = true;
+    }
+    
+    WeatherUtils.showToast('🔄 Form reset - ready for new request', 'success');
+}
+
+// Quick Agent Access Functions
+function toggleQuickAgents() {
+    const panel = document.getElementById('quickAgentsPanel');
+    const overlay = document.getElementById('quickAgentsOverlay');
+    const toggle = document.querySelector('.quick-agent-toggle');
+    
+    if (!panel || !overlay) return;
+    
+    const isActive = panel.classList.contains('active');
+    
+    if (isActive) {
+        // Close panel
+        panel.classList.remove('active');
+        overlay.classList.remove('active');
+        if (toggle) toggle.classList.remove('active');
+        // Update ARIA attributes
+        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        panel.setAttribute('aria-hidden', 'true');
+        overlay.setAttribute('aria-hidden', 'true');
+    } else {
+        // Open panel
+        panel.classList.add('active');
+        overlay.classList.add('active');
+        if (toggle) toggle.classList.add('active');
+        // Update ARIA attributes
+        if (toggle) toggle.setAttribute('aria-expanded', 'true');
+        panel.setAttribute('aria-hidden', 'false');
+        overlay.setAttribute('aria-hidden', 'false');
+    }
+}
+
+function closeQuickAgents() {
+    const panel = document.getElementById('quickAgentsPanel');
+    const overlay = document.getElementById('quickAgentsOverlay');
+    const toggle = document.querySelector('.quick-agent-toggle');
+    
+    if (panel) panel.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
+    if (toggle) toggle.classList.remove('active');
+    
+    // Update ARIA attributes
+    if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    if (panel) panel.setAttribute('aria-hidden', 'true');
+    if (overlay) overlay.setAttribute('aria-hidden', 'true');
+}
+
+// Form submission handler
+function handleFormSubmission(e) {
+    e.preventDefault();
+    
+    if (!isFormValid()) {
+        WeatherUtils.showToast('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    // Check authentication and balance
+    const isAuthenticated = document.body.getAttribute('data-user-authenticated') === 'true';
+    if (!isAuthenticated) {
+        WeatherUtils.showToast('Please login to continue', 'error');
+        window.location.href = "{% url 'authentication:login' %}";
+        return;
+    }
+    
+    const walletBalance = parseFloat(document.getElementById('walletBalance')?.textContent) || 0;
+    if (walletBalance < 2.00) {
+        WeatherUtils.showToast('Insufficient wallet balance', 'error');
+        setTimeout(() => {
+            window.location.href = "{% url 'core:wallet' %}";
+        }, 2000);
+        return;
+    }
+    
+    // Show processing status
+    const processingStatus = document.getElementById('processingStatus');
+    const resultsContainer = document.getElementById('resultsContainer');
+    
+    if (processingStatus) processingStatus.style.display = 'block';
+    if (resultsContainer) resultsContainer.style.display = 'none';
+    
+    // Submit form
+    const formData = new FormData(e.target);
+    
+    fetch('/agents/weather-reporter/process/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(result => {
+        // Handle immediate response (API-based agent)
+        processingStatus.style.display = 'none';
+        
+        if (result.error) {
+            WeatherUtils.showToast(`❌ ${result.error}`, 'error');
+        } else if (result.success) {
+            WeatherUtils.displayResults(result);
+        } else {
+            WeatherUtils.showToast('❌ Failed to generate weather report', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Form submission error:', error);
+        if (processingStatus) processingStatus.style.display = 'none';
+        WeatherUtils.showToast('❌ Connection error. Please try again.', 'error');
+    });
+}
 </script>
 
-<style>
-    /* Custom styles for weather reporter radio grid */
-    .radio-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: var(--space-md);
-    }
-    
-    .radio-option {
-        display: flex;
-        align-items: center;
-        gap: var(--space-md);
-        padding: var(--space-lg);
-        border: 1px solid var(--agent-border);
-        border-radius: var(--radius);
-        cursor: pointer;
-        background: white;
-        transition: all var(--transition);
-        min-height: 60px;
-    }
-    
-    .radio-option.selected {
-        border-color: var(--agent-primary);
-        background: var(--agent-card-bg);
-    }
-    
-    .radio-option:hover {
-        border-color: var(--agent-primary);
-        background: var(--hover-color);
-    }
-    
-    .radio-option input[type="radio"] {
-        width: 18px;
-        height: 18px;
-        margin: 0;
-    }
-    
-    .form-help {
-        font-size: var(--text-xs);
-        color: var(--accent-color);
-        margin-top: var(--space-xs);
-        opacity: 0.7;
-    }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="agent-page theme-professional">
-    <div class="agent-container">
-        <!-- Messages -->
-        {% if messages %}
-            {% for message in messages %}
-                <div class="{% if message.tags == 'error' %}error-message{% else %}success-message{% endif %}" style="grid-column: 1 / -1;">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-        
-        <!-- Main Content -->
+<div class="agent-container">
+    <!-- Agent Header -->
+    <div class="agent-header">
         <div>
-            <div class="card">
-                <h3 class="section-title">🌤️ Weather Reporter</h3>
-                
-                <form method="POST" id="weatherForm">
+            <h1 class="agent-title">Weather Reporter</h1>
+            <p class="agent-subtitle">Get real-time weather data from any location worldwide</p>
+        </div>
+        <div class="header-controls">
+            <div class="wallet-card widget-small" style="margin-bottom: 0;">
+                <div class="wallet-header">
+                    <h3 class="wallet-title">Your Wallet</h3>
+                    <div class="wallet-icon">💳</div>
+                </div>
+                <div class="balance-display">
+                    <div class="balance-amount">
+                        <span id="walletBalance">{{ user.wallet_balance|floatformat:2 }}</span> AED
+                    </div>
+                    <div class="balance-label">Available Balance</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Agent Access Panel -->
+    <div class="quick-agents-overlay" id="quickAgentsOverlay" onclick="closeQuickAgents()" aria-hidden="true"></div>
+    <div class="quick-agents-panel" id="quickAgentsPanel" role="dialog" aria-labelledby="quickAgentsTitle" aria-hidden="true">
+        <div class="quick-agents-header">
+            <h3 id="quickAgentsTitle">Quick Access to Other Agents</h3>
+            <button class="close-panel" onclick="toggleQuickAgents()" aria-label="Close quick agents panel">×</button>
+        </div>
+        <div class="quick-agents-grid">
+            <a href="/agents/data-analyzer/" class="quick-agent-card">
+                <div class="agent-icon">📊</div>
+                <div class="agent-info">
+                    <h4>Data Analyzer</h4>
+                    <p>AI-powered data analysis</p>
+                    <span class="agent-price">5.0 AED</span>
+                </div>
+            </a>
+            
+            <a href="/agents/job-posting-generator/" class="quick-agent-card">
+                <div class="agent-icon">💼</div>
+                <div class="agent-info">
+                    <h4>Job Posting Generator</h4>
+                    <p>Create professional job posts</p>
+                    <span class="agent-price">4.0 AED</span>
+                </div>
+            </a>
+            
+            <a href="/agents/social-ads-generator/" class="quick-agent-card">
+                <div class="agent-icon">📢</div>
+                <div class="agent-info">
+                    <h4>Social Ads Generator</h4>
+                    <p>Create social media campaigns</p>
+                    <span class="agent-price">7.0 AED</span>
+                </div>
+            </a>
+            
+            <a href="/agents/five-whys-analyzer/" class="quick-agent-card">
+                <div class="agent-icon">🤔</div>
+                <div class="agent-info">
+                    <h4>Five Whys Analyzer</h4>
+                    <p>Problem analysis method</p>
+                    <span class="agent-price">3.0 AED</span>
+                </div>
+            </a>
+        </div>
+        <div class="quick-agents-footer">
+            <a href="{% url 'core:marketplace' %}" class="view-all-agents">View All Agents →</a>
+        </div>
+    </div>
+
+    <!-- Agent Grid -->
+    <div class="agent-grid">
+        <!-- Weather Form Widget -->
+        <div class="agent-widget widget-large" style="flex: 1; margin-right: clamp(0px, var(--spacing-lg), 2vw);">
+            <div class="widget-header">
+                <h3 class="widget-title">
+                    <span class="widget-icon">🌤️</span>
+                    Weather Report Configuration
+                </h3>
+            </div>
+            <div class="widget-content">
+                <form id="weatherForm" method="POST">
                     {% csrf_token %}
                     
                     <!-- Location Input -->
                     <div class="form-group">
-                        <label for="location" class="form-label">📍 Enter Location *</label>
-                        <input type="text" name="location" id="location" class="form-input" placeholder="Enter city name, address, or coordinates..." required>
+                        <label for="location" class="form-label">📍 Enter Location</label>
+                        <input type="text" name="location" id="location" class="form-input" 
+                               placeholder="Enter city name, address, or coordinates..." required>
                         <div class="form-help">Examples: "New York", "London, UK", "Tokyo, Japan", "37.7749,-122.4194"</div>
                     </div>
                     
                     <!-- Report Type Selection -->
-                    <div>
-                        <label class="form-label">📊 Report Type *</label>
+                    <div class="form-group">
+                        <label class="form-label">📊 Report Type</label>
                         <div class="radio-grid">
-                            <label class="radio-option selected" onclick="selectReportType('current')">
-                                <input type="radio" name="report_type" value="current" checked>
-                                <div style="font-size: 20px;">🌡️</div>
-                                <div>
-                                    <div style="font-weight: 600; margin-bottom: 4px; font-size: 16px;">Current Weather</div>
-                                    <div style="font-size: 14px; color: var(--text-secondary);">Real-time conditions</div>
-                                </div>
-                            </label>
-                            
-                            <label class="radio-option" onclick="selectReportType('forecast')">
-                                <input type="radio" name="report_type" value="forecast">
-                                <div style="font-size: 20px;">📅</div>
-                                <div>
-                                    <div style="font-weight: 600; margin-bottom: 4px; font-size: 16px;">5-Day Forecast</div>
-                                    <div style="font-size: 14px; color: var(--text-secondary);">Extended weather outlook</div>
-                                </div>
-                            </label>
-                            
-                            <label class="radio-option" onclick="selectReportType('detailed')">
-                                <input type="radio" name="report_type" value="detailed">
-                                <div style="font-size: 20px;">📋</div>
-                                <div>
-                                    <div style="font-weight: 600; margin-bottom: 4px; font-size: 16px;">Detailed Report</div>
-                                    <div style="font-size: 14px; color: var(--text-secondary);">Current + forecast combined</div>
-                                </div>
-                            </label>
+                            <div class="radio-card selected" onclick="selectRadio('current')">
+                                <input type="radio" id="current" name="report_type" value="current" checked>
+                                <div class="radio-button"></div>
+                                <label for="current" class="radio-label">🌡️ Current Weather</label>
+                            </div>
+                            <div class="radio-card" onclick="selectRadio('forecast')">
+                                <input type="radio" id="forecast" name="report_type" value="forecast">
+                                <div class="radio-button"></div>
+                                <label for="forecast" class="radio-label">📅 5-Day Forecast</label>
+                            </div>
+                            <div class="radio-card" onclick="selectRadio('detailed')">
+                                <input type="radio" id="detailed" name="report_type" value="detailed">
+                                <div class="radio-button"></div>
+                                <label for="detailed" class="radio-label">📋 Detailed Report</label>
+                            </div>
                         </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div style="margin-top: var(--spacing-lg);">
+                        {% if user.is_authenticated %}
+                            {% if user.wallet_balance >= 2.00 %}
+                                <button type="submit" class="btn btn-primary btn-full" id="processButton">
+                                    🌤️ Get Weather Report (2.00 AED)
+                                </button>
+                            {% else %}
+                                <div style="background: #fef2f2; color: #dc2626; padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); font-size: 14px; font-weight: 500; text-align: center;">
+                                    Insufficient balance! You need 2.00 AED.
+                                </div>
+                                <a href="{% url 'core:wallet' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
+                                    💰 Top Up Wallet
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'authentication:login' %}" class="btn btn-primary btn-full">
+                                🔐 Login to Continue
+                            </a>
+                        {% endif %}
                     </div>
                 </form>
             </div>
-            
-            <!-- Processing Status -->
-            <div id="processingStatus" class="processing-status">
-                <div class="status-icon">⏳</div>
-                <div style="font-weight: 600; color: var(--primary-dark);">Getting Weather Data...</div>
-                <div style="font-size: 14px; color: var(--primary-blue); margin-top: 8px;" id="statusText">Fetching latest weather information for your location</div>
-            </div>
-            
-            <!-- Results -->
-            <div id="weatherResults" class="results-card">
-                <div class="results-header">
-                    <div style="font-size: 24px;">✅</div>
-                    <h3 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">Weather Report</h3>
-                    <div style="background: var(--primary-blue); color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-left: auto;">✅ Complete</div>
-                </div>
-                
-                <div class="results-content" id="weatherContent">
-                    <!-- Weather data will be displayed here -->
-                </div>
-                
-                <div class="action-buttons">
-                    <button onclick="copyWeatherReport()" class="btn btn-primary">📋 Copy Report</button>
-                    <button onclick="downloadWeatherReport()" class="btn btn-secondary">💾 Download Report</button>
-                    <button onclick="resetForm()" class="btn" style="background: var(--primary-blue); color: white;">🔄 Get Another</button>
-                </div>
-            </div>
         </div>
-        
-        <!-- Wallet Sidebar -->
-        <div class="wallet-section">
-            <div class="card">
-                <h3 class="section-title">💳 Your Wallet</h3>
-                
-                <div class="wallet-balance" data-wallet-balance>
-                    {% if user.is_authenticated %}
-                        {{ user.wallet_balance|floatformat:2 }} AED
-                    {% else %}
-                        0.00 AED
-                    {% endif %}
-                </div>
-                <div class="balance-label">Available Balance</div>
-                
-                {% if user.is_authenticated %}
-                    {% if user.wallet_balance >= 2.00 %}
-                        <button type="submit" form="weatherForm" class="btn btn-primary process-btn" id="processButton">
-                            🌤️ Get Weather Report (2.00 AED)
-                        </button>
-                    {% else %}
-                        <div class="insufficient-balance">
-                            Insufficient balance! You need 2.00 AED.
-                        </div>
-                        <a href="{% url 'core:wallet' %}" class="btn btn-primary process-btn" style="text-decoration: none;">
-                            💰 Top Up Wallet
-                        </a>
-                    {% endif %}
-                {% else %}
-                    <a href="{% url 'authentication:login' %}" class="btn btn-primary process-btn" style="text-decoration: none;">
-                        🔑 Login to Continue
-                    </a>
-                {% endif %}
+
+        <!-- How It Works Widget - Positioned on the right -->
+        <div class="agent-widget widget-small" style="min-width: min(280px, 100%); max-width: min(280px, 100%); margin-left: auto;">
+            <div class="widget-header">
+                <h3 class="widget-title">
+                    <span class="widget-icon">ℹ️</span>
+                    How It Works
+                </h3>
             </div>
-            
-            <div class="usage-info">
-                <h4>💡 How it works</h4>
-                <ul>
+            <div class="widget-content">
+                <ol class="info-list">
                     <li>Enter any city name worldwide</li>
                     <li>Choose your preferred report type</li>
                     <li>Get real-time weather data</li>
                     <li>Copy or download detailed reports</li>
-                </ul>
+                </ol>
+                
+                <!-- Other Agents Button -->
+                <button class="quick-agent-toggle btn btn-secondary btn-full" onclick="toggleQuickAgents()" 
+                        title="Quick access to other agents"
+                        aria-label="Open quick access panel for other AI agents"
+                        aria-expanded="false"
+                        aria-controls="quickAgentsPanel"
+                        style="margin-top: var(--spacing-md);">
+                    <span class="toggle-icon" aria-hidden="true">🚀</span>
+                    <span class="toggle-text">Explore Other Agents</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="agent-grid">
+        <!-- Processing Status -->
+        <div id="processingStatus" class="agent-widget widget-wide processing-status">
+            <div class="widget-header">
+                <h3 class="widget-title">
+                    <span class="widget-icon">⏳</span>
+                    Processing Status
+                </h3>
+            </div>
+            <div class="widget-content" style="text-align: center;">
+                <div class="status-icon">⏳</div>
+                <div class="status-text">Getting Weather Data...</div>
+                <div class="status-detail" id="statusText">Fetching real-time weather information...</div>
+            </div>
+        </div>
+        
+        <!-- Results Widget -->
+        <div id="resultsContainer" class="agent-widget widget-wide results-container">
+            <div class="widget-header">
+                <h3 class="widget-title">
+                    <span class="widget-icon">📊</span>
+                    Weather Report
+                </h3>
+                <span class="status-badge" style="background: var(--success-color); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">Success</span>
+            </div>
+            <div class="widget-content">
+                <div class="results-content" id="resultsContent">
+                    <!-- Results will be populated here by JavaScript -->
+                </div>
+                
+                <div class="action-buttons" style="margin-top: var(--spacing-lg); padding-top: var(--spacing-lg); border-top: 1px solid var(--outline-variant);">
+                    <button onclick="copyResults()" class="btn btn-primary">📋 Copy Report</button>
+                    <button onclick="downloadResults()" class="btn btn-secondary">💾 Download</button>
+                    <button onclick="resetForm()" class="btn btn-secondary">🔄 New Request</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    // Report type selection
-    function selectReportType(type) {
-        document.querySelectorAll('.radio-option').forEach(option => {
-            option.classList.remove('selected');
-        });
-        
-        event.currentTarget.classList.add('selected');
-        document.querySelector(`input[value="${type}"]`).checked = true;
-    }
-    
-    // Form validation
-    function isFormValid() {
-        const location = document.getElementById('location').value.trim();
-        const reportType = document.querySelector('input[name="report_type"]:checked');
-        
-        return location && reportType;
-    }
-    
-    // Copy weather report to clipboard
-    function copyWeatherReport() {
-        const reportText = AgentUtils.generateTextForExport('weatherContent');
-        AgentUtils.copyToClipboard(reportText, 'Weather report copied to clipboard!');
-    }
-    
-    // Download weather report as text file
-    function downloadWeatherReport() {
-        const reportText = AgentUtils.generateTextForExport('weatherContent');
-        AgentUtils.downloadAsFile(reportText, `weather-report-${Date.now()}.txt`, 'Weather report downloaded!');
-    }
-
-    // Track processing state to prevent duplicates
-    let isProcessing = false;
-
-    // Reset form for creating another report
-    function resetForm() {
-        // Reset processing state
-        isProcessing = false;
-        
-        // Reset form and UI
-        document.getElementById('weatherForm').reset();
-        document.getElementById('weatherResults').style.display = 'none';
-        document.getElementById('processingStatus').style.display = 'none';
-        document.getElementById('processButton').disabled = false;
-        document.getElementById('processButton').innerHTML = '🌤️ Get Weather Report (2.00 AED)';
-        
-        // Reset to default selection
-        document.querySelectorAll('.radio-option').forEach(option => {
-            option.classList.remove('selected');
-        });
-        document.querySelector('.radio-option').classList.add('selected');
-        document.querySelector('input[value="current"]').checked = true;
-        
-        AgentUtils.showToast('Form reset! Ready for another weather report.', 'success');
-    }
-    
-    // Simple toast notification
-
-
-    // Display weather results with clean weather data formatting
-    function displayResults(result) {
-        const resultsContainer = document.getElementById('weatherResults');
-        const contentElement = document.getElementById('weatherContent');
-        
-        if (!resultsContainer || !contentElement) {
-            console.error('Weather results elements not found');
-            return;
-        }
-        
-        // Update wallet balance if provided
-        if (result.wallet_balance !== undefined) {
-            AgentUtils.updateWalletBalance(result.wallet_balance);
-        }
-        
-        // Handle errors
-        if (result.error) {
-            AgentUtils.showToast(`❌ ${result.error}`, 'error');
-            return;
-        }
-        
-        // Handle failed status
-        if (result.status === 'failed') {
-            AgentUtils.showToast('❌ Failed to generate weather report - no charge applied', 'error');
-            return;
-        }
-        
-        // Extract weather content with priority order
-        let content = '';
-        
-        if (result.weather_data && typeof result.weather_data === 'string') {
-            content = result.weather_data;
-        } else if (result.formatted_report && typeof result.formatted_report === 'string') {
-            content = result.formatted_report;
-        } else if (result.content && typeof result.content === 'string') {
-            content = result.content;
-        } else if (result.output_text && typeof result.output_text === 'string') {
-            content = result.output_text;
-        } else {
-            content = 'Weather report generated successfully!';
-        }
-        
-        // Format weather content with clean data presentation
-        const formattedContent = formatWeatherContent(content);
-        
-        // Update content
-        contentElement.innerHTML = formattedContent;
-        
-        // Show results
-        resultsContainer.style.display = 'block';
-        resultsContainer.scrollIntoView({ behavior: 'smooth' });
-        
-        // Show success message
-        const successMessage = result.success ? '✅ Weather report completed and payment processed!' : '✅ Weather report generated!';
-        AgentUtils.showToast(successMessage, 'success');
-    }
-    
-    // Clean weather data formatter
-    function formatWeatherContent(content) {
-        if (!content || typeof content !== 'string') {
-            return '<p>No weather data available.</p>';
-        }
-        
-        let html = content;
-        
-        // Enhanced header formatting for weather sections
-        html = html.replace(/^# (.*$)/gm, '<h1 style="font-size: 22px; font-weight: 700; color: var(--primary-blue); margin: 20px 0 14px 0; border-bottom: 3px solid var(--primary-blue); padding-bottom: 10px; text-align: center;">$1</h1>');
-        html = html.replace(/^## (.*$)/gm, '<h2 style="font-size: 18px; font-weight: 600; color: var(--primary-dark); margin: 16px 0 10px 0; padding: 8px 12px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border-left: 4px solid var(--primary-blue);">$1</h2>');
-        html = html.replace(/^### (.*$)/gm, '<h3 style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin: 14px 0 8px 0; padding-bottom: 4px;">$1</h3>');
-        
-        // Temperature and weather metric highlighting
-        html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight: 600; color: var(--primary-dark); background: rgba(59, 130, 246, 0.1); padding: 2px 6px; border-radius: 4px;">$1</strong>');
-        
-        // Weather condition formatting with clean presentation
-        const lines = html.split('\n');
-        let inList = false;
-        let processedLines = [];
-        
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-            
-            if (line.startsWith('- ') || line.startsWith('• ')) {
-                if (!inList) {
-                    processedLines.push('<ul style="margin: 12px 0; padding-left: 20px; list-style: none;">');
-                    inList = true;
-                }
-                const listContent = line.substring(2).trim();
-                processedLines.push(`<li style="margin: 6px 0; line-height: 1.5; color: var(--text-primary); position: relative; padding-left: 20px;"><span style="position: absolute; left: 0; color: var(--primary-blue); font-weight: bold;">•</span>${listContent}</li>`);
-            } else {
-                if (inList) {
-                    processedLines.push('</ul>');
-                    inList = false;
-                }
-                processedLines.push(line);
-            }
-        }
-        
-        if (inList) {
-            processedLines.push('</ul>');
-        }
-        
-        html = processedLines.join('\n');
-        
-        // Convert line breaks to clean paragraphs
-        const paragraphs = html.split(/\n\s*\n/);
-        html = paragraphs
-            .filter(p => p.trim() !== '')
-            .map(p => {
-                const trimmed = p.trim();
-                // Don't wrap headers or lists in paragraphs
-                if (trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('</ul>') || trimmed.includes('<li')) {
-                    return trimmed;
-                }
-                return `<p style="margin: 12px 0; line-height: 1.6; color: var(--text-primary); font-size: 15px;">${trimmed}</p>`;
-            })
-            .join('');
-        
-        // Add clean wrapper for weather data
-        html = `<div style="font-family: 'Inter', sans-serif; max-width: 100%; overflow-wrap: break-word; background: var(--background-subtle); border-radius: 8px; padding: 16px; border: 1px solid var(--border-light);">${html}</div>`;
-        
-        return html;
-    }
-
-    // Poll for results
-    function pollForResults(requestId) {
-        let pollCount = 0;
-        const maxPolls = 30; // 30 seconds maximum
-        
-        const pollInterval = setInterval(() => {
-            pollCount++;
-            
-            fetch(`/agents/weather-reporter/status/${requestId}/`)
-                .then(response => response.json())
-                .then(result => {
-                    if (result.status === 'completed' || result.status === 'failed') {
-                        clearInterval(pollInterval);
-                        document.getElementById('processingStatus').style.display = 'none';
-                        document.getElementById('processButton').disabled = false;
-                        document.getElementById('processButton').innerHTML = '🌤️ Get Weather Report (2.00 AED)';
-                        
-                        displayResults(result);
-                    } else if (pollCount >= maxPolls) {
-                        clearInterval(pollInterval);
-                        document.getElementById('processingStatus').style.display = 'none';
-                        document.getElementById('processButton').disabled = false;
-                        document.getElementById('processButton').innerHTML = '🌤️ Get Weather Report (2.00 AED)';
-                        AgentUtils.showToast('❌ Processing timeout - please try again', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error polling results:', error);
-                    if (pollCount >= maxPolls) {
-                        clearInterval(pollInterval);
-                        document.getElementById('processingStatus').style.display = 'none';
-                        document.getElementById('processButton').disabled = false;
-                        document.getElementById('processButton').innerHTML = '🌤️ Get Weather Report (2.00 AED)';
-                        AgentUtils.showToast('❌ Network error - please try again', 'error');
-                    }
-                });
-        }, 1000);
-    }
-    
-    // Handle form submission
-    document.getElementById('weatherForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        if (!isFormValid()) {
-            AgentUtils.showToast('Please fill in all required fields', 'error');
-            return;
-        }
-        
-        // Prevent duplicate submissions
-        if (isProcessing) {
-            return;
-        }
-        
-        // Check user authentication
-        {% if not user.is_authenticated %}
-            window.location.href = "{% url 'authentication:login' %}";
-            return;
-        {% endif %}
-        
-        // Check wallet balance
-        const balance = {{ user.wallet_balance|default:0 }};
-        if (balance < 2.00) {
-            AgentUtils.showToast('Insufficient balance! You need 2.00 AED.', 'error');
-            setTimeout(() => {
-                window.location.href = "{% url 'core:wallet' %}";
-            }, 2000);
-            return;
-        }
-
-        // Set processing state
-        isProcessing = true;
-
-        // Show processing status with steps
-        document.getElementById('processingStatus').style.display = 'block';
-        document.getElementById('processButton').disabled = true;
-        document.getElementById('processButton').innerHTML = '⏳ Processing...';
-        document.getElementById('weatherResults').style.display = 'none';
-        
-        const steps = [
-            'Connecting to weather service...',
-            'Fetching location data...',
-            'Getting current conditions...',
-            'Processing weather information...',
-            'Generating report...'
-        ];
-        
-        let currentStep = 0;
-        const stepInterval = setInterval(() => {
-            if (currentStep < steps.length) {
-                document.getElementById('statusText').textContent = steps[currentStep];
-                currentStep++;
-            } else {
-                clearInterval(stepInterval);
-            }
-        }, 800);
-
-        // Submit form via AJAX
-        const formData = new FormData(this);
-        
-        fetch('/agents/weather-reporter/process/', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(result => {
-            clearInterval(stepInterval);
-            
-            // Reset processing state
-            isProcessing = false;
-            
-            // Handle immediate response (API-based agent)
-            document.getElementById('processingStatus').style.display = 'none';
-            document.getElementById('processButton').disabled = false;
-            document.getElementById('processButton').innerHTML = '🌤️ Get Weather Report (2.00 AED)';
-            
-            if (result.error) {
-                AgentUtils.showToast(`❌ ${result.error}`, 'error');
-            } else if (result.success) {
-                displayResults(result);
-            } else {
-                AgentUtils.showToast('❌ Failed to generate weather report', 'error');
-            }
-        })
-        .catch(error => {
-            clearInterval(stepInterval);
-            console.error('Error:', error);
-            
-            // Reset processing state
-            isProcessing = false;
-            
-            document.getElementById('processingStatus').style.display = 'none';
-            document.getElementById('processButton').disabled = false;
-            document.getElementById('processButton').innerHTML = '🌤️ Get Weather Report (2.00 AED)';
-            AgentUtils.showToast('❌ Network error - please try again', 'error');
-        });
-    });
-</script>
 {% endblock %}

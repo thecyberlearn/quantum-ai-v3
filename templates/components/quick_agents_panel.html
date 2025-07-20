@@ -1,0 +1,59 @@
+<div class="quick-agents-overlay" id="quickAgentsOverlay" onclick="closeQuickAgents()" aria-hidden="true"></div>
+
+<div class="quick-agents-panel" id="quickAgentsPanel" role="dialog" aria-labelledby="quickAgentsTitle" aria-hidden="true">
+    <div class="quick-agents-header">
+        <h3 id="quickAgentsTitle">Quick Access to Other Agents</h3>
+        <button class="close-panel" onclick="toggleQuickAgents()" aria-label="Close quick agents panel">×</button>
+    </div>
+
+    <div class="quick-agents-grid">
+        <a href="/agents/data-analyzer/" class="quick-agent-card">
+            <div class="agent-icon">📊</div>
+            <div class="agent-info">
+                <h4>Data Analyzer</h4>
+                <p>AI-powered data analysis</p>
+                <span class="agent-price">5.0 AED</span>
+            </div>
+        </a>
+
+        <a href="/agents/weather-reporter/" class="quick-agent-card">
+            <div class="agent-icon">🌤️</div>
+            <div class="agent-info">
+                <h4>Weather Reporter</h4>
+                <p>Worldwide weather forecasts</p>
+                <span class="agent-price">2.0 AED</span>
+            </div>
+        </a>
+
+        <a href="/agents/social-ads-generator/" class="quick-agent-card">
+            <div class="agent-icon">📢</div>
+            <div class="agent-info">
+                <h4>Social Ads Generator</h4>
+                <p>Create social media ads</p>
+                <span class="agent-price">7.0 AED</span>
+            </div>
+        </a>
+
+        <a href="/agents/job-posting-generator/" class="quick-agent-card">
+            <div class="agent-icon">💼</div>
+            <div class="agent-info">
+                <h4>Job Posting Generator</h4>
+                <p>Create professional job posts</p>
+                <span class="agent-price">4.0 AED</span>
+            </div>
+        </a>
+
+        <a href="/agents/five-whys-analyzer/" class="quick-agent-card">
+            <div class="agent-icon">🤔</div>
+            <div class="agent-info">
+                <h4>Five Whys Analyzer</h4>
+                <p>Problem analysis method</p>
+                <span class="agent-price">3.0 AED</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="quick-agents-footer">
+        <a href="{% url 'core:marketplace' %}" class="view-all-agents">View All Agents →</a>
+    </div>
+</div>
