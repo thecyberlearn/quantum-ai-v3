@@ -120,11 +120,7 @@ body {
     background: rgba(59, 130, 246, 0.05);
 }
 
-.nav-link.active {
-    color: var(--primary-blue);
-    background: rgba(59, 130, 246, 0.1);
-    font-weight: 600;
-}
+/* Removed .nav-link.active - no active state styling per user request */
 
 .user-info {
     display: flex;
@@ -173,19 +169,7 @@ body {
     background: rgba(59, 130, 246, 0.05);
 }
 
-/* More specific selector for auth links active state */
-.header .auth-links a.active {
-    color: var(--primary-blue) !important;
-    background: rgba(59, 130, 246, 0.1) !important;
-    font-weight: 600 !important;
-}
-
-/* Fallback with higher specificity */
-.header-container .auth-links a.active {
-    color: var(--primary-blue) !important;
-    background: rgba(59, 130, 246, 0.1) !important;
-    font-weight: 600 !important;
-}
+/* Removed all .auth-links a.active rules - no active state styling per user request */
 
 .main-container {
     max-width: 1200px;

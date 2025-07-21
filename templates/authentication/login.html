@@ -4,265 +4,131 @@
 {% block title %}Sign In{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/agent-base.css' %}">
 <style>
     /* Override main-container for full-width sections */
     .main-container {
         max-width: none;
         padding: 0;
-        margin-top: 0;
     }
     
-    /* Login page background */
+    /* Login page using agent-base.css */
     .login-page {
-        min-height: calc(100vh - 80px); /* Account for header height */
-        background: var(--gradient-hero);
+        background: var(--background);
+        min-height: calc(100vh - 84px);
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: clamp(20px, 5vw, 40px);
+        padding: var(--spacing-lg);
     }
     
-    /* Login container */
     .login-container {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: clamp(16px, 4vw, 24px);
-        padding: clamp(32px, 8vw, 48px);
-        box-shadow: 0 20px 60px rgba(30, 64, 175, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(20px);
+        background: var(--surface);
+        border-radius: var(--radius-lg);
+        padding: 48px;
+        box-shadow: var(--shadow-lg);
         width: 100%;
-        max-width: 480px;
-        position: relative;
-        overflow: hidden;
+        max-width: 450px;
+        border: 1px solid var(--outline);
     }
     
-    /* Decorative elements */
-    .login-container::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 80px;
-        height: 80px;
-        background: var(--gradient-primary);
-        border-top-right-radius: clamp(16px, 4vw, 24px);
-        border-bottom-left-radius: clamp(16px, 4vw, 24px);
-        opacity: 0.8;
-    }
-    
-    .login-container::after {
-        content: '🔐';
-        position: absolute;
-        top: 24px;
-        right: 24px;
-        font-size: 24px;
-        z-index: 1;
-    }
-    
-    /* Header section */
     .login-header {
         text-align: center;
-        margin-bottom: clamp(24px, 6vw, 32px);
-        position: relative;
-        z-index: 2;
+        margin-bottom: 40px;
     }
     
     .login-title {
-        font-size: clamp(24px, 6vw, 32px);
+        font-size: 28px;
         font-weight: 700;
-        color: var(--primary-blue);
-        margin: 0 0 8px 0;
+        color: var(--on-surface);
+        margin: 0 0 var(--spacing-sm) 0;
     }
     
     .login-subtitle {
-        font-size: clamp(14px, 3.5vw, 16px);
-        color: var(--text-secondary);
+        font-size: 16px;
+        color: var(--on-surface-variant);
         margin: 0;
     }
     
-    /* Form styles */
-    .login-form {
-        position: relative;
-        z-index: 2;
-    }
-    
-    .form-group {
-        margin-bottom: clamp(16px, 4vw, 20px);
-    }
-    
-    .form-label {
-        display: block;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin-bottom: 8px;
-        font-size: clamp(14px, 3.5vw, 16px);
-    }
-    
-    .form-input {
-        width: 100%;
-        padding: clamp(14px, 4vw, 18px) clamp(16px, 4vw, 20px);
-        border: 2px solid var(--border-medium);
-        border-radius: clamp(8px, 2vw, 12px);
-        font-size: clamp(14px, 3.5vw, 16px);
-        transition: all 0.3s ease;
-        background: white;
-        min-height: 48px;
-        box-sizing: border-box;
-    }
-    
-    .form-input:focus {
-        outline: none;
-        border-color: var(--primary-blue);
-        box-shadow: 0 0 0 3px rgba(64, 224, 208, 0.1);
-    }
-    
-    /* Login button */
     .login-btn {
         width: 100%;
-        background: var(--gradient-primary);
-        color: white;
-        border: none;
-        padding: clamp(16px, 4vw, 20px);
-        border-radius: clamp(8px, 2vw, 12px);
-        font-size: clamp(16px, 4vw, 18px);
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        min-height: 56px;
-        margin-bottom: clamp(20px, 5vw, 24px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
+        margin-bottom: 32px;
+        margin-top: 8px;
     }
     
-    .login-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(30, 64, 175, 0.3);
-        background: var(--gradient-success);
-    }
-    
-    .login-btn:active {
-        transform: translateY(0);
-        box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
-    }
-    
-    /* Messages */
     .messages {
-        margin-bottom: clamp(16px, 4vw, 20px);
+        margin-bottom: var(--spacing-lg);
     }
     
     .message {
-        padding: 12px 16px;
-        border-radius: clamp(8px, 2vw, 12px);
-        margin-bottom: 8px;
+        padding: var(--spacing-md);
+        border-radius: var(--radius-sm);
+        margin-bottom: var(--spacing-sm);
+        font-size: 14px;
         font-weight: 500;
-        font-size: clamp(14px, 3.5vw, 16px);
+        border: 1px solid;
     }
     
     .message.success {
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--success-dark);
-        border: 1px solid rgba(16, 185, 129, 0.3);
+        background: var(--surface-variant);
+        color: var(--on-surface);
+        border-color: var(--outline);
     }
     
     .message.error {
-        background: rgba(239, 68, 68, 0.1);
-        color: var(--error-red);
-        border: 1px solid rgba(239, 68, 68, 0.3);
+        background: var(--surface-variant);
+        color: var(--on-surface);
+        border-color: var(--outline);
     }
     
-    .message.info {
-        background: rgba(59, 130, 246, 0.1);
-        color: var(--primary-blue);
-        border: 1px solid rgba(59, 130, 246, 0.3);
-    }
-    
-    /* Auth links - scoped to login page */
-    .login-page .login-container .auth-links {
+    .login-auth-links {
         text-align: center;
-        padding-top: clamp(16px, 4vw, 20px);
-        border-top: 1px solid var(--border-light);
+        padding-top: 24px;
+        border-top: 1px solid var(--outline);
     }
     
-    .login-page .login-container .auth-links p {
-        margin: 8px 0;
-        color: var(--text-secondary);
-        font-size: clamp(14px, 3.5vw, 16px);
-    }
-    
-    .login-page .login-container .auth-links a {
-        color: var(--primary-blue);
-        text-decoration: none;
-        font-weight: 600;
-        transition: color 0.2s ease;
-    }
-    
-    .login-page .login-container .auth-links a:hover {
-        color: var(--primary-blue);
-        text-decoration: underline;
-    }
-    
-    /* Features section */
-    .login-features {
-        background: rgba(64, 224, 208, 0.05);
-        border-radius: clamp(12px, 3vw, 16px);
-        padding: clamp(16px, 4vw, 20px);
-        margin-top: clamp(20px, 5vw, 24px);
-        border: 1px solid rgba(64, 224, 208, 0.2);
-    }
-    
-    .features-title {
-        font-size: clamp(14px, 3.5vw, 16px);
-        font-weight: 600;
-        color: var(--primary-blue);
-        margin: 0 0 12px 0;
-        text-align: center;
-    }
-    
-    .features-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-    
-    .features-list li {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin: 8px 0;
-        color: var(--text-primary);
-        font-size: clamp(13px, 3vw, 14px);
-    }
-    
-    .features-list li::before {
-        content: '✨';
+    .login-auth-links p {
+        margin: var(--spacing-sm) 0;
+        color: var(--on-surface-variant);
         font-size: 14px;
     }
     
-    /* Responsive adjustments */
+    .login-auth-links a {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all var(--transition);
+    }
+    
+    .login-auth-links a:hover {
+        text-decoration: underline;
+    }
+    
+    /* Responsive */
     @media (max-width: 480px) {
         .login-page {
-            padding: 16px;
+            padding: var(--spacing-md);
         }
         
         .login-container {
-            padding: 24px;
+            padding: 32px 24px;
+        }
+        
+        .login-title {
+            font-size: 24px;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="login-page">
+<div class="login-page theme-professional">
     <div class="login-container">
-        <!-- Header -->
         <div class="login-header">
             <h1 class="login-title">Welcome Back</h1>
-            <p class="login-subtitle">Sign in to access your AI agents and continue your work</p>
+            <p class="login-subtitle">Sign in to your account</p>
         </div>
         
-        <!-- Messages -->
         {% if messages %}
             <div class="messages">
                 {% for message in messages %}
@@ -271,7 +137,6 @@
             </div>
         {% endif %}
         
-        <!-- Login Form -->
         <form method="post" class="login-form">
             {% csrf_token %}
             {% if request.GET.next %}
@@ -285,7 +150,7 @@
                     id="email" 
                     name="email" 
                     class="form-input"
-                    placeholder="Enter your email address"
+                    placeholder="Enter your email"
                     required
                     autocomplete="email"
                 >
@@ -304,26 +169,14 @@
                 >
             </div>
             
-            <button type="submit" class="login-btn">
-                🔑 Sign In to Your Account
+            <button type="submit" class="btn btn-primary login-btn">
+                Sign In
             </button>
         </form>
         
-        <!-- Auth Links -->
-        <div class="auth-links">
+        <div class="login-auth-links">
             <p><a href="{% url 'authentication:forgot_password' %}">Forgot your password?</a></p>
             <p>Don't have an account? <a href="{% url 'authentication:register' %}">Create account</a></p>
-        </div>
-        
-        <!-- Features Preview -->
-        <div class="login-features">
-            <h3 class="features-title">🚀 What's waiting for you</h3>
-            <ul class="features-list">
-                <li>Access powerful AI agents for your business</li>
-                <li>Professional data analysis and insights</li>
-                <li>Automated content and job posting generation</li>
-                <li>Real-time weather reporting and social ads</li>
-            </ul>
         </div>
     </div>
 </div>
@@ -331,20 +184,20 @@
 
 {% block extra_js %}
 <script>
-    // Focus on email field when page loads
     document.addEventListener('DOMContentLoaded', function() {
         const emailField = document.getElementById('email');
+        const loginForm = document.querySelector('.login-form');
+        const loginBtn = document.querySelector('.login-btn');
+        
+        // Focus on email field
         if (emailField) {
             emailField.focus();
         }
         
-        // Add loading state to button on form submission
-        const loginForm = document.querySelector('.login-form');
-        const loginBtn = document.querySelector('.login-btn');
-        
+        // Form submission
         if (loginForm && loginBtn) {
             loginForm.addEventListener('submit', function() {
-                loginBtn.innerHTML = '⏳ Signing you in...';
+                loginBtn.innerHTML = 'Signing in...';
                 loginBtn.disabled = true;
             });
         }

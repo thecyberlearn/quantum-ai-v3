@@ -38,8 +38,8 @@
     --error-color: var(--error);
     --warning-color: #f59e0b;
     
-    /* Typography */
-    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    /* Typography - Unified with header component */
+    --font-primary: 'Inter', Arial, sans-serif;
     
     /* Font Sizes - Crisp & Readable */
     --text-xs: 11px;
@@ -103,13 +103,20 @@
     --agent-card-border: 1px solid #e5e7eb;
 }
 
-/* Import Data Analyzer Font */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* Font imported globally in base.html - no need for duplicate import */
 
 
 /* Base Styles - Data Analyzer Exact Copy */
+/* Scoped font-family - unified with header component */
+.main-container *:not(.header-component):not(.header-component *),
+.pricing-page *:not(.header-component):not(.header-component *):not(.nav-link):not(.auth-links *),
+.agent-page *:not(.header-component):not(.header-component *):not(.nav-link):not(.auth-links *),
+.modal-overlay *,
+.footer * {
+    font-family: 'Inter', Arial, sans-serif;
+}
+
 * {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     box-sizing: border-box;
 }
 

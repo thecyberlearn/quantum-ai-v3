@@ -4,6 +4,7 @@
 {% block title %}Create Account{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/agent-base.css' %}">
 <style>
     /* Override main-container for full-width sections */
     .main-container {
@@ -11,300 +12,166 @@
         padding: 0;
     }
     
-    /* Register page background */
+    /* Register page using agent-base.css */
     .register-page {
-        min-height: calc(100vh - 80px); /* Account for header height */
-        background: linear-gradient(135deg, #f0f7ff 0%, #e0f7fa 50%, #f6f8ff 100%);
+        background: var(--background);
+        min-height: calc(100vh - 84px);
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: clamp(20px, 5vw, 40px);
+        padding: var(--spacing-lg);
     }
     
-    /* Register container */
     .register-container {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: clamp(16px, 4vw, 24px);
-        padding: clamp(32px, 8vw, 48px);
-        box-shadow: 0 20px 60px rgba(30, 64, 175, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(20px);
+        background: var(--surface);
+        border-radius: var(--radius-lg);
+        padding: 48px;
+        box-shadow: var(--shadow-lg);
         width: 100%;
         max-width: 520px;
-        position: relative;
-        overflow: hidden;
+        border: 1px solid var(--outline);
     }
     
-    /* Decorative elements */
-    .register-container::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 80px;
-        height: 80px;
-        background: linear-gradient(135deg, #34d399 0%, #059669 100%);
-        border-top-right-radius: clamp(16px, 4vw, 24px);
-        border-bottom-left-radius: clamp(16px, 4vw, 24px);
-        opacity: 0.8;
-    }
-    
-    .register-container::after {
-        content: '🚀';
-        position: absolute;
-        top: 24px;
-        right: 24px;
-        font-size: 24px;
-        z-index: 1;
-    }
-    
-    /* Header section */
     .register-header {
         text-align: center;
-        margin-bottom: clamp(24px, 6vw, 32px);
-        position: relative;
-        z-index: 2;
+        margin-bottom: 40px;
     }
     
     .register-title {
-        font-size: clamp(24px, 6vw, 32px);
+        font-size: 28px;
         font-weight: 700;
-        color: #059669;
-        margin: 0 0 8px 0;
+        color: var(--on-surface);
+        margin: 0 0 var(--spacing-sm) 0;
     }
     
     .register-subtitle {
-        font-size: clamp(14px, 3.5vw, 16px);
-        color: #6b7280;
+        font-size: 16px;
+        color: var(--on-surface-variant);
         margin: 0;
-    }
-    
-    /* Form styles */
-    .register-form {
-        position: relative;
-        z-index: 2;
     }
     
     .form-row {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
-        gap: clamp(12px, 3vw, 16px);
-        margin-bottom: clamp(16px, 4vw, 20px);
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
     }
     
-    .form-group {
-        margin-bottom: clamp(16px, 4vw, 20px);
-    }
-    
-    .form-label {
-        display: block;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 8px;
-        font-size: clamp(14px, 3.5vw, 16px);
-    }
-    
-    .form-input {
-        width: 100%;
-        padding: clamp(14px, 4vw, 18px) clamp(16px, 4vw, 20px);
-        border: 2px solid var(--border-medium);
-        border-radius: clamp(8px, 2vw, 12px);
-        font-size: clamp(14px, 3.5vw, 16px);
-        transition: all 0.3s ease;
-        background: white;
-        min-height: 48px;
-        box-sizing: border-box;
-    }
-    
-    .form-input:focus {
-        outline: none;
-        border-color: #34d399;
-        box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.1);
-    }
-    
-    /* Password strength indicator */
     .password-strength {
-        margin-top: 8px;
-        font-size: clamp(12px, 3vw, 14px);
-        color: #6b7280;
+        margin-top: var(--spacing-sm);
+        font-size: 12px;
+        color: var(--on-surface-variant);
     }
     
     .strength-indicator {
         display: flex;
-        gap: 4px;
-        margin-top: 4px;
+        gap: var(--spacing-xs);
+        margin-top: var(--spacing-xs);
     }
     
     .strength-bar {
         flex: 1;
-        height: 4px;
+        height: 3px;
         border-radius: 2px;
-        background: #e5e7eb;
-        transition: background-color 0.2s ease;
+        background: var(--outline);
+        transition: background-color var(--transition);
     }
     
-    .strength-bar.weak { background-color: #ef4444; }
-    .strength-bar.medium { background-color: #f59e0b; }
-    .strength-bar.strong { background-color: #10b981; }
+    .strength-bar.weak { background-color: var(--on-surface-variant); }
+    .strength-bar.medium { background-color: var(--on-surface); }
+    .strength-bar.strong { background-color: var(--primary); }
     
-    /* Register button */
+    .help-text {
+        font-size: 12px;
+        color: var(--on-surface-variant);
+        margin-top: var(--spacing-xs);
+    }
+    
     .register-btn {
         width: 100%;
-        background: linear-gradient(135deg, #34d399 0%, #059669 100%);
-        color: white;
-        border: none;
-        padding: clamp(16px, 4vw, 20px);
-        border-radius: clamp(8px, 2vw, 12px);
-        font-size: clamp(16px, 4vw, 18px);
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        min-height: 56px;
-        margin-bottom: clamp(20px, 5vw, 24px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
+        margin-bottom: 32px;
+        margin-top: 8px;
     }
     
-    .register-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(5, 150, 105, 0.3);
-        background: linear-gradient(135deg, #10b981 0%, #047857 100%);
-    }
-    
-    .register-btn:active {
-        transform: translateY(0);
-        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
-    }
-    
-    /* Messages */
     .messages {
-        margin-bottom: clamp(16px, 4vw, 20px);
+        margin-bottom: var(--spacing-lg);
     }
     
     .message {
-        padding: 12px 16px;
-        border-radius: clamp(8px, 2vw, 12px);
-        margin-bottom: 8px;
+        padding: var(--spacing-md);
+        border-radius: var(--radius-sm);
+        margin-bottom: var(--spacing-sm);
+        font-size: 14px;
         font-weight: 500;
-        font-size: clamp(14px, 3.5vw, 16px);
+        border: 1px solid;
     }
     
     .message.success {
-        background: #d1fae5;
-        color: #065f46;
-        border: 1px solid #a7f3d0;
+        background: var(--surface-variant);
+        color: var(--on-surface);
+        border-color: var(--outline);
     }
     
     .message.error {
-        background: #fee2e2;
-        color: #991b1b;
-        border: 1px solid #fca5a5;
+        background: var(--surface-variant);
+        color: var(--on-surface);
+        border-color: var(--outline);
     }
     
-    .message.info {
-        background: #dbeafe;
-        color: #1e40af;
-        border: 1px solid #93c5fd;
-    }
-    
-    /* Auth links - scoped to register page */
-    .register-page .register-container .auth-links {
+    .register-auth-links {
         text-align: center;
-        padding-top: clamp(16px, 4vw, 20px);
-        border-top: 1px solid #e5e7eb;
+        padding-top: 24px;
+        border-top: 1px solid var(--outline);
     }
     
-    .register-page .register-container .auth-links p {
-        margin: 8px 0;
-        color: #6b7280;
-        font-size: clamp(14px, 3.5vw, 16px);
-    }
-    
-    .register-page .register-container .auth-links a {
-        color: #059669;
-        text-decoration: none;
-        font-weight: 600;
-        transition: color 0.2s ease;
-    }
-    
-    .register-page .register-container .auth-links a:hover {
-        color: #34d399;
-        text-decoration: underline;
-    }
-    
-    /* Benefits section */
-    .register-benefits {
-        background: rgba(52, 211, 153, 0.05);
-        border-radius: clamp(12px, 3vw, 16px);
-        padding: clamp(16px, 4vw, 20px);
-        margin-top: clamp(20px, 5vw, 24px);
-        border: 1px solid rgba(52, 211, 153, 0.2);
-    }
-    
-    .benefits-title {
-        font-size: clamp(14px, 3.5vw, 16px);
-        font-weight: 600;
-        color: #059669;
-        margin: 0 0 12px 0;
-        text-align: center;
-    }
-    
-    .benefits-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-    
-    .benefits-list li {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin: 8px 0;
-        color: #374151;
-        font-size: clamp(13px, 3vw, 14px);
-    }
-    
-    .benefits-list li::before {
-        content: '🎯';
+    .register-auth-links p {
+        margin: var(--spacing-sm) 0;
+        color: var(--on-surface-variant);
         font-size: 14px;
     }
     
-    /* Help text */
-    .help-text {
-        font-size: clamp(12px, 3vw, 14px);
-        color: #6b7280;
-        margin-top: 4px;
+    .register-auth-links a {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all var(--transition);
     }
     
-    /* Responsive adjustments */
+    .register-auth-links a:hover {
+        text-decoration: underline;
+    }
+    
+    /* Responsive */
+    @media (max-width: 640px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+    
     @media (max-width: 480px) {
         .register-page {
-            padding: 16px;
+            padding: var(--spacing-md);
         }
         
         .register-container {
-            padding: 24px;
+            padding: 32px 24px;
         }
         
-        .form-row {
-            grid-template-columns: 1fr;
+        .register-title {
+            font-size: 24px;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="register-page">
+<div class="register-page theme-professional">
     <div class="register-container">
-        <!-- Header -->
         <div class="register-header">
-            <h1 class="register-title">Create Your Account</h1>
-            <p class="register-subtitle">Create your account and start using powerful AI agents</p>
+            <h1 class="register-title">Create Account</h1>
+            <p class="register-subtitle">Join our platform to get started</p>
         </div>
         
-        <!-- Messages -->
         {% if messages %}
             <div class="messages">
                 {% for message in messages %}
@@ -313,7 +180,6 @@
             </div>
         {% endif %}
         
-        <!-- Register Form -->
         <form method="post" class="register-form" id="registerForm">
             {% csrf_token %}
             
@@ -325,25 +191,25 @@
                         id="username" 
                         name="username" 
                         class="form-input"
-                        placeholder="Choose a username"
+                        placeholder="Choose username"
                         required
                         autocomplete="username"
                     >
-                    <div class="help-text">This will be your unique identifier</div>
+                    <div class="help-text">Your unique identifier</div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="email" class="form-label">Email Address</label>
+                    <label for="email" class="form-label">Email</label>
                     <input 
                         type="email" 
                         id="email" 
                         name="email" 
                         class="form-input"
-                        placeholder="Enter your email address"
+                        placeholder="Enter your email"
                         required
                         autocomplete="email"
                     >
-                    <div class="help-text">We'll use this for important updates</div>
+                    <div class="help-text">We'll use this for updates</div>
                 </div>
             </div>
             
@@ -354,7 +220,7 @@
                     id="password1" 
                     name="password1" 
                     class="form-input"
-                    placeholder="Create a strong password"
+                    placeholder="Create password"
                     required
                     autocomplete="new-password"
                 >
@@ -376,33 +242,20 @@
                     id="password2" 
                     name="password2" 
                     class="form-input"
-                    placeholder="Confirm your password"
+                    placeholder="Confirm password"
                     required
                     autocomplete="new-password"
                 >
                 <div class="help-text" id="password-match"></div>
             </div>
             
-            <button type="submit" class="register-btn" id="registerBtn">
-                🚀 Create My Account
+            <button type="submit" class="btn btn-primary register-btn" id="registerBtn">
+                Create Account
             </button>
         </form>
         
-        <!-- Auth Links -->
-        <div class="auth-links">
-            <p>Already have an account? <a href="{% url 'authentication:login' %}">Sign in here</a></p>
-        </div>
-        
-        <!-- Benefits Preview -->
-        <div class="register-benefits">
-            <h3 class="benefits-title">🎯 What you'll get</h3>
-            <ul class="benefits-list">
-                <li>Instant access to 4+ powerful AI agents</li>
-                <li>Professional data analysis and insights</li>
-                <li>Content generation for job postings & ads</li>
-                <li>Real-time weather reports and more</li>
-                <li>Secure wallet system for pay-per-use</li>
-            </ul>
+        <div class="register-auth-links">
+            <p>Already have an account? <a href="{% url 'authentication:login' %}">Sign in</a></p>
         </div>
     </div>
 </div>
@@ -418,7 +271,7 @@
         const registerBtn = document.getElementById('registerBtn');
         const passwordMatch = document.getElementById('password-match');
         
-        // Focus on username field when page loads
+        // Focus on username field
         if (usernameField) {
             usernameField.focus();
         }
@@ -443,10 +296,10 @@
                     passwordMatch.style.color = '';
                 } else if (password1 === password2) {
                     passwordMatch.textContent = '✅ Passwords match';
-                    passwordMatch.style.color = '#059669';
+                    passwordMatch.style.color = 'var(--primary)';
                 } else {
                     passwordMatch.textContent = '❌ Passwords do not match';
-                    passwordMatch.style.color = '#dc2626';
+                    passwordMatch.style.color = 'var(--on-surface-variant)';
                 }
             });
         }
@@ -454,7 +307,7 @@
         // Form submission
         if (registerForm && registerBtn) {
             registerForm.addEventListener('submit', function() {
-                registerBtn.innerHTML = '⏳ Creating your account...';
+                registerBtn.innerHTML = 'Creating account...';
                 registerBtn.disabled = true;
             });
         }

@@ -6,15 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}NetCop Hub - AI Platform{% endblock %}</title>
     
+    <!-- Unified Font Loading - Single Source of Truth -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+    
     <!-- Base Styles -->
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
-    <link rel="stylesheet" href="{% static 'css/header.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}?v=3">
     
     {% block extra_css %}{% endblock %}
+    
+    <!-- Header Component - ALWAYS loads last for consistency -->
+    <link rel="stylesheet" href="{% static 'css/header-component.css' %}?v=3">
 </head>
 <body>
     <!-- Header -->
-    <div class="header">
+    <div class="header-component theme-professional">
         <div class="header-container">
             <div class="header-left">
                 <a href="{% url 'core:homepage' %}" class="logo-section">
@@ -39,8 +47,8 @@
                     </div>
                 {% else %}
                     <div class="auth-links">
-                        <a href="{% url 'authentication:login' %}" class="{% if request.resolver_match.url_name == 'login' and request.resolver_match.namespace == 'authentication' %}active{% endif %}">Login</a>
-                        <a href="{% url 'authentication:register' %}" class="{% if request.resolver_match.url_name == 'register' and request.resolver_match.namespace == 'authentication' %}active{% endif %}">Register</a>
+                        <a href="{% url 'authentication:login' %}">Login</a>
+                        <a href="{% url 'authentication:register' %}">Register</a>
                     </div>
                 {% endif %}
             </div>

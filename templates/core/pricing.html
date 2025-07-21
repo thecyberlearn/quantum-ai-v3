@@ -4,209 +4,571 @@
 {% block title %}Pricing - NetCop Hub{% endblock %}
 
 {% block extra_css %}
-<style>
-    .pricing-container {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 40px 20px;
-    }
-    
-    .pricing-header {
-        text-align: center;
-        margin-bottom: 40px;
-    }
-    
-    .pricing-header h1 {
-        font-size: 32px;
-        font-weight: 700;
-        color: #1f2937;
-        margin-bottom: 12px;
-    }
-    
-    .pricing-header p {
-        font-size: 18px;
-        color: #6b7280;
-        margin: 0;
-    }
-    
-    .pricing-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 24px;
-        margin-bottom: 40px;
-    }
-    
-    .pricing-card {
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 32px 24px;
-        text-align: center;
-        transition: box-shadow 0.2s ease;
-    }
-    
-    .pricing-card:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    
-    .pricing-card.popular {
-        border-color: #3b82f6;
-        position: relative;
-    }
-    
-    .popular-badge {
-        position: absolute;
-        top: -10px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #3b82f6;
-        color: white;
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-    
-    .card-price {
-        font-size: 36px;
-        font-weight: 800;
-        color: #1f2937;
-        margin-bottom: 8px;
-    }
-    
-    .card-description {
-        font-size: 16px;
-        color: #6b7280;
-        margin-bottom: 24px;
-    }
-    
-    .card-button {
-        width: 100%;
-        background: #3b82f6;
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 8px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-block;
-        transition: background-color 0.2s ease;
-    }
-    
-    .card-button:hover {
-        background: #2563eb;
-        color: white;
-    }
-    
-    .cta-section {
-        text-align: center;
-        padding: 32px;
-        background: #f9fafb;
-        border-radius: 12px;
-    }
-    
-    .cta-section h3 {
-        font-size: 24px;
-        font-weight: 700;
-        color: #1f2937;
-        margin-bottom: 12px;
-    }
-    
-    .cta-section p {
-        font-size: 16px;
-        color: #6b7280;
-        margin-bottom: 24px;
-    }
-    
-    .cta-buttons {
-        display: flex;
-        gap: 16px;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-    
-    .cta-btn {
-        background: #10b981;
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 8px;
-        font-size: 16px;
-        font-weight: 600;
-        text-decoration: none;
-        transition: background-color 0.2s ease;
-    }
-    
-    .cta-btn:hover {
-        background: #059669;
-        color: white;
-    }
-    
-    .cta-btn.secondary {
-        background: #6b7280;
-    }
-    
-    .cta-btn.secondary:hover {
-        background: #4b5563;
-    }
-    
-    @media (max-width: 768px) {
-        .pricing-grid {
-            grid-template-columns: 1fr;
-        }
-        
-        .cta-buttons {
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        .cta-btn {
-            width: 100%;
-            max-width: 300px;
-        }
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/agent-base.css' %}">
+<link rel="stylesheet" href="{% static 'css/pricing.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="pricing-container">
-    <div class="pricing-header">
-        <p>Add funds to your wallet and use AI agents with transparent pricing</p>
-    </div>
-    
-    <div class="pricing-grid">
-        <div class="pricing-card">
-            <div class="card-price">10 AED</div>
-            <div class="card-description">Perfect for trying out agents</div>
-            <a href="{% url 'authentication:register' %}" class="card-button">Get Started</a>
-        </div>
+<div class="pricing-page theme-professional">
+    <div class="pricing-container-wrapper">
+        <!-- Main Content -->
+        <main class="pricing-main" role="main">
+            <!-- Hero Section -->
+            <section class="pricing-hero" aria-labelledby="pricing-heading">
+                <h1 id="pricing-heading">💳 Transparent Pricing</h1>
+                <p>Add funds to your wallet and use AI agents with clear, upfront pricing</p>
+            </section>
+            
+            <!-- Pricing Section -->
+            <section class="pricing-section" aria-labelledby="plans-heading">
+                <h2 id="plans-heading" class="section-title">Choose Your Plan</h2>
+                <p class="section-subtitle">Start with any amount and top up as needed</p>
+                
+                <div class="pricing-grid" role="group" aria-label="Pricing plans">
+                    <div class="pricing-card" role="article" aria-label="Basic plan - 10 AED">
+                        <div class="card-price">
+                            <span>10</span>
+                            <span class="currency">AED</span>
+                        </div>
+                        <div class="card-description">Perfect for trying out agents</div>
+                        <ul class="card-features">
+                            <li><span class="feature-icon">✓</span> Try multiple AI agents</li>
+                            <li><span class="feature-icon">✓</span> Basic task processing</li>
+                            <li><span class="feature-icon">✓</span> Instant wallet credit</li>
+                        </ul>
+                        <a href="{% url 'authentication:register' %}" 
+                           class="card-button"
+                           aria-label="Get started with basic plan">
+                            Get Started
+                        </a>
+                    </div>
+                    
+                    <div class="pricing-card popular" role="article" aria-label="Popular plan - 50 AED">
+                        <div class="popular-badge">Most Popular</div>
+                        <div class="card-price">
+                            <span>50</span>
+                            <span class="currency">AED</span>
+                        </div>
+                        <div class="card-description">Great for regular usage</div>
+                        <ul class="card-features">
+                            <li><span class="feature-icon">✓</span> All AI agents available</li>
+                            <li><span class="feature-icon">✓</span> Priority processing</li>
+                            <li><span class="feature-icon">✓</span> Extended usage time</li>
+                            <li><span class="feature-icon">✓</span> Best value option</li>
+                        </ul>
+                        <a href="{% url 'authentication:register' %}" 
+                           class="card-button"
+                           aria-label="Get started with popular plan">
+                            Get Started
+                        </a>
+                    </div>
+                    
+                    <div class="pricing-card" role="article" aria-label="Professional plan - 100 AED">
+                        <div class="card-price">
+                            <span>100</span>
+                            <span class="currency">AED</span>
+                        </div>
+                        <div class="card-description">Ideal for power users</div>
+                        <ul class="card-features">
+                            <li><span class="feature-icon">✓</span> Unlimited agent access</li>
+                            <li><span class="feature-icon">✓</span> Fastest processing</li>
+                            <li><span class="feature-icon">✓</span> Bulk operations</li>
+                            <li><span class="feature-icon">✓</span> Maximum efficiency</li>
+                        </ul>
+                        <a href="{% url 'authentication:register' %}" 
+                           class="card-button"
+                           aria-label="Get started with professional plan">
+                            Get Started
+                        </a>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- CTA Section -->
+            <section class="cta-section" aria-labelledby="cta-heading">
+                <h3 id="cta-heading">Ready to get started?</h3>
+                <p>Create your account and start using AI agents today with transparent, pay-as-you-go pricing.</p>
+                <div class="cta-buttons">
+                    <a href="{% url 'authentication:register' %}" 
+                       class="cta-btn"
+                       aria-label="Create account to get started">
+                        🚀 Create Account
+                    </a>
+                    <a href="{% url 'core:marketplace' %}" 
+                       class="cta-btn secondary"
+                       aria-label="Browse available AI agents">
+                        🤖 View Marketplace
+                    </a>
+                </div>
+            </section>
+        </main>
         
-        <div class="pricing-card popular">
-            <div class="popular-badge">Most Popular</div>
-            <div class="card-price">50 AED</div>
-            <div class="card-description">Great for regular usage</div>
-            <a href="{% url 'authentication:register' %}" class="card-button">Get Started</a>
-        </div>
-        
-        <div class="pricing-card">
-            <div class="card-price">100 AED</div>
-            <div class="card-description">Ideal for power users</div>
-            <a href="{% url 'authentication:register' %}" class="card-button">Get Started</a>
-        </div>
-    </div>
-    
-    <div class="cta-section">
-        <h3>Ready to get started?</h3>
-        <p>Create your account and start using AI agents today.</p>
-        <div class="cta-buttons">
-            <a href="{% url 'authentication:register' %}" class="cta-btn">Create Account</a>
-            <a href="{% url 'core:marketplace' %}" class="cta-btn secondary">View Marketplace</a>
-        </div>
+        <!-- Sidebar -->
+        <aside class="pricing-sidebar">
+            <!-- Pricing Info -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">💰 Pricing Details</h3>
+                </div>
+                <div class="card-content">
+                    <div class="info-list">
+                        <div class="info-item">
+                            <span class="info-icon">⚡</span>
+                            <span class="info-text">Pay only for successful results</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-icon">🔄</span>
+                            <span class="info-text">Top up anytime, any amount</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-icon">📊</span>
+                            <span class="info-text">Transparent transaction history</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-icon">🔒</span>
+                            <span class="info-text">Secure payment processing</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">⚡ Quick Actions</h3>
+                </div>
+                <div class="card-content">
+                    <div class="quick-actions">
+                        <a href="{% url 'core:marketplace' %}" class="action-btn">
+                            🤖 Browse AI Agents
+                        </a>
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'core:wallet' %}" class="action-btn">
+                                💳 View Wallet
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'core:homepage' %}" class="action-btn">
+                            🏠 Back to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Features Comparison -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">⭐ What's Included</h3>
+                </div>
+                <div class="card-content">
+                    <div class="info-list">
+                        <div class="info-item">
+                            <span class="info-icon">🤖</span>
+                            <span class="info-text">5 specialized AI agents</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-icon">📄</span>
+                            <span class="info-text">Document processing</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-icon">📊</span>
+                            <span class="info-text">Data analysis tools</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-icon">🌐</span>
+                            <span class="info-text">Web-based platform</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-icon">🔧</span>
+                            <span class="info-text">24/7 system availability</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+<script>
+// Enhanced Pricing Page Manager with Accessibility
+class PricingManager {
+    constructor() {
+        try {
+            this.pricingCards = document.querySelectorAll('.pricing-card');
+            this.ctaButtons = document.querySelectorAll('.cta-btn');
+            this.cardButtons = document.querySelectorAll('.card-button');
+            
+            this.init();
+        } catch (error) {
+            console.error('Failed to initialize PricingManager:', error);
+        }
+    }
+    
+    init() {
+        this.setupCardInteractions();
+        this.setupButtonHovers();
+        this.addKeyboardNavigation();
+        this.addScrollAnimations();
+    }
+    
+    setupCardInteractions() {
+        this.pricingCards.forEach((card, index) => {
+            // Add hover effects
+            card.addEventListener('mouseenter', () => {
+                this.highlightCard(card);
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                this.removeHighlight(card);
+            });
+            
+            // Add click to select functionality
+            card.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('card-button')) {
+                    this.selectCard(card);
+                }
+            });
+            
+            // Keyboard support
+            card.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.selectCard(card);
+                }
+            });
+        });
+    }
+    
+    highlightCard(card) {
+        card.style.transform = 'translateY(-4px)';
+        card.style.boxShadow = 'var(--shadow-lg)';
+    }
+    
+    removeHighlight(card) {
+        if (!card.classList.contains('selected')) {
+            card.style.transform = 'translateY(-2px)';
+            card.style.boxShadow = '';
+        }
+    }
+    
+    selectCard(card) {
+        // Remove selection from other cards
+        this.pricingCards.forEach(c => {
+            c.classList.remove('selected');
+            c.setAttribute('aria-selected', 'false');
+        });
+        
+        // Select current card
+        card.classList.add('selected');
+        card.setAttribute('aria-selected', 'true');
+        
+        // Get price for announcement
+        const price = card.querySelector('.card-price span:first-child')?.textContent;
+        if (price) {
+            this.announceSelection(`${price} AED plan selected`);
+        }
+        
+        // Highlight the card button
+        const button = card.querySelector('.card-button');
+        if (button) {
+            button.focus();
+        }
+    }
+    
+    setupButtonHovers() {
+        // Enhanced button interactions
+        [...this.cardButtons, ...this.ctaButtons].forEach(button => {
+            button.addEventListener('mouseenter', () => {
+                button.style.transform = 'translateY(-2px)';
+            });
+            
+            button.addEventListener('mouseleave', () => {
+                button.style.transform = '';
+            });
+            
+            button.addEventListener('focus', () => {
+                button.style.outline = '2px solid var(--primary)';
+                button.style.outlineOffset = '2px';
+            });
+            
+            button.addEventListener('blur', () => {
+                button.style.outline = '';
+                button.style.outlineOffset = '';
+            });
+        });
+    }
+    
+    addKeyboardNavigation() {
+        // Arrow key navigation between pricing cards
+        this.pricingCards.forEach((card, index) => {
+            card.setAttribute('tabindex', '0');
+            card.setAttribute('role', 'button');
+            card.setAttribute('aria-selected', 'false');
+            
+            card.addEventListener('keydown', (e) => {
+                let targetIndex = index;
+                
+                switch(e.key) {
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        targetIndex = index > 0 ? index - 1 : this.pricingCards.length - 1;
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        targetIndex = index < this.pricingCards.length - 1 ? index + 1 : 0;
+                        break;
+                    case 'Home':
+                        e.preventDefault();
+                        targetIndex = 0;
+                        break;
+                    case 'End':
+                        e.preventDefault();
+                        targetIndex = this.pricingCards.length - 1;
+                        break;
+                    default:
+                        return;
+                }
+                
+                this.pricingCards[targetIndex].focus();
+            });
+        });
+    }
+    
+    addScrollAnimations() {
+        // Intersection Observer for scroll animations
+        if ('IntersectionObserver' in window) {
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+            
+            // Observe pricing cards and sections
+            this.pricingCards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
+                observer.observe(card);
+            });
+            
+            // Observe other sections
+            document.querySelectorAll('.pricing-hero, .cta-section').forEach(section => {
+                section.style.opacity = '0';
+                section.style.transform = 'translateY(20px)';
+                section.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(section);
+            });
+        }
+    }
+    
+    announceSelection(message) {
+        // Create or update live region for screen reader announcements
+        let liveRegion = document.getElementById('pricing-announcement');
+        if (!liveRegion) {
+            liveRegion = document.createElement('div');
+            liveRegion.id = 'pricing-announcement';
+            liveRegion.setAttribute('aria-live', 'polite');
+            liveRegion.setAttribute('aria-atomic', 'true');
+            liveRegion.style.position = 'absolute';
+            liveRegion.style.left = '-9999px';
+            document.body.appendChild(liveRegion);
+        }
+        
+        liveRegion.textContent = message;
+    }
+}
+
+// Plan Comparison Function
+function showPlanComparison() {
+    const features = {
+        basic: ['Try multiple AI agents', 'Basic task processing', 'Instant wallet credit'],
+        popular: ['All AI agents available', 'Priority processing', 'Extended usage time', 'Best value option'],
+        professional: ['Unlimited agent access', 'Fastest processing', 'Bulk operations', 'Maximum efficiency']
+    };
+    
+    let comparisonHtml = '<div class="plan-comparison"><h3>Plan Comparison</h3>';
+    
+    Object.entries(features).forEach(([plan, featureList]) => {
+        comparisonHtml += `<div class="plan-features"><h4>${plan.charAt(0).toUpperCase() + plan.slice(1)}</h4><ul>`;
+        featureList.forEach(feature => {
+            comparisonHtml += `<li>✓ ${feature}</li>`;
+        });
+        comparisonHtml += '</ul></div>';
+    });
+    
+    comparisonHtml += '</div>';
+    
+    showModal('Plan Comparison', comparisonHtml);
+}
+
+// Enhanced Modal System
+function showModal(title, content) {
+    // Remove existing modal
+    const existingModal = document.querySelector('.pricing-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'pricing-modal';
+    modal.innerHTML = `
+        <div class="modal-backdrop" onclick="closeModal()"></div>
+        <div class="modal-content" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+            <div class="modal-header">
+                <h3 id="modal-title">${title}</h3>
+                <button class="modal-close" onclick="closeModal()" aria-label="Close modal">×</button>
+            </div>
+            <div class="modal-body">${content}</div>
+        </div>
+    `;
+    
+    // Modal styles
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    `;
+    
+    // Add modal styles if not exists
+    if (!document.querySelector('#modal-styles')) {
+        const style = document.createElement('style');
+        style.id = 'modal-styles';
+        style.textContent = `
+            .modal-backdrop {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(4px);
+            }
+            .modal-content {
+                background: var(--surface);
+                border-radius: var(--radius-lg);
+                max-width: 600px;
+                width: 90%;
+                max-height: 80vh;
+                overflow-y: auto;
+                box-shadow: var(--shadow-lg);
+                position: relative;
+                z-index: 1001;
+            }
+            .modal-header {
+                padding: var(--spacing-lg);
+                border-bottom: 1px solid var(--outline);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .modal-body {
+                padding: var(--spacing-lg);
+            }
+            .modal-close {
+                background: none;
+                border: none;
+                font-size: 24px;
+                cursor: pointer;
+                color: var(--on-surface-variant);
+            }
+            .plan-comparison {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: var(--spacing-md);
+            }
+            .plan-features h4 {
+                margin-bottom: var(--spacing-sm);
+                color: var(--primary);
+            }
+            .plan-features ul {
+                list-style: none;
+                padding: 0;
+            }
+            .plan-features li {
+                padding: var(--spacing-xs) 0;
+                font-size: 14px;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(modal);
+    
+    // Focus management
+    const closeButton = modal.querySelector('.modal-close');
+    if (closeButton) {
+        closeButton.focus();
+    }
+    
+    // Escape key to close
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            closeModal();
+            document.removeEventListener('keydown', handleEscape);
+        }
+    };
+    document.addEventListener('keydown', handleEscape);
+}
+
+function closeModal() {
+    const modal = document.querySelector('.pricing-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    new PricingManager();
+    
+    // Add smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+});
+
+// Add loading states for buttons
+document.querySelectorAll('.card-button, .cta-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        if (!this.classList.contains('loading')) {
+            this.classList.add('loading');
+            const originalText = this.textContent;
+            this.textContent = '⏳ Loading...';
+            
+            // Reset after navigation (this is just for UX, actual navigation will occur)
+            setTimeout(() => {
+                if (this.classList.contains('loading')) {
+                    this.classList.remove('loading');
+                    this.textContent = originalText;
+                }
+            }, 2000);
+        }
+    });
+});
+</script>
 {% endblock %}
