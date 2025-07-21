@@ -52,6 +52,10 @@ class BaseAgent(models.Model):
             'customer-service': 'from-blue-500 to-blue-600',
         }
         return gradient_map.get(self.category, 'from-gray-500 to-gray-600')
+    
+    def get_absolute_url(self):
+        """Get the URL for this agent's detail page"""
+        return f'/agents/{self.slug}/'
 
 
 class BaseAgentRequest(models.Model):

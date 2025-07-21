@@ -29,21 +29,6 @@ def marketplace_view(request):
     return render(request, 'agent_base/marketplace.html', context)
 
 
-def agent_detail_view(request, agent_slug):
-    """Agent detail view - redirect to specific agent app"""
-    try:
-        agent = BaseAgent.objects.get(slug=agent_slug, is_active=True)
-        # Redirect to the specific agent app URL
-        if agent_slug == 'weather-reporter':
-            return redirect('/agents/weather-reporter/')
-        else:
-            # For other agents, redirect to marketplace for now
-            messages.info(request, f'Agent "{agent.name}" page not yet available.')
-            return redirect('agent_base:marketplace')
-    except BaseAgent.DoesNotExist:
-        messages.error(request, 'Agent not found')
-        return redirect('agent_base:marketplace')
-
 
 def agents_api_view(request):
     """API endpoint for agents list"""
