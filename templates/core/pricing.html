@@ -94,7 +94,7 @@
                        aria-label="Create account to get started">
                         🚀 Create Account
                     </a>
-                    <a href="{% url 'core:marketplace' %}" 
+                    <a href="{% url 'agent_base:marketplace' %}" 
                        class="cta-btn secondary"
                        aria-label="Browse available AI agents">
                         🤖 View Marketplace
@@ -139,11 +139,11 @@
                 </div>
                 <div class="card-content">
                     <div class="quick-actions">
-                        <a href="{% url 'core:marketplace' %}" class="action-btn">
+                        <a href="{% url 'agent_base:marketplace' %}" class="action-btn">
                             🤖 Browse AI Agents
                         </a>
                         {% if user.is_authenticated %}
-                            <a href="{% url 'core:wallet' %}" class="action-btn">
+                            <a href="{% url 'wallet:wallet' %}" class="action-btn">
                                 💳 View Wallet
                             </a>
                         {% endif %}

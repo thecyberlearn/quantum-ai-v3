@@ -278,7 +278,7 @@ function handleFormSubmission(e) {
     if (walletBalance < 2.00) {
         WeatherUtils.showToast('Insufficient wallet balance', 'error');
         setTimeout(() => {
-            window.location.href = "{% url 'core:wallet' %}";
+            window.location.href = "{% url 'wallet:wallet' %}";
         }, 2000);
         return;
     }
@@ -323,75 +323,10 @@ function handleFormSubmission(e) {
 
 <div class="agent-container">
     <!-- Agent Header -->
-    <div class="agent-header">
-        <div>
-            <h1 class="agent-title">Weather Reporter</h1>
-            <p class="agent-subtitle">Get real-time weather data from any location worldwide</p>
-        </div>
-        <div class="header-controls">
-            <div class="wallet-card widget-small" style="margin-bottom: 0;">
-                <div class="wallet-header">
-                    <h3 class="wallet-title">Your Wallet</h3>
-                    <div class="wallet-icon">💳</div>
-                </div>
-                <div class="balance-display">
-                    <div class="balance-amount">
-                        <span id="walletBalance">{{ user.wallet_balance|floatformat:2 }}</span> AED
-                    </div>
-                    <div class="balance-label">Available Balance</div>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% include "components/agent_header.html" with agent_title="Weather Reporter" agent_subtitle="Get real-time weather data from any location worldwide" %}
 
     <!-- Quick Agent Access Panel -->
-    <div class="quick-agents-overlay" id="quickAgentsOverlay" onclick="closeQuickAgents()" aria-hidden="true"></div>
-    <div class="quick-agents-panel" id="quickAgentsPanel" role="dialog" aria-labelledby="quickAgentsTitle" aria-hidden="true">
-        <div class="quick-agents-header">
-            <h3 id="quickAgentsTitle">Quick Access to Other Agents</h3>
-            <button class="close-panel" onclick="toggleQuickAgents()" aria-label="Close quick agents panel">×</button>
-        </div>
-        <div class="quick-agents-grid">
-            <a href="/agents/data-analyzer/" class="quick-agent-card">
-                <div class="agent-icon">📊</div>
-                <div class="agent-info">
-                    <h4>Data Analyzer</h4>
-                    <p>AI-powered data analysis</p>
-                    <span class="agent-price">5.0 AED</span>
-                </div>
-            </a>
-            
-            <a href="/agents/job-posting-generator/" class="quick-agent-card">
-                <div class="agent-icon">💼</div>
-                <div class="agent-info">
-                    <h4>Job Posting Generator</h4>
-                    <p>Create professional job posts</p>
-                    <span class="agent-price">4.0 AED</span>
-                </div>
-            </a>
-            
-            <a href="/agents/social-ads-generator/" class="quick-agent-card">
-                <div class="agent-icon">📢</div>
-                <div class="agent-info">
-                    <h4>Social Ads Generator</h4>
-                    <p>Create social media campaigns</p>
-                    <span class="agent-price">7.0 AED</span>
-                </div>
-            </a>
-            
-            <a href="/agents/five-whys-analyzer/" class="quick-agent-card">
-                <div class="agent-icon">🤔</div>
-                <div class="agent-info">
-                    <h4>Five Whys Analyzer</h4>
-                    <p>Problem analysis method</p>
-                    <span class="agent-price">3.0 AED</span>
-                </div>
-            </a>
-        </div>
-        <div class="quick-agents-footer">
-            <a href="{% url 'core:marketplace' %}" class="view-all-agents">View All Agents →</a>
-        </div>
-    </div>
+    {% include "components/quick_agents_panel.html" %}
 
     <!-- Agent Grid -->
     <div class="agent-grid">
@@ -448,7 +383,7 @@ function handleFormSubmission(e) {
                                 <div style="background: #fef2f2; color: #dc2626; padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); font-size: 14px; font-weight: 500; text-align: center;">
                                     Insufficient balance! You need 2.00 AED.
                                 </div>
-                                <a href="{% url 'core:wallet' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
+                                <a href="{% url 'wallet:wallet' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
                                     💰 Top Up Wallet
                                 </a>
                             {% endif %}
@@ -495,41 +430,10 @@ function handleFormSubmission(e) {
     <!-- Main Content Grid -->
     <div class="agent-grid">
         <!-- Processing Status -->
-        <div id="processingStatus" class="agent-widget widget-wide processing-status">
-            <div class="widget-header">
-                <h3 class="widget-title">
-                    <span class="widget-icon">⏳</span>
-                    Processing Status
-                </h3>
-            </div>
-            <div class="widget-content" style="text-align: center;">
-                <div class="status-icon">⏳</div>
-                <div class="status-text">Getting Weather Data...</div>
-                <div class="status-detail" id="statusText">Fetching real-time weather information...</div>
-            </div>
-        </div>
+        {% include "components/processing_status.html" with status_title="Getting Weather Data..." status_text="Fetching real-time weather information..." %}
         
         <!-- Results Widget -->
-        <div id="resultsContainer" class="agent-widget widget-wide results-container">
-            <div class="widget-header">
-                <h3 class="widget-title">
-                    <span class="widget-icon">📊</span>
-                    Weather Report
-                </h3>
-                <span class="status-badge" style="background: var(--success-color); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">Success</span>
-            </div>
-            <div class="widget-content">
-                <div class="results-content" id="resultsContent">
-                    <!-- Results will be populated here by JavaScript -->
-                </div>
-                
-                <div class="action-buttons" style="margin-top: var(--spacing-lg); padding-top: var(--spacing-lg); border-top: 1px solid var(--outline-variant);">
-                    <button onclick="copyResults()" class="btn btn-primary">📋 Copy Report</button>
-                    <button onclick="downloadResults()" class="btn btn-secondary">💾 Download</button>
-                    <button onclick="resetForm()" class="btn btn-secondary">🔄 New Request</button>
-                </div>
-            </div>
-        </div>
+        {% include "components/results_container.html" with results_title="Weather Report" %}
     </div>
 </div>
 {% endblock %}

@@ -4,7 +4,7 @@ import sys
 import django
 
 # Add the project root to Python path
-sys.path.insert(0, '/home/amit/projects/netcop_django')
+sys.path.insert(0, '/home/amit/Desktop/quantum_ai')
 
 # Set Django settings
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'netcop_hub.settings')
@@ -70,7 +70,7 @@ def check_url_structure():
         homepage_url = reverse('core:homepage')
         print(f"✅ Homepage URL: {homepage_url}")
         
-        marketplace_url = reverse('core:marketplace')
+        marketplace_url = reverse('agent_base:marketplace')
         print(f"✅ Marketplace URL: {marketplace_url}")
         
         # Test weather reporter URL

@@ -1,5 +1,10 @@
 /* Base Styles for NetCop Hub */
 
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
+
 /* Unified Color System */
 :root {
     /* Primary Colors */

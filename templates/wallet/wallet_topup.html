@@ -436,7 +436,7 @@
 
 {% block content %}
 <div class="topup-page theme-professional">
-    <a href="{% url 'core:wallet' %}" class="back-to-wallet">
+    <a href="{% url 'wallet:wallet' %}" class="back-to-wallet">
         ← Back to Wallet
     </a>
     
@@ -565,10 +565,10 @@
                 </div>
                 <div class="card-content">
                     <div class="quick-actions">
-                        <a href="{% url 'core:wallet' %}" class="action-btn">
+                        <a href="{% url 'wallet:wallet' %}" class="action-btn">
                             📊 View Transactions
                         </a>
-                        <a href="{% url 'core:marketplace' %}" class="action-btn">
+                        <a href="{% url 'agent_base:marketplace' %}" class="action-btn">
                             🤖 Browse Agents
                         </a>
                         <a href="{% url 'core:homepage' %}" class="action-btn">

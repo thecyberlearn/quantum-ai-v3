@@ -594,7 +594,7 @@
                 <div class="card-content">
                     <h2 id="balance-heading" class="balance-label">💰 Current Balance</h2>
                     <div class="balance-amount" aria-live="polite" data-wallet-balance>{{ current_balance|floatformat:2 }} AED</div>
-                    <a href="{% url 'core:wallet_topup' %}" 
+                    <a href="{% url 'wallet:wallet_topup' %}" 
                        class="btn btn-primary" 
                        style="background: white; color: black; border: 1px solid rgba(255,255,255,0.2);"
                        aria-label="Top up wallet balance">
@@ -700,7 +700,7 @@
                         <div class="empty-state">
                             <div class="empty-icon">📭</div>
                             <p class="empty-text">No transactions yet. Start using AI agents to see your transaction history!</p>
-                            <a href="{% url 'core:marketplace' %}" class="btn btn-primary">🤖 Browse Agents</a>
+                            <a href="{% url 'agent_base:marketplace' %}" class="btn btn-primary">🤖 Browse Agents</a>
                         </div>
                     {% endif %}
                 </div>
@@ -716,10 +716,10 @@
                 </div>
                 <div class="card-content">
                     <div class="quick-actions">
-                        <a href="{% url 'core:wallet_topup' %}" class="action-btn">
+                        <a href="{% url 'wallet:wallet_topup' %}" class="action-btn">
                             💳 Top Up Wallet
                         </a>
-                        <a href="{% url 'core:marketplace' %}" class="action-btn">
+                        <a href="{% url 'agent_base:marketplace' %}" class="action-btn">
                             🤖 Browse Agents
                         </a>
                         <a href="{% url 'core:homepage' %}" class="action-btn">

@@ -4,6 +4,7 @@
 {% block title %}Data Analyzer - NetCop AI Hub{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/agent-base.css' %}">
 <style>
 /* Data Analyzer Agent - Optimized Styles */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -1230,7 +1231,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.body.setAttribute('data-user-authenticated', '{{ user.is_authenticated|yesno:"true,false" }}');
     document.body.setAttribute('data-login-url', '{% url "authentication:login" %}');
     document.body.setAttribute('data-wallet-balance', '{{ user.wallet_balance|default:0 }}');
-    document.body.setAttribute('data-wallet-url', '{% url "core:wallet" %}');
+    document.body.setAttribute('data-wallet-url', '{% url "wallet:wallet" %}');
     
     // Initialize radio selection
     selectRadio('summary');
@@ -1241,75 +1242,10 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <div class="agent-container">
     <!-- Agent Header -->
-    <div class="agent-header">
-        <div>
-            <h1 class="agent-title">Data Analyzer</h1>
-            <p class="agent-subtitle">Upload your data file and get AI-powered analysis with advanced insights</p>
-        </div>
-        <div class="header-controls">
-            <div class="wallet-card widget-small" style="margin-bottom: 0;">
-                <div class="wallet-header">
-                    <h3 class="wallet-title">Your Wallet</h3>
-                    <div class="wallet-icon">💳</div>
-                </div>
-                <div class="balance-display">
-                    <div class="balance-amount">
-                        <span id="walletBalance">{{ user.wallet_balance|floatformat:2 }}</span> AED
-                    </div>
-                    <div class="balance-label">Available Balance</div>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% include "components/agent_header.html" with agent_title="Data Analyzer" agent_subtitle="Upload your data file and get AI-powered analysis with advanced insights" %}
 
     <!-- Quick Agent Access Panel -->
-    <div class="quick-agents-overlay" id="quickAgentsOverlay" onclick="closeQuickAgents()" aria-hidden="true"></div>
-    <div class="quick-agents-panel" id="quickAgentsPanel" role="dialog" aria-labelledby="quickAgentsTitle" aria-hidden="true">
-        <div class="quick-agents-header">
-            <h3 id="quickAgentsTitle">Quick Access to Other Agents</h3>
-            <button class="close-panel" onclick="toggleQuickAgents()" aria-label="Close quick agents panel">×</button>
-        </div>
-        <div class="quick-agents-grid">
-            <a href="/agents/weather-reporter/" class="quick-agent-card">
-                <div class="agent-icon">🌤️</div>
-                <div class="agent-info">
-                    <h4>Weather Reporter</h4>
-                    <p>Real-time weather info</p>
-                    <span class="agent-price">2.0 AED</span>
-                </div>
-            </a>
-            
-            <a href="/agents/job-posting-generator/" class="quick-agent-card">
-                <div class="agent-icon">💼</div>
-                <div class="agent-info">
-                    <h4>Job Posting Generator</h4>
-                    <p>Create professional job posts</p>
-                    <span class="agent-price">3.0 AED</span>
-                </div>
-            </a>
-            
-            <a href="/agents/social-ads-generator/" class="quick-agent-card">
-                <div class="agent-icon">📱</div>
-                <div class="agent-info">
-                    <h4>Social Ads Generator</h4>
-                    <p>Engaging social media ads</p>
-                    <span class="agent-price">4.0 AED</span>
-                </div>
-            </a>
-            
-            <a href="/agents/five-whys-analyzer/" class="quick-agent-card">
-                <div class="agent-icon">🔍</div>
-                <div class="agent-info">
-                    <h4>Five Whys Analyzer</h4>
-                    <p>Root cause analysis</p>
-                    <span class="agent-price">8.0 AED</span>
-                </div>
-            </a>
-        </div>
-        <div class="quick-agents-footer">
-            <a href="{% url 'core:marketplace' %}" class="view-all-agents">View All Agents →</a>
-        </div>
-    </div>
+    {% include "components/quick_agents_panel.html" %}
 
     <!-- Agent Grid -->
     <div class="agent-grid">
@@ -1372,7 +1308,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="alert alert-error">
                                     Insufficient balance! You need 5.00 AED.
                                 </div>
-                                <a href="{% url 'core:wallet' %}" class="btn btn-primary btn-full">
+                                <a href="{% url 'wallet:wallet' %}" class="btn btn-primary btn-full">
                                     💳 Top Up Wallet
                                 </a>
                             {% endif %}
@@ -1419,41 +1355,10 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- Main Content Grid -->
     <div class="agent-grid">
         <!-- Processing Status -->
-        <div id="processingStatus" class="agent-widget widget-wide processing-status">
-            <div class="widget-header">
-                <h3 class="widget-title">
-                    <span class="widget-icon">⏳</span>
-                    Processing Status
-                </h3>
-            </div>
-            <div class="widget-content" style="text-align: center;">
-                <div class="status-icon">⏳</div>
-                <div class="status-title">Analyzing your data...</div>
-                <div class="status-subtitle" id="statusText">Processing file...</div>
-            </div>
-        </div>
+        {% include "components/processing_status.html" %}
         
         <!-- Results Widget -->
-        <div id="resultsContainer" class="agent-widget widget-wide results-container">
-            <div class="widget-header">
-                <h3 class="widget-title">
-                    <span class="widget-icon">📊</span>
-                    Analysis Results
-                </h3>
-                <span class="status-badge">Success</span>
-            </div>
-            <div class="widget-content">
-                <div id="resultsContent" class="results-content"></div>
-                <div class="results-actions">
-                    <button onclick="copyResults()" class="btn btn-primary">
-                        📋 Copy Results
-                    </button>
-                    <button onclick="downloadResults()" class="btn btn-secondary">
-                        💾 Download Report
-                    </button>
-                </div>
-            </div>
-        </div>
+        {% include "components/results_container.html" with results_title="Analysis Results" %}
     </div>
 </div>
 

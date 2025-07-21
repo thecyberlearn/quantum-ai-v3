@@ -30,7 +30,7 @@
                 </a>
                 <nav class="header-nav" id="header-nav">
                     <a href="{% url 'core:homepage' %}" class="nav-link {% if request.resolver_match.url_name == 'homepage' %}active{% endif %}">Home</a>
-                    <a href="{% url 'core:marketplace' %}" class="nav-link {% if request.resolver_match.url_name == 'marketplace' %}active{% endif %}">AI Marketplace</a>
+                    <a href="{% url 'agent_base:marketplace' %}" class="nav-link {% if request.resolver_match.url_name == 'marketplace' %}active{% endif %}">AI Marketplace</a>
                     <a href="{% url 'core:pricing' %}" class="nav-link {% if request.resolver_match.url_name == 'pricing' %}active{% endif %}">Pricing</a>
                 </nav>
                 <button class="mobile-nav-toggle" onclick="toggleMobileNav()" aria-label="Toggle navigation">
@@ -40,9 +40,9 @@
             <div class="user-info">
                 {% if user.is_authenticated %}
                     <p class="user-welcome">Welcome, {{ user.username }}!</p>
-                    <a href="{% url 'core:wallet' %}" class="balance" data-wallet-balance>💰 {{ user.wallet_balance|floatformat:2 }} AED</a>
+                    <a href="{% url 'wallet:wallet' %}" class="balance" data-wallet-balance>💰 {{ user.wallet_balance|floatformat:2 }} AED</a>
                     <div class="auth-links">
-                        <a href="{% url 'core:wallet' %}">Wallet</a>
+                        <a href="{% url 'wallet:wallet' %}">Wallet</a>
                         <a href="{% url 'authentication:logout' %}">Logout</a>
                     </div>
                 {% else %}
@@ -105,7 +105,7 @@
                             <a href="#company-profile" class="footer-nav-link">About Us</a>
                             <a href="#founder" class="footer-nav-link">Leadership</a>
                             <a href="#contact" class="footer-nav-link">Contact Us</a>
-                            <a href="{% url 'core:marketplace' %}" class="footer-nav-link">AI Marketplace</a>
+                            <a href="{% url 'agent_base:marketplace' %}" class="footer-nav-link">AI Marketplace</a>
                         </div>
                     </div>
                 </div>

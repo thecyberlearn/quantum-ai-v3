@@ -22,6 +22,8 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('authentication.urls')),
+    path('wallet/', include('wallet.urls')),
+    path('', include('agent_base.urls')),
     path('agents/weather-reporter/', include('weather_reporter.urls')),
     path('agents/data-analyzer/', include('data_analyzer.urls')),
     path('agents/job-posting-generator/', include('job_posting_generator.urls')),

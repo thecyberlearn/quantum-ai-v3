@@ -36,12 +36,12 @@
 
         <!-- Category Filters -->
         <div class="category-filters">
-            <a href="{% url 'core:marketplace' %}" class="category-button {% if not selected_category %}active{% endif %}" data-category="all">
+            <a href="{% url 'agent_base:marketplace' %}" class="category-button {% if not selected_category %}active{% endif %}" data-category="all">
                 <span class="category-emoji">🤖</span> All Assistants
             </a>
             {% if categories %}
                 {% for category_value, category_display in categories %}
-                    <a href="{% url 'core:marketplace' %}?category={{ category_value }}" 
+                    <a href="{% url 'agent_base:marketplace' %}?category={{ category_value }}" 
                        class="category-button {% if selected_category == category_value %}active{% endif %}" 
                        data-category="{{ category_value }}">
                         <span class="category-emoji">
@@ -91,9 +91,9 @@
                                 <span class="price-text">{{ agent.price }} AED</span>
                             </div>
                             {% if user.is_authenticated %}
-                                <a href="{% url 'core:agent_detail' agent.slug %}" class="use-button">Use Now</a>
+                                <a href="{% url 'agent_base:agent_detail' agent.slug %}" class="use-button">Use Now</a>
                             {% else %}
-                                <a href="{% url 'authentication:login' %}?next={% url 'core:agent_detail' agent.slug %}" class="use-button">Login to Use</a>
+                                <a href="{% url 'authentication:login' %}?next={% url 'agent_base:agent_detail' agent.slug %}" class="use-button">Login to Use</a>
                             {% endif %}
                         </div>
                     </div>

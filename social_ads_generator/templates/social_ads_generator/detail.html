@@ -1455,7 +1455,7 @@ if (document.readyState === 'loading') {
                                 <div style="background: #fef2f2; color: #dc2626; padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); font-size: 14px; font-weight: 500; text-align: center;">
                                     Insufficient balance! You need 7.00 AED.
                                 </div>
-                                <a href="{% url 'core:wallet' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
+                                <a href="{% url 'wallet:wallet' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
                                     💰 Top Up Wallet
                                 </a>
                             {% endif %}
@@ -1501,43 +1501,10 @@ if (document.readyState === 'loading') {
     </div>
     
     <!-- Processing Status -->
-    <div id="processingStatus" class="processing-status" aria-live="polite" aria-label="Processing request">
-        <div class="status-icon">📢</div>
-        <div style="font-weight: 600; color: var(--primary);">Creating Social Ads...</div>
-        <div style="font-size: 14px; color: var(--on-surface-variant); margin-top: 8px;" id="statusText">
-            Generating engaging ad content...
-        </div>
-        <span class="sr-only">Processing your request...</span>
-    </div>
+    {% include "components/processing_status.html" with status_title="Creating Social Ads..." status_text="Generating engaging ad content..." %}
     
     <!-- Results -->
-    <div id="adResults" class="results-card" role="region" aria-labelledby="resultsTitle">
-        <div class="results-header">
-            <div style="font-size: 24px;">✅</div>
-            <h3 id="resultsTitle" style="font-size: 20px; font-weight: 600; color: var(--on-surface); margin: 0;">
-                Generated Social Ads
-            </h3>
-            <div style="background: var(--success); color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-left: auto;">
-                ✅ Complete
-            </div>
-        </div>
-        
-        <div class="results-content" id="adContent">
-            <!-- Ad content will be displayed here -->
-        </div>
-        
-        <div class="action-buttons">
-            <button onclick="copySocialAds()" class="btn btn-primary" type="button">
-                📋 Copy Ads
-            </button>
-            <button onclick="downloadSocialAds()" class="btn btn-secondary" type="button">
-                💾 Download Ads
-            </button>
-            <button onclick="resetForm()" class="btn btn-secondary" type="button">
-                🔄 Create Another
-            </button>
-        </div>
-    </div>
+    {% include "components/results_container.html" with results_title="Generated Social Ads" %}
 </div>
 {% endblock %}
 
@@ -1913,7 +1880,7 @@ if (document.readyState === 'loading') {
         // Check wallet balance dynamically
         if (!AgentUtils.validateWalletBalance()) {
             setTimeout(() => {
-                window.location.href = "{% url 'core:wallet' %}";
+                window.location.href = "{% url 'wallet:wallet' %}";
             }, 2000);
             return;
         }

@@ -5,6 +5,7 @@ from .models import DataAnalysisAgentRequest, DataAnalysisAgentResponse
 import json
 import requests
 import time
+import os
 
 
 class DataAnalysisAgentProcessor(StandardWebhookProcessor):
@@ -28,6 +29,20 @@ class DataAnalysisAgentProcessor(StandardWebhookProcessor):
                 text_parts.append("")  # Add empty line between sections
         
         return "\n".join(text_parts).strip()
+    
+    def _cleanup_uploaded_file(self, request_obj):
+        """Delete the uploaded file after processing to save storage and protect privacy"""
+        if request_obj and request_obj.data_file:
+            try:
+                file_path = request_obj.data_file.path
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    print(f"{self.agent_slug}: Successfully deleted uploaded file: {file_path}")
+                else:
+                    print(f"{self.agent_slug}: File already deleted or doesn't exist: {file_path}")
+            except Exception as e:
+                print(f"{self.agent_slug}: Warning - Failed to delete uploaded file: {e}")
+                # Don't raise exception as this is cleanup, not critical functionality
     
     def make_request(self, data, timeout=60):
         """Override to send PDF file as binary data instead of JSON"""
@@ -169,6 +184,9 @@ class DataAnalysisAgentProcessor(StandardWebhookProcessor):
             request_obj.processed_at = timezone.now()
             request_obj.save()
             
+            # Cleanup uploaded file after successful processing
+            self._cleanup_uploaded_file(request_obj)
+            
             return response_obj
             
         except Exception as e:
@@ -192,5 +210,8 @@ class DataAnalysisAgentProcessor(StandardWebhookProcessor):
                 error_response.error_message = str(e)
                 error_response.processing_time = response_data.get('processing_time', 0) if response_data else 0
                 error_response.save()
+            
+            # Cleanup uploaded file even on error to prevent accumulation
+            self._cleanup_uploaded_file(request_obj)
             
             raise Exception(f"Failed to process Data Analysis Agent response: {e}")
