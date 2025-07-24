@@ -28,6 +28,7 @@ urlpatterns = [
     path('agents/data-analyzer/', include('data_analyzer.urls')),
     path('agents/job-posting-generator/', include('job_posting_generator.urls')),
     path('agents/social-ads-generator/', include('social_ads_generator.urls')),
+    path('agents/email-writer/', include('email_writer.urls')),
     path('agents/five-whys-analyzer/', include('five_whys_analyzer.urls')),
     path('', include('core.urls')),
 ]

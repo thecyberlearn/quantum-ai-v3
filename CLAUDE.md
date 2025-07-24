@@ -171,21 +171,41 @@ Required environment variables (see `.env.example`):
 - Stripe keys for payment processing
 - Email configuration for password reset
 
+### Agent Creation with Template Prototype
+
+**Quick Agent Creation:**
+- Use `agent_template_prototype.html` as foundation for all new agents
+- Follow detailed guide in `AGENT_CREATION_GUIDE.md`
+- Template provides complete CSS framework, JavaScript utilities, and UI components
+- Ensures consistent user experience across all agents
+
 ### Development Workflow
 
 1. **Adding New Agent:**
    - Use `python manage.py create_agent` command
    - Follow existing agent patterns (inherit from `BaseAgentProcessor`)
+   - **Convert `agent_template_prototype.html` to Django template** - see `AGENT_CREATION_GUIDE.md`
    - Add URL routing in main `urls.py`
    - Agent will automatically appear in marketplace via `BaseAgent` model
 
-2. **Modifying Templates:**
-   - Check existing components in `templates/components/`
-   - Follow CSS variable system defined in `base.css`
-   - Use `.hidden` utility class instead of inline `style="display:none"`
-   - Respect app-specific template organization (core, agent_base, wallet, etc.)
+2. **Template Development:**
+   - **ALWAYS use `agent_template_prototype.html` as starting point**
+   - Copy all CSS (lines 8-632) and JavaScript (lines 808-967) from prototype
+   - Replace placeholder sections with agent-specific content
+   - Use existing components: wallet card, processing status, quick access panel
+   - Follow responsive design patterns and accessibility features
 
-3. **Database Changes:**
+3. **Agent Template Structure:**
+   ```
+   templates/agent_name/detail.html:
+   - Copy complete CSS framework from prototype
+   - Replace "Agent Grid Section" with your form
+   - Replace "Results Section" with your results display  
+   - Keep "How It Works" widget and all JavaScript utilities
+   - Preserve responsive design and accessibility features
+   ```
+
+4. **Database Changes:**
    - Always run migrations after model changes
    - Use `check_db` command to verify configuration
    - Test with `populate_agents` to ensure agent catalog works

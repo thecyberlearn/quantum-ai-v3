@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'data_analyzer',
     'job_posting_generator',
     'social_ads_generator',
+    'email_writer',
     'five_whys_analyzer',
 ]
 

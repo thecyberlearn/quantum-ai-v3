@@ -1,0 +1,1334 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Email Writer Agent - NetCop AI Hub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/agent-base.css' %}">
+<style>
+/* Email Writer Agent - Using Template Prototype CSS */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary: #000000;
+    --surface: #ffffff;
+    --surface-variant: #f8fafc;
+    --background: #f3f4f6;
+    --outline: #e4e7eb;
+    --outline-variant: #e1e4e7;
+    --on-surface: #1a1a1a;
+    --on-surface-variant: #6b7280;
+    --success: #10b981;
+    --error: #ef4444;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+html {
+    scrollbar-gutter: stable;
+}
+
+body {
+    background: var(--background);
+    color: var(--on-surface);
+    line-height: 1.5;
+    font-weight: 400;
+    margin: 0;
+    padding: 0;
+}
+
+/* Layout */
+.agent-container {
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+    max-width: 1600px;
+}
+
+.agent-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+}
+
+.agent-grid {
+    display: flex;
+    gap: var(--spacing-lg);
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Typography */
+.agent-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--on-surface);
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.agent-subtitle {
+    font-size: 16px;
+    color: var(--on-surface-variant);
+    margin: 4px 0 0 0;
+}
+
+/* Widgets */
+.agent-widget {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    border: 1px solid var(--outline-variant);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.agent-widget:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.widget-large {
+    min-width: 400px;
+    flex: 1;
+}
+
+.widget-small {
+    min-width: 280px;
+    flex: 0 0 280px;
+}
+
+.widget-wide {
+    flex: 1 1 100%;
+    width: 100%;
+}
+
+.widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--outline-variant);
+}
+
+.widget-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--on-surface);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.widget-icon {
+    font-size: 20px;
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-variant);
+}
+
+.widget-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+/* Form Styles - From Social Ads Generator */
+.section-container {
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background: var(--surface-variant);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--outline-variant);
+}
+
+.section-subtitle {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--on-surface);
+    margin: 0 0 var(--spacing-lg) 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.section-subtitle::before {
+    content: '';
+    width: 3px;
+    height: 16px;
+    background: var(--primary);
+    border-radius: 2px;
+}
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-label {
+    display: block;
+    font-weight: 500;
+    color: var(--on-surface);
+    margin-bottom: var(--spacing-sm);
+    font-size: 14px;
+}
+
+.form-input, .form-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--outline-variant);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    line-height: 1.5;
+    background: var(--surface);
+    color: var(--on-surface);
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.form-input:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.form-input:hover, .form-textarea:hover {
+    border-color: var(--on-surface-variant);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.form-help {
+    color: var(--on-surface-variant);
+    font-size: 0.875rem;
+    margin-top: var(--spacing-xs);
+}
+
+.form-error {
+    color: var(--error);
+    font-size: 0.875rem;
+    margin-top: var(--spacing-xs);
+}
+
+.form-input.is-invalid, .form-textarea.is-invalid {
+    border-color: var(--error);
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.25;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    white-space: nowrap;
+    min-height: 44px;
+}
+
+.btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: var(--surface);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #333;
+}
+
+.btn-secondary {
+    background: var(--surface);
+    color: var(--on-surface);
+    border: 2px solid var(--outline);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--surface-variant);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-full {
+    width: 100%;
+    justify-content: center;
+}
+
+.btn-loading {
+    position: relative;
+    color: transparent;
+}
+
+.btn-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Processing Status */
+.processing-status {
+    background: var(--surface);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    text-align: center;
+    display: none;
+    margin-bottom: var(--spacing-lg);
+}
+
+.processing-status.active {
+    display: block;
+}
+
+.status-icon {
+    font-size: 48px;
+    margin-bottom: var(--spacing-md);
+    animation: pulse 2s infinite;
+}
+
+.status-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--on-surface);
+    margin-bottom: var(--spacing-sm);
+}
+
+.status-text {
+    font-size: 14px;
+    color: var(--on-surface-variant);
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Results */
+.results-card {
+    background: var(--surface);
+    border: 1px solid var(--outline);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-sm);
+    display: none;
+    margin-bottom: var(--spacing-lg);
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--outline);
+}
+
+.results-content {
+    background: var(--surface-variant);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.7;
+    color: var(--on-surface);
+    font-size: 15px;
+    white-space: pre-wrap;
+}
+
+.action-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+/* Info List */
+.info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: step-counter;
+}
+
+.info-list li {
+    padding: var(--spacing-sm) 0;
+    color: var(--on-surface-variant);
+    font-size: 14px;
+    border-bottom: 1px solid var(--outline-variant);
+    position: relative;
+    padding-left: var(--spacing-lg);
+}
+
+.info-list li:last-child {
+    border-bottom: none;
+}
+
+.info-list li::before {
+    content: counter(step-counter);
+    counter-increment: step-counter;
+    position: absolute;
+    left: 0;
+    top: var(--spacing-sm);
+    width: 20px;
+    height: 20px;
+    background: var(--primary);
+    color: var(--surface);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Quick Agent Toggle */
+.quick-agent-toggle {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    justify-content: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--surface);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-md);
+    color: var(--on-surface);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+}
+
+.quick-agent-toggle:hover {
+    border-color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.toggle-icon {
+    font-size: 16px;
+}
+
+/* Quick Agents Panel - From Prototype */
+.quick-agents-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.quick-agents-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.quick-agents-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(400px, 90vw);
+    height: 100vh;
+    background: var(--surface);
+    border-left: 1px solid var(--outline);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+}
+
+.quick-agents-panel.active {
+    transform: translateX(0);
+}
+
+.quick-agents-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--outline-variant);
+    background: var(--surface-variant);
+}
+
+.quick-agents-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--on-surface);
+}
+
+.close-panel {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--on-surface-variant);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+}
+
+.close-panel:hover {
+    background: var(--surface);
+    color: var(--on-surface);
+}
+
+.quick-agents-grid {
+    padding: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.quick-agent-card {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: var(--on-surface);
+    transition: all 0.2s ease;
+    background: var(--surface);
+}
+
+.quick-agent-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.agent-icon {
+    font-size: 24px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-variant);
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+}
+
+.agent-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.agent-info h4 {
+    margin: 0 0 4px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--on-surface);
+}
+
+.agent-info p {
+    margin: 0;
+    font-size: 12px;
+    color: var(--on-surface-variant);
+    line-height: 1.4;
+}
+
+.agent-price {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary);
+    background: rgba(0, 0, 0, 0.05);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    margin-top: 4px;
+    display: inline-block;
+}
+
+.quick-agents-footer {
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-top: 1px solid var(--outline-variant);
+    background: var(--surface-variant);
+}
+
+.view-all-agents {
+    display: block;
+    text-align: center;
+    padding: var(--spacing-md);
+    background: var(--primary);
+    color: white;
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.view-all-agents:hover {
+    background: #333333;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Toast Notifications */
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--surface);
+    border: 1px solid var(--outline);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    max-width: 400px;
+    font-size: 14px;
+    font-weight: 500;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+}
+
+.toast.show {
+    transform: translateX(0);
+}
+
+.toast.success {
+    border-color: var(--success);
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
+.toast.error {
+    border-color: var(--error);
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .agent-container {
+        padding: var(--spacing-md);
+    }
+    
+    .agent-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+    
+    .header-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .agent-title {
+        font-size: 24px;
+    }
+    
+    .agent-grid {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+    
+    .widget-large,
+    .widget-small {
+        min-width: auto;
+        flex: none;
+    }
+    
+    .quick-agents-panel {
+        width: 100%;
+        max-width: 100%;
+        right: 0;
+        left: 0;
+    }
+    
+    .widget-large {
+        margin-right: 0 !important;
+    }
+}
+</style>
+
+<script>
+// Email Writer - Common JavaScript Utilities from Template Prototype
+const EmailWriterModule = (function() {
+    'use strict';
+    
+    let currentPollInterval = null;
+    let resultsDisplayed = false;
+    
+    // Public utilities
+    const EmailWriterUtils = {
+        showToast(message, type = 'info') {
+            document.querySelectorAll('.toast').forEach(toast => toast.remove());
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        },
+
+        updateWalletBalance(newBalance) {
+            if (newBalance !== undefined) {
+                const walletBalance = document.getElementById('walletBalance');
+                if (walletBalance) {
+                    walletBalance.textContent = newBalance.toFixed(2);
+                }
+                window.currentWalletBalance = newBalance;
+            }
+        },
+
+        copyToClipboard(text, successMessage = 'Copied to clipboard!') {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    this.showToast(`📋 ${successMessage}`, 'success');
+                }).catch(() => {
+                    this.showToast('Failed to copy content', 'error');
+                });
+            } else {
+                this.showToast(`📋 ${successMessage}`, 'success');
+            }
+        },
+
+        downloadAsFile(text, filename, successMessage = 'File downloaded!') {
+            try {
+                const blob = new Blob([text], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename || `email-${Date.now()}.txt`;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                this.showToast(`💾 ${successMessage}`, 'success');
+            } catch (error) {
+                this.showToast('Failed to download file', 'error');
+            }
+        },
+
+        validateWalletBalance() {
+            const walletBalanceElement = document.getElementById('walletBalance');
+            const currentBalance = walletBalanceElement ? 
+                parseFloat(walletBalanceElement.textContent) : 0;
+            
+            if (currentBalance < 3.00) {
+                this.showToast('Insufficient wallet balance. Please top up your wallet.', 'error');
+                return false;
+            }
+            return true;
+        }
+    };
+    
+    return {
+        EmailWriterUtils,
+        setCurrentPollInterval(interval) { currentPollInterval = interval; },
+        clearCurrentPollInterval() {
+            if (currentPollInterval) {
+                clearInterval(currentPollInterval);
+                currentPollInterval = null;
+            }
+        },
+        setResultsDisplayed(value) { resultsDisplayed = value; },
+        getResultsDisplayed() { return resultsDisplayed; }
+    };
+})();
+
+// For backward compatibility
+const AgentUtils = EmailWriterModule.EmailWriterUtils;
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="agent-container">
+    <!-- Agent Header -->
+    {% include "components/agent_header.html" with agent_title="Email Writer" agent_subtitle="Generate professional emails with AI-powered content creation" %}
+
+    <!-- Quick Agent Access Panel -->
+    {% include "components/quick_agents_panel.html" %}
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="{% if message.tags == 'error' %}alert alert-error{% else %}alert{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <!-- Agent Grid -->
+    <div class="agent-grid">
+        <!-- Email Writer Form Widget -->
+        <div class="agent-widget widget-large" style="flex: 1; margin-right: clamp(0px, var(--spacing-lg), 2vw);">
+            <div class="widget-header">
+                <h3 class="widget-title">
+                    <span class="widget-icon">📧</span>
+                    Email Details
+                </h3>
+            </div>
+            <div class="widget-content">
+                
+                <form method="POST" id="emailWriterForm">
+                    {% csrf_token %}
+                    
+                    <!-- Email Type & Recipient Section -->
+                    <div class="section-container">
+                        <h4 class="section-subtitle">📬 Email Information</h4>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="email_type">📧 Email Type *</label>
+                            <select name="email_type" id="email_type" class="form-input" required aria-describedby="email_type_help">
+                                <option value="">Select email type...</option>
+                                <option value="business">Business Email</option>
+                                <option value="follow_up">Follow-up Email</option>
+                                <option value="complaint">Complaint Email</option>
+                                <option value="thank_you">Thank You Email</option>
+                                <option value="introduction">Introduction Email</option>
+                                <option value="meeting_request">Meeting Request</option>
+                                <option value="apology">Apology Email</option>
+                                <option value="announcement">Announcement</option>
+                            </select>
+                            <div id="email_type_help" class="form-help">Choose the type of email you want to generate</div>
+                            <div id="email_type-error" class="form-error" role="alert"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="recipient">👤 Recipient *</label>
+                            <input type="text" name="recipient" id="recipient" class="form-input" placeholder="Who are you writing to? (e.g., John Smith, Customer Service, etc.)" required aria-describedby="recipient_help">
+                            <div id="recipient_help" class="form-help">Enter the name or title of the person/team you're writing to</div>
+                            <div id="recipient-error" class="form-error" role="alert"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="subject">📝 Subject (Optional)</label>
+                            <input type="text" name="subject" id="subject" class="form-input" placeholder="Email subject line (leave blank to auto-generate)" aria-describedby="subject_help">
+                            <div id="subject_help" class="form-help">Optional - we can generate an appropriate subject line if left blank</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Content & Style Section -->
+                    <div class="section-container">
+                        <h4 class="section-subtitle">✍️ Content & Style</h4>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="main_message">📄 Main Message *</label>
+                            <textarea name="main_message" id="main_message" class="form-textarea" placeholder="What is the main purpose of this email? What do you want to communicate?" required aria-describedby="main_message_help" rows="4"></textarea>
+                            <div id="main_message_help" class="form-help">Describe the key points and purpose of your email</div>
+                            <div id="main_message-error" class="form-error" role="alert"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="tone">🎭 Tone</label>
+                            <select name="tone" id="tone" class="form-input" aria-describedby="tone_help">
+                                <option value="professional">Professional</option>
+                                <option value="friendly">Friendly</option>
+                                <option value="formal">Formal</option>
+                                <option value="casual">Casual</option>
+                            </select>
+                            <div id="tone_help" class="form-help">Choose the appropriate tone for your email</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="length">📏 Length</label>
+                            <select name="length" id="length" class="form-input" aria-describedby="length_help">
+                                <option value="short">Short (1-2 paragraphs)</option>
+                                <option value="medium" selected>Medium (3-4 paragraphs)</option>
+                                <option value="long">Long (5+ paragraphs)</option>
+                            </select>
+                            <div id="length_help" class="form-help">How detailed should the email be?</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Button -->
+                    <div style="margin-top: var(--spacing-lg);">
+                        {% if user.is_authenticated %}
+                            {% if user.wallet_balance >= 3.00 %}
+                                <button type="submit" class="btn btn-primary btn-full" id="processButton">
+                                    📧 Generate Email (3.00 AED)
+                                </button>
+                            {% else %}
+                                <div style="background: #fef2f2; color: #dc2626; padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); font-size: 14px; font-weight: 500; text-align: center;">
+                                    Insufficient balance! You need 3.00 AED.
+                                </div>
+                                <a href="{% url 'wallet:wallet' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
+                                    💰 Top Up Wallet
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'authentication:login' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
+                                🔑 Login to Continue
+                            </a>
+                        {% endif %}
+                    </div>
+                </form>
+                
+            </div>
+        </div>
+        
+        <!-- How It Works Widget -->
+        <div class="agent-widget widget-small" style="min-width: min(280px, 100%); max-width: min(280px, 100%); margin-left: auto;">
+            <div class="widget-header">
+                <h3 class="widget-title">
+                    <span class="widget-icon">ℹ️</span>
+                    How It Works
+                </h3>
+            </div>
+            <div class="widget-content">
+                <ol class="info-list">
+                    <li>Choose email type and recipient</li>
+                    <li>Describe your message and purpose</li>
+                    <li>Select tone and length preferences</li>
+                    <li>Get professional AI-generated email</li>
+                </ol>
+                
+                <!-- Quick Agents Toggle Button -->
+                <button class="quick-agent-toggle btn btn-secondary btn-full" onclick="toggleQuickAgents()" 
+                        title="Quick access to other agents"
+                        aria-label="Open quick access panel for other AI agents"
+                        aria-expanded="false"
+                        aria-controls="quickAgentsPanel"
+                        style="margin-top: var(--spacing-md);">
+                    <span class="toggle-icon" aria-hidden="true">🚀</span>
+                    <span class="toggle-text">Explore Other Agents</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Processing Status -->
+    {% include "components/processing_status.html" with status_title="Generating Email..." status_text="Creating professional email content..." %}
+    
+    <!-- Results -->
+    {% include "components/results_container.html" with results_title="Generated Email" %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Email Writer Form Validation and Processing
+    function isFormValid() {
+        const emailType = document.getElementById('email_type').value;
+        const recipient = document.getElementById('recipient').value.trim();
+        const mainMessage = document.getElementById('main_message').value.trim();
+        
+        let isValid = true;
+        
+        // Clear previous errors
+        document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
+        document.querySelectorAll('.form-input, .form-textarea').forEach(el => el.classList.remove('is-invalid'));
+        
+        // Validate email type
+        if (!emailType) {
+            showFieldError('email_type', 'Please select an email type');
+            isValid = false;
+        }
+        
+        // Validate recipient
+        if (!recipient) {
+            showFieldError('recipient', 'Please enter the recipient name');
+            isValid = false;
+        } else if (recipient.length < 2) {
+            showFieldError('recipient', 'Recipient name must be at least 2 characters');
+            isValid = false;
+        }
+        
+        // Validate main message
+        if (!mainMessage) {
+            showFieldError('main_message', 'Please describe the main message');
+            isValid = false;
+        } else if (mainMessage.length < 10) {
+            showFieldError('main_message', 'Main message must be at least 10 characters long');
+            isValid = false;
+        }
+        
+        return isValid;
+    }
+    
+    function showFieldError(fieldName, message) {
+        const field = document.getElementById(fieldName);
+        const errorElement = document.getElementById(`${fieldName}-error`);
+        
+        if (field) {
+            field.classList.add('is-invalid');
+        }
+        
+        if (errorElement) {
+            errorElement.textContent = message;
+        }
+    }
+    
+    // Copy email to clipboard
+    function copyResults() {
+        const emailContent = document.getElementById('resultsContent');
+        const text = emailContent ? (emailContent.innerText || emailContent.textContent || '') : '';
+        AgentUtils.copyToClipboard(text, 'Email copied to clipboard!');
+    }
+    
+    // Download email as text file
+    function downloadResults() {
+        const emailContent = document.getElementById('resultsContent');
+        const text = emailContent ? (emailContent.innerText || emailContent.textContent || '') : '';
+        AgentUtils.downloadAsFile(text, `email-${Date.now()}.txt`, 'Email downloaded!');
+    }
+
+    // Reset form
+    function resetForm() {
+        EmailWriterModule.clearCurrentPollInterval();
+        EmailWriterModule.setResultsDisplayed(false);
+        
+        document.getElementById('emailWriterForm').reset();
+        
+        // Clear validation errors
+        document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
+        document.querySelectorAll('.form-input, .form-textarea').forEach(el => el.classList.remove('is-invalid'));
+        
+        // Hide status and results
+        document.getElementById('processingStatus').style.display = 'none';
+        document.getElementById('resultsContainer').style.display = 'none';
+        
+        const processButton = document.getElementById('processButton');
+        processButton.disabled = false;
+        processButton.classList.remove('btn-loading');
+        processButton.innerHTML = '📧 Generate Email (3.00 AED)';
+        
+        AgentUtils.showToast('Form reset! Ready for another email.', 'success');
+    }
+
+    // Display email results
+    function displayResults(result) {
+        const resultsContainer = document.getElementById('resultsContainer');
+        const contentElement = document.getElementById('resultsContent');
+        
+        if (!resultsContainer || !contentElement) {
+            console.error('Results elements not found');
+            return;
+        }
+        
+        // Update wallet balance if provided
+        if (result.wallet_balance !== undefined) {
+            AgentUtils.updateWalletBalance(result.wallet_balance);
+        }
+        
+        // Handle errors
+        if (result.error) {
+            AgentUtils.showToast(`❌ ${result.error}`, 'error');
+            return;
+        }
+        
+        // Handle failed status
+        if (result.status === 'failed') {
+            AgentUtils.showToast('❌ Failed to generate email - no charge applied', 'error');
+            return;
+        }
+        
+        // Extract email content
+        let content = '';
+        if (result.email_content && typeof result.email_content === 'string') {
+            content = result.email_content;
+        } else if (result.content && typeof result.content === 'string') {
+            content = result.content;
+        } else {
+            content = 'Email generated successfully!';
+        }
+        
+        // Update content
+        contentElement.textContent = content;
+        
+        // Show results
+        resultsContainer.style.display = 'block';
+        resultsContainer.scrollIntoView({ behavior: 'smooth' });
+        
+        // Show success message
+        const successMessage = result.success ? '✅ Email created and payment processed!' : '✅ Email generated!';
+        AgentUtils.showToast(successMessage, 'success');
+    }
+    
+    // Poll for results
+    function pollForResults(requestId) {
+        let pollCount = 0;
+        const maxPolls = 30;
+        EmailWriterModule.setResultsDisplayed(false);
+        
+        EmailWriterModule.clearCurrentPollInterval();
+        
+        const pollInterval = setInterval(() => {
+            pollCount++;
+            
+            fetch(`/agents/email-writer/status/${requestId}/`, {
+                credentials: 'same-origin'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    if (result.status === 'completed' || result.status === 'failed') {
+                        clearInterval(pollInterval);
+                        EmailWriterModule.setCurrentPollInterval(null);
+                        
+                        // Reset UI
+                        document.getElementById('processingStatus').style.display = 'none';
+                        const processButton = document.getElementById('processButton');
+                        processButton.disabled = false;
+                        processButton.classList.remove('btn-loading');
+                        processButton.innerHTML = '📧 Generate Email (3.00 AED)';
+                        
+                        // Display results only once
+                        if (!EmailWriterModule.getResultsDisplayed()) {
+                            EmailWriterModule.setResultsDisplayed(true);
+                            displayResults(result);
+                        }
+                    } else if (pollCount >= maxPolls) {
+                        clearInterval(pollInterval);
+                        EmailWriterModule.setCurrentPollInterval(null);
+                        
+                        document.getElementById('processingStatus').style.display = 'none';
+                        const processButton = document.getElementById('processButton');
+                        processButton.disabled = false;
+                        processButton.classList.remove('btn-loading');
+                        processButton.innerHTML = '📧 Generate Email (3.00 AED)';
+                        
+                        AgentUtils.showToast('❌ Processing timeout - please try again', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error polling results:', error);
+                    clearInterval(pollInterval);
+                    EmailWriterModule.setCurrentPollInterval(null);
+                    
+                    document.getElementById('processingStatus').style.display = 'none';
+                    const processButton = document.getElementById('processButton');
+                    processButton.disabled = false;
+                    processButton.classList.remove('btn-loading');
+                    processButton.innerHTML = '📧 Generate Email (3.00 AED)';
+                    
+                    AgentUtils.showToast('❌ Network error during processing - please try again', 'error');
+                });
+        }, 1000);
+        
+        EmailWriterModule.setCurrentPollInterval(pollInterval);
+    }
+    
+    // Handle form submission
+    document.getElementById('emailWriterForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!isFormValid()) {
+            AgentUtils.showToast('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        // Check user authentication
+        {% if not user.is_authenticated %}
+        window.location.href = "{% url 'authentication:login' %}";
+        return;
+        {% endif %}
+        
+        // Check wallet balance
+        if (!AgentUtils.validateWalletBalance()) {
+            setTimeout(() => {
+                window.location.href = "{% url 'wallet:wallet' %}";
+            }, 2000);
+            return;
+        }
+
+        // Clear any existing polling
+        EmailWriterModule.clearCurrentPollInterval();
+        EmailWriterModule.setResultsDisplayed(false);
+
+        // Show processing status
+        document.getElementById('processingStatus').style.display = 'block';
+        const processButton = document.getElementById('processButton');
+        processButton.disabled = true;
+        processButton.classList.add('btn-loading');
+        processButton.innerHTML = '⏳ Processing...';
+        document.getElementById('resultsContainer').style.display = 'none';
+        
+        const steps = [
+            'Analyzing email requirements...',
+            'Selecting appropriate tone and style...',
+            'Crafting professional content...',
+            'Optimizing for clarity and impact...',
+            'Finalizing email structure...'
+        ];
+        
+        let currentStep = 0;
+        const stepInterval = setInterval(() => {
+            if (currentStep < steps.length) {
+                document.getElementById('statusText').textContent = steps[currentStep];
+                currentStep++;
+            } else {
+                clearInterval(stepInterval);
+            }
+        }, 800);
+
+        // Submit form via AJAX
+        const formData = new FormData(this);
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(result => {
+            clearInterval(stepInterval);
+            if (result.success && result.request_id) {
+                // Start polling for results
+                pollForResults(result.request_id);
+            } else {
+                // Handle immediate response
+                document.getElementById('processingStatus').style.display = 'none';
+                processButton.disabled = false;
+                processButton.classList.remove('btn-loading');
+                processButton.innerHTML = '📧 Generate Email (3.00 AED)';
+                
+                if (result.error) {
+                    AgentUtils.showToast(`❌ ${result.error}`, 'error');
+                } else {
+                    displayResults(result);
+                }
+            }
+        })
+        .catch(error => {
+            clearInterval(stepInterval);
+            console.error('Error:', error);
+            document.getElementById('processingStatus').style.display = 'none';
+            processButton.disabled = false;
+            processButton.classList.remove('btn-loading');
+            processButton.innerHTML = '📧 Generate Email (3.00 AED)';
+            AgentUtils.showToast('❌ Network error - please try again', 'error');
+        });
+    });
+    
+    // Quick Agent Access Toggle Functions (from template prototype)
+    function toggleQuickAgents() {
+        const panel = document.getElementById('quickAgentsPanel');
+        const overlay = document.getElementById('quickAgentsOverlay');
+        const toggle = document.querySelector('.quick-agent-toggle');
+        
+        const isActive = panel.classList.contains('active');
+        
+        if (isActive) {
+            panel.classList.remove('active');
+            overlay.classList.remove('active');
+            toggle.classList.remove('active');
+            toggle.setAttribute('aria-expanded', 'false');
+            panel.setAttribute('aria-hidden', 'true');
+            overlay.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = 'auto';
+        } else {
+            panel.classList.add('active');
+            overlay.classList.add('active');
+            toggle.classList.add('active');
+            toggle.setAttribute('aria-expanded', 'true');
+            panel.setAttribute('aria-hidden', 'false');
+            overlay.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeQuickAgents() {
+        const panel = document.getElementById('quickAgentsPanel');
+        const overlay = document.getElementById('quickAgentsOverlay');
+        const toggle = document.querySelector('.quick-agent-toggle');
+        
+        if (panel && overlay && toggle) {
+            panel.classList.remove('active');
+            overlay.classList.remove('active');
+            toggle.classList.remove('active');
+            toggle.setAttribute('aria-expanded', 'false');
+            panel.setAttribute('aria-hidden', 'true');
+            overlay.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = 'auto';
+        }
+    }
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const panel = document.getElementById('quickAgentsPanel');
+            if (panel && panel.classList.contains('active')) {
+                closeQuickAgents();
+            }
+        }
+    });
+</script>
+{% endblock %}
