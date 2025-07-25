@@ -4,6 +4,9 @@ from django.conf import settings
 from .models import FiveWhysAnalyzerRequest, FiveWhysAnalyzerResponse
 import json
 import uuid
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class FiveWhysAnalyzerProcessor(StandardWebhookProcessor):
@@ -12,6 +15,43 @@ class FiveWhysAnalyzerProcessor(StandardWebhookProcessor):
     agent_slug = 'five-whys-analyzer'
     webhook_url = 'https://m8taq6tk.rpcld.cc/webhook/5-whys-web'
     agent_id = 'five-whys-001'
+    
+    # Security settings
+    webhook_timeout = 30  # seconds
+    max_retries = 2
+    
+    def make_secure_webhook_request(self, payload):
+        """Make a secure webhook request with timeout and logging"""
+        import requests
+        
+        try:
+            logger.info(f"Making webhook request to {self.webhook_url} for agent {self.agent_id}")
+            
+            response = requests.post(
+                self.webhook_url,
+                json=payload,
+                timeout=self.webhook_timeout,
+                headers={
+                    'Content-Type': 'application/json',
+                    'User-Agent': f'QuantumTasksAI-{self.agent_slug}/1.0'
+                }
+            )
+            
+            response.raise_for_status()
+            response_data = response.json()
+            
+            logger.info(f"Webhook request successful for agent {self.agent_id}")
+            return response_data
+            
+        except requests.exceptions.Timeout:
+            logger.error(f"Webhook timeout for agent {self.agent_id}")
+            raise Exception("Service temporarily unavailable")
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Webhook request failed for agent {self.agent_id}: {str(e)}")
+            raise Exception("External service error")
+        except ValueError as e:  # JSON decode error
+            logger.error(f"Invalid webhook response format for agent {self.agent_id}: {str(e)}")
+            raise Exception("Invalid service response")
     
     def process_response(self, response_data, request_obj):
         """Required implementation of abstract method - delegates to specific handlers"""
@@ -41,7 +81,8 @@ class FiveWhysAnalyzerProcessor(StandardWebhookProcessor):
         try:
             agent = BaseAgent.objects.get(slug=self.agent_slug)
         except BaseAgent.DoesNotExist:
-            raise Exception(f"Agent with slug '{self.agent_slug}' not found")
+            logger.error(f"Agent with slug '{self.agent_slug}' not found")
+            raise Exception("Service configuration error")
         
         # Get or create request object for this session
         request_obj, created = FiveWhysAnalyzerRequest.objects.get_or_create(
@@ -77,7 +118,7 @@ class FiveWhysAnalyzerProcessor(StandardWebhookProcessor):
         }
         
         # Send to webhook
-        response_data = self.make_request(chat_payload)
+        response_data = self.make_secure_webhook_request(chat_payload)
         
         # Process chat response (no wallet deduction)
         return self.process_chat_response(response_data, request_obj, user_message)
@@ -95,7 +136,8 @@ class FiveWhysAnalyzerProcessor(StandardWebhookProcessor):
         try:
             agent = BaseAgent.objects.get(slug=self.agent_slug)
         except BaseAgent.DoesNotExist:
-            raise Exception(f"Agent with slug '{self.agent_slug}' not found")
+            logger.error(f"Agent with slug '{self.agent_slug}' not found")
+            raise Exception("Service configuration error")
         
         # Get existing session or create new one
         try:
@@ -134,7 +176,7 @@ class FiveWhysAnalyzerProcessor(StandardWebhookProcessor):
         }
         
         # Send to webhook
-        response_data = self.make_request(report_payload)
+        response_data = self.make_secure_webhook_request(report_payload)
         
         # Process report response (with wallet deduction)
         return self.process_report_response(response_data, request_obj)
@@ -180,9 +222,10 @@ class FiveWhysAnalyzerProcessor(StandardWebhookProcessor):
             return response_obj
             
         except Exception as e:
+            logger.error(f"Failed to process chat response: {str(e)}")
             request_obj.status = 'failed'
             request_obj.save()
-            raise Exception(f"Failed to process chat response: {e}")
+            raise Exception("Chat processing failed")
     
     def process_report_response(self, response_data, request_obj):
         """Process report generation response - deduct wallet after success"""
@@ -238,9 +281,10 @@ class FiveWhysAnalyzerProcessor(StandardWebhookProcessor):
             return response_obj
             
         except Exception as e:
+            logger.error(f"Failed to process report response: {str(e)}")
             request_obj.status = 'failed'
             request_obj.save()
-            raise Exception(f"Failed to process report response: {e}")
+            raise Exception("Report generation failed")
     
     def prepare_message_text(self, **kwargs):
         """Legacy method for compatibility"""
