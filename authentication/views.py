@@ -18,29 +18,21 @@ logger = logging.getLogger(__name__)
 
 def validate_password_strength(password):
     """Validate password strength on backend"""
-    errors = []
-    
-    if len(password) < 8:
-        errors.append("Password must be at least 8 characters long")
-    
-    if not any(c.islower() for c in password):
-        errors.append("Password must contain at least one lowercase letter")
-    
-    if not any(c.isupper() for c in password):
-        errors.append("Password must contain at least one uppercase letter")
-    
-    if not any(c.isdigit() for c in password):
-        errors.append("Password must contain at least one number")
-    
-    if not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
-        errors.append("Password must contain at least one special character")
+    # Check all requirements
+    has_length = len(password) >= 8
+    has_lower = any(c.islower() for c in password)
+    has_upper = any(c.isupper() for c in password)
+    has_digit = any(c.isdigit() for c in password)
+    has_special = any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password)
     
     # Check for common weak passwords
     common_passwords = ['password', '12345678', 'qwerty', 'abc123', 'password123', '123456789']
-    if password.lower() in common_passwords:
-        errors.append("Password is too common and easily guessable")
+    is_common = password.lower() in common_passwords
     
-    return errors
+    if not (has_length and has_lower and has_upper and has_digit and has_special) or is_common:
+        return ["Password must be at least 8 characters with uppercase, lowercase, number, and special character"]
+    
+    return []
 
 
 def send_verification_email(user):
