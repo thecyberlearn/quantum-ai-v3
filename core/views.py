@@ -1,28 +1,212 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.http import JsonResponse
+from django.core.mail import send_mail
+from django.conf import settings
+from django_ratelimit.decorators import ratelimit
+from django_ratelimit import UNSAFE
 from agent_base.models import BaseAgent
+from .models import ContactSubmission
+import logging
+import re
+
+logger = logging.getLogger(__name__)
+@ratelimit(key='ip', rate='60/m', method='GET', block=False)
 def homepage_view(request):
-    """Homepage view with agent system"""
-    # Get featured agents for homepage
-    featured_agents = BaseAgent.objects.filter(is_active=True).order_by('name')[:6]
+    """Homepage view with agent system and rate limiting"""
+    # Check if rate limited
+    if getattr(request, 'limited', False):
+        logger.warning(f"Homepage rate limit exceeded for IP {request.META.get('REMOTE_ADDR')}")
+        messages.warning(request, 'Too many requests. Please wait a moment before refreshing.')
     
-    context = {
-        'user_balance': request.user.wallet_balance if request.user.is_authenticated else 0,
-        'featured_agents': featured_agents,
-    }
-    
-    return render(request, 'core/homepage.html', context)
+    try:
+        # Get featured agents for homepage with safe querying
+        featured_agents = BaseAgent.objects.filter(is_active=True).order_by('name')[:6]
+        
+        context = {
+            'user_balance': request.user.wallet_balance if request.user.is_authenticated else 0,
+            'featured_agents': featured_agents,
+        }
+        
+        return render(request, 'core/homepage.html', context)
+        
+    except Exception as e:
+        logger.error(f"Homepage view error: {e}")
+        messages.error(request, 'Unable to load homepage. Please try again.')
+        return render(request, 'core/homepage.html', {'featured_agents': [], 'user_balance': 0})
+@ratelimit(key='ip', rate='60/m', method='GET', block=False)
 def pricing_view(request):
-    """Pricing page for non-logged-in users"""
+    """Pricing page for non-logged-in users with rate limiting"""
+    # Check if rate limited
+    if getattr(request, 'limited', False):
+        logger.warning(f"Pricing page rate limit exceeded for IP {request.META.get('REMOTE_ADDR')}")
+        messages.warning(request, 'Too many requests. Please wait a moment before refreshing.')
+    
     # If user is already logged in, redirect to wallet top-up
     if request.user.is_authenticated:
         return redirect('wallet:wallet_topup')
     
-    # Get sample agents to show pricing context
-    sample_agents = BaseAgent.objects.filter(is_active=True).order_by('name')[:4]
+    try:
+        # Get sample agents to show pricing context with safe querying
+        sample_agents = BaseAgent.objects.filter(is_active=True).order_by('name')[:4]
+        
+        context = {
+            'sample_agents': sample_agents,
+        }
+        
+        return render(request, 'core/pricing.html', context)
+        
+    except Exception as e:
+        logger.error(f"Pricing view error: {e}")
+        messages.error(request, 'Unable to load pricing page. Please try again.')
+        return render(request, 'core/pricing.html', {'sample_agents': []})
+
+
+def validate_contact_input(name, email, message, company=""):
+    """Validate and sanitize contact form input"""
+    errors = []
     
-    context = {
-        'sample_agents': sample_agents,
-    }
+    # Name validation
+    if not name or len(name.strip()) < 2:
+        errors.append("Name must be at least 2 characters long")
+    elif len(name) > 100:
+        errors.append("Name must be less than 100 characters")
+    elif not re.match(r'^[a-zA-Z\s\-\.\']+$', name):
+        errors.append("Name contains invalid characters")
     
-    return render(request, 'core/pricing.html', context)
+    # Email validation (Django handles basic format)
+    if not email or len(email) > 254:
+        errors.append("Please provide a valid email address")
+    
+    # Message validation
+    if not message or len(message.strip()) < 10:
+        errors.append("Message must be at least 10 characters long")
+    elif len(message) > 1000:
+        errors.append("Message must be less than 1000 characters")
+    
+    # Company validation (optional)
+    if company and len(company) > 100:
+        errors.append("Company name must be less than 100 characters")
+    
+    # Check for potential spam indicators
+    spam_keywords = ['viagra', 'casino', 'lottery', 'winner', 'congratulations', 'million dollars']
+    message_lower = message.lower()
+    if any(keyword in message_lower for keyword in spam_keywords):
+        errors.append("Message contains prohibited content")
+    
+    return errors
+
+
+def send_contact_notification(submission):
+    """Send notification email for new contact submission"""
+    try:
+        subject = f'New Contact Form Submission from {submission.name}'
+        message = f'''
+New contact form submission received:
+
+Name: {submission.name}
+Email: {submission.email}
+Company: {submission.company or 'Not provided'}
+IP Address: {submission.ip_address}
+Submitted: {submission.created_at.strftime('%Y-%m-%d %H:%M:%S UTC')}
+
+Message:
+{submission.message}
+
+---
+This is an automated notification from Quantum Tasks AI contact form.
+        '''
+        
+        # Send to admin email
+        admin_email = getattr(settings, 'ADMIN_EMAIL', 'abhay@quantumtaskai.com')
+        
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[admin_email],
+            fail_silently=False,
+        )
+        
+        logger.info(f"Contact notification sent for submission from {submission.email}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to send contact notification: {e}")
+        return False
+
+
+@ratelimit(key='ip', rate='3/m', method='POST', block=False)
+def contact_form_view(request):
+    """Handle contact form submission with security and rate limiting"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+    
+    # Check if rate limited
+    if getattr(request, 'limited', False):
+        logger.warning(f"Contact form rate limit exceeded for IP {request.META.get('REMOTE_ADDR')}")
+        return JsonResponse({
+            'success': False, 
+            'error': 'Too many contact form submissions. Please try again in a few minutes.'
+        }, status=429)
+    
+    try:
+        # Get form data
+        name = request.POST.get('name', '').strip()
+        email = request.POST.get('email', '').strip()
+        company = request.POST.get('company', '').strip()
+        message = request.POST.get('message', '').strip()
+        
+        # Validate input
+        validation_errors = validate_contact_input(name, email, message, company)
+        if validation_errors:
+            logger.warning(f"Contact form validation failed from IP {request.META.get('REMOTE_ADDR')}: {validation_errors}")
+            return JsonResponse({
+                'success': False,
+                'error': 'Please correct the following errors: ' + ', '.join(validation_errors)
+            }, status=400)
+        
+        # Check for duplicate submissions (same email/IP in last hour)
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        recent_submission = ContactSubmission.objects.filter(
+            ip_address=request.META.get('REMOTE_ADDR'),
+            created_at__gte=timezone.now() - timedelta(hours=1)
+        ).first()
+        
+        if recent_submission:
+            logger.warning(f"Duplicate contact submission attempted from IP {request.META.get('REMOTE_ADDR')}")
+            return JsonResponse({
+                'success': False,
+                'error': 'You have already submitted a contact form recently. Please wait before submitting again.'
+            }, status=429)
+        
+        # Create submission
+        submission = ContactSubmission.objects.create(
+            name=name,
+            email=email,
+            company=company,
+            message=message,
+            ip_address=request.META.get('REMOTE_ADDR', ''),
+            user_agent=request.META.get('HTTP_USER_AGENT', '')[:500]  # Truncate user agent
+        )
+        
+        # Send notification email
+        email_sent = send_contact_notification(submission)
+        
+        logger.info(f"Contact form submitted successfully from {email} (IP: {request.META.get('REMOTE_ADDR')})")
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Thank you for your message! We will get back to you within 24 hours.',
+            'email_sent': email_sent
+        })
+        
+    except Exception as e:
+        logger.error(f"Contact form processing error: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Unable to process your message at this time. Please try again later.'
+        }, status=500)
