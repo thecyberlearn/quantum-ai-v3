@@ -5,6 +5,8 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/agent-base.css' %}?v={{ timestamp }}">
+<!-- Security: Content Security Policy -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; img-src 'self' data:; connect-src 'self';">
 {% endblock %}
 
 {% block content %}
@@ -16,7 +18,7 @@
         document.body.setAttribute('data-wallet-url', '{% url "wallet:wallet" %}');
         
         // Initialize agent configuration
-        window.AGENT_PRICE = {{ agent.price }};
+        window.AGENT_PRICE = parseFloat('{{ agent.price }}');
     });
 </script>
 <script>
@@ -140,6 +142,21 @@
                 closeQuickAgents();
             }
         });
+
+        // Security: HTML escaping function
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Security: Safe DOM content creation
+        function createSecureElement(tagName, className, textContent) {
+            const element = document.createElement(tagName);
+            if (className) element.className = className;
+            if (textContent) element.textContent = textContent;
+            return element;
+        }
 
         // Initialize accessibility features
         document.addEventListener('DOMContentLoaded', function() {
@@ -349,30 +366,132 @@
         return required.every(id => document.getElementById(id).value.trim());
     }
 
-    // Display results
+    // Display results with secure formatting
     function displayResults(result) {
         const resultsContainer = document.getElementById('resultsContainer');
         const contentElement = document.getElementById('resultsContent');
+        const processingStatus = document.getElementById('processingStatus');
         
-        if (result.wallet_balance !== undefined) {
-            updateWalletBalance(result.wallet_balance);
+        if (result.success) {
+            // Hide processing status
+            hideProcessing();
+            
+            // Update wallet balance if provided
+            if (result.wallet_balance !== undefined) {
+                updateWalletBalance(result.wallet_balance);
+            }
+            
+            // Get job posting content
+            const jobContent = result.job_posting_content || result.content || 'Job posting generated successfully!';
+            
+            if (contentElement) {
+                // Clear existing content safely
+                contentElement.textContent = '';
+                
+                // Create secure container
+                const jobContainer = createSecureElement('div', 'job-posting-content');
+                
+                // Parse content securely line by line
+                const lines = jobContent.split('\n');
+                let currentParagraph = null;
+                let currentList = null;
+                
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    
+                    if (!line) {
+                        // Empty line - end current paragraph/list
+                        if (currentParagraph) {
+                            jobContainer.appendChild(currentParagraph);
+                            currentParagraph = null;
+                        }
+                        if (currentList) {
+                            jobContainer.appendChild(currentList);
+                            currentList = null;
+                        }
+                        continue;
+                    }
+                    
+                    // Check for headers (markdown style **text**)
+                    const headerMatch = line.match(/^\*\*([^*]+)\*\*$/);
+                    if (headerMatch) {
+                        // End current elements
+                        if (currentParagraph) {
+                            jobContainer.appendChild(currentParagraph);
+                            currentParagraph = null;
+                        }
+                        if (currentList) {
+                            jobContainer.appendChild(currentList);
+                            currentList = null;
+                        }
+                        
+                        // Create secure header
+                        const header = createSecureElement('h3', 'job-section-title', headerMatch[1]);
+                        jobContainer.appendChild(header);
+                        continue;
+                    }
+                    
+                    // Check for bullet points
+                    const bulletMatch = line.match(/^-\s+(.+)$/);
+                    if (bulletMatch) {
+                        // End current paragraph
+                        if (currentParagraph) {
+                            jobContainer.appendChild(currentParagraph);
+                            currentParagraph = null;
+                        }
+                        
+                        // Create or continue list
+                        if (!currentList) {
+                            currentList = createSecureElement('ul', 'job-list');
+                        }
+                        
+                        const listItem = createSecureElement('li', null, bulletMatch[1]);
+                        currentList.appendChild(listItem);
+                        continue;
+                    }
+                    
+                    // Regular text - add to paragraph
+                    if (currentList) {
+                        jobContainer.appendChild(currentList);
+                        currentList = null;
+                    }
+                    
+                    if (!currentParagraph) {
+                        currentParagraph = createSecureElement('p', 'job-paragraph');
+                    } else {
+                        // Add line break for multi-line paragraphs
+                        currentParagraph.appendChild(document.createElement('br'));
+                    }
+                    
+                    currentParagraph.appendChild(document.createTextNode(line));
+                }
+                
+                // Add any remaining elements
+                if (currentParagraph) {
+                    jobContainer.appendChild(currentParagraph);
+                }
+                if (currentList) {
+                    jobContainer.appendChild(currentList);
+                }
+                
+                // Safely append to DOM
+                contentElement.appendChild(jobContainer);
+            }
+            
+            // Show results container with animation
+            if (resultsContainer) {
+                resultsContainer.style.display = 'block';
+                resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            
+            showToast('✅ Job posting created successfully!', 'success');
+            
+        } else {
+            // Handle error case
+            hideProcessing();
+            const errorMsg = result.error || result.error_message || 'Failed to generate job posting';
+            showToast(`❌ ${escapeHtml(errorMsg)}`, 'error');
         }
-        
-        if (result.error) {
-            showToast(`❌ ${result.error}`, 'error');
-            return;
-        }
-        
-        let content = result.job_posting_content || result.content || 'Job posting generated successfully!';
-        if (contentElement) {
-            contentElement.innerHTML = `<pre style="white-space: pre-wrap; word-wrap: break-word;">${content}</pre>`;
-        }
-        
-        if (resultsContainer) {
-            resultsContainer.style.display = 'block';
-            resultsContainer.scrollIntoView({ behavior: 'smooth' });
-        }
-        showToast('✅ Job posting created successfully!', 'success');
     }
 
     // Poll for results
@@ -478,20 +597,47 @@
         });
     });
 
-    // Add functions expected by the results component
+    // Enhanced copy and download functions
     function copyResults() {
         const content = document.getElementById('resultsContent');
         if (content) {
+            // Get clean text content without HTML formatting
             const text = content.textContent || content.innerText || '';
-            copyToClipboard(text, 'Job posting copied to clipboard!');
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('📋 Job posting copied to clipboard!', 'success');
+            }).catch(() => {
+                showToast('❌ Failed to copy to clipboard', 'error');
+            });
+        } else {
+            showToast('❌ No job posting content to copy', 'error');
         }
     }
 
     function downloadResults() {
         const content = document.getElementById('resultsContent');
         if (content) {
+            // Get clean text content without HTML formatting
             const text = content.textContent || content.innerText || '';
-            downloadAsFile(text, `job-posting-${Date.now()}.txt`, 'Job posting downloaded!');
+            
+            // Create filename with current date and job title if available
+            const jobTitle = document.getElementById('job_title')?.value || 'job-posting';
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+            const filename = `${jobTitle.toLowerCase().replace(/\s+/g, '-')}-${timestamp}.txt`;
+            
+            // Create and download file
+            const blob = new Blob([text], { type: 'text/plain; charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('💾 Job posting downloaded!', 'success');
+        } else {
+            showToast('❌ No job posting content to download', 'error');
         }
     }
 
@@ -502,4 +648,98 @@
         document.getElementById('processButton').disabled = false;
     }
 </script>
+
+<style>
+/* Job Posting Results Styling */
+.job-posting-content {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.6;
+    color: var(--text-primary);
+    max-width: none;
+}
+
+.job-section-title {
+    color: var(--primary-color);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 1.5rem 0 0.75rem 0 !important;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.job-section-title:first-child {
+    margin-top: 0 !important;
+}
+
+.job-paragraph {
+    margin: 1rem 0;
+    text-align: justify;
+    color: var(--text-primary);
+}
+
+.job-list {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.job-list li {
+    margin: 0.5rem 0;
+    line-height: 1.5;
+    color: var(--text-primary);
+}
+
+.job-list li::marker {
+    color: var(--primary-color);
+}
+
+/* Enhanced results container */
+#resultsContainer .results-content {
+    background: var(--background-subtle);
+    border-radius: 8px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+/* Action buttons styling */
+.results-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.results-actions .btn {
+    flex: 1;
+    min-width: 140px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .job-section-title {
+        font-size: 1.1rem;
+    }
+    
+    .results-actions {
+        flex-direction: column;
+    }
+    
+    .results-actions .btn {
+        flex: none;
+        width: 100%;
+    }
+}
+
+/* Loading animation for smooth transitions */
+#resultsContainer {
+    transition: opacity 0.3s ease-in-out;
+}
+
+#resultsContainer[style*="display: none"] {
+    opacity: 0;
+}
+
+#resultsContainer[style*="display: block"] {
+    opacity: 1;
+}
+</style>
 {% endblock %}
