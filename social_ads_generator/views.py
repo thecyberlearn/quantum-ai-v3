@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+import logging
 from django.contrib import messages
 from django.http import JsonResponse
 from agent_base.models import BaseAgent
@@ -7,6 +8,7 @@ from .models import SocialAdsGeneratorRequest, SocialAdsGeneratorResponse
 from .processor import SocialAdsGeneratorProcessor
 
 
+@login_required
 def social_ads_generator_detail(request):
     """Detail page for Social Ads Generator agent"""
     try:
@@ -26,15 +28,46 @@ def social_ads_generator_detail(request):
                 return JsonResponse({'error': 'Insufficient wallet balance'}, status=400)
             
             try:
+                # Validate and sanitize input data
+                description = request.POST.get('description', '').strip()
+                social_platform = request.POST.get('social_platform', 'facebook')
+                include_emoji = request.POST.get('include_emoji') == 'yes'
+                language = request.POST.get('language', 'English')
+                
+                # Server-side validation
+                validation_errors = []
+                
+                # Validate description
+                if not description:
+                    validation_errors.append('Description is required')
+                elif len(description) < 10:
+                    validation_errors.append('Description must be at least 10 characters long')
+                elif len(description) > 5000:
+                    validation_errors.append('Description must be less than 5000 characters')
+                
+                # Validate social platform
+                valid_platforms = ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok', 'youtube']
+                if social_platform not in valid_platforms:
+                    validation_errors.append('Invalid social media platform selected')
+                
+                # Validate language
+                valid_languages = ['English', 'Arabic', 'Spanish', 'French', 'German', 'Chinese']
+                if language not in valid_languages:
+                    validation_errors.append('Invalid language selected')
+                
+                # Return validation errors if any
+                if validation_errors:
+                    return JsonResponse({'error': '; '.join(validation_errors)}, status=400)
+                
                 # Create request object (no wallet deduction yet)
                 agent_request = SocialAdsGeneratorRequest.objects.create(
                     user=request.user,
                     agent=agent,
                     cost=agent.price,
-                    description=request.POST.get('description'),
-                    social_platform=request.POST.get('social_platform', 'facebook'),
-                    include_emoji=request.POST.get('include_emoji') == 'yes',
-                    language=request.POST.get('language', 'English'),
+                    description=description,
+                    social_platform=social_platform,
+                    include_emoji=include_emoji,
+                    language=language,
                 )
                 
                 # Process request
@@ -55,7 +88,12 @@ def social_ads_generator_detail(request):
                 })
                 
             except Exception as e:
-                return JsonResponse({'error': str(e)}, status=500)
+                # Log detailed error for debugging (server-side only)
+                logger = logging.getLogger(__name__)
+                logger.error(f"Social ads generation failed for user {request.user.id}: {str(e)}", exc_info=True)
+                
+                # Return generic error message to client
+                return JsonResponse({'error': 'Processing failed. Please try again later.'}, status=500)
         
         # Regular form submission (redirect to avoid resubmission)
         return redirect('social_ads_generator:detail')
@@ -112,44 +150,9 @@ def social_ads_generator_status(request, request_id):
     except SocialAdsGeneratorRequest.DoesNotExist:
         return JsonResponse({'error': 'Request not found'}, status=404)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
-
-@login_required
-def social_ads_generator_result(request, request_id):
-    """Get result for a specific request"""
-    try:
-        agent_request = SocialAdsGeneratorRequest.objects.get(
-            id=request_id,
-            user=request.user
-        )
+        # Log detailed error for debugging (server-side only)
+        logger = logging.getLogger(__name__)
+        logger.error(f"Social ads status check failed for request {request_id}: {str(e)}", exc_info=True)
         
-        if hasattr(agent_request, 'response'):
-            response = agent_request.response
-            # Refresh user to get current wallet balance
-            request.user.refresh_from_db()
-            
-            return JsonResponse({
-                'success': response.success,
-                'status': agent_request.status,
-                'content': getattr(response, 'ad_copy', None),
-                'ad_copy_content': getattr(response, 'ad_copy', None),
-                'hashtags': getattr(response, 'hashtags', None),
-                'targeting_suggestions': getattr(response, 'targeting_suggestions', None),
-                'formatted_ad': getattr(response, 'formatted_ad', None),
-                'raw_response': getattr(response, 'raw_response', None),
-                'processing_time': float(response.processing_time) if response.processing_time else None,
-                'error_message': response.error_message,
-                'wallet_balance': float(request.user.wallet_balance)
-            })
-        else:
-            return JsonResponse({
-                'success': False,
-                'status': agent_request.status,
-                'message': 'Processing in progress...'
-            })
-            
-    except SocialAdsGeneratorRequest.DoesNotExist:
-        return JsonResponse({'error': 'Request not found'}, status=404)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        # Return generic error message to client
+        return JsonResponse({'error': 'Unable to retrieve status. Please try again later.'}, status=500)

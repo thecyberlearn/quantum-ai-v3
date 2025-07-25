@@ -13,7 +13,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Set data for JavaScript access
     document.body.setAttribute('data-user-authenticated', '{{ user.is_authenticated|yesno:"true,false" }}');
-    document.body.setAttribute('data-agent-price', '7.00');
+    document.body.setAttribute('data-agent-price', '4.00');
     
     // Initialize form submission
     const form = document.getElementById('agentForm');
@@ -110,20 +110,14 @@ const SocialAdsUtils = {
             // Hide processing status
             this.hideProcessing();
             
-            // Show results with rich formatting for social ads
+            // Show results with secure content rendering
             const adContent = result.ad_copy_content || result.content || result.ad_copy || result.formatted_ad || 'Social ads generated successfully!';
             if (resultsContent) {
-                // Convert social ad content to HTML with enhanced formatting
-                const formattedText = adContent
-                    .replace(/\n\n/g, '</p><p>')
-                    .replace(/\n/g, '<br>')
-                    .replace(/### (.*?)(<br>|$)/g, '<h3>$1</h3>')
-                    .replace(/## (.*?)(<br>|$)/g, '<h2>$1</h2>')
-                    .replace(/# (.*?)(<br>|$)/g, '<h1>$1</h1>')
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\*(.*?)\*/g, '<em>$1</em>');
+                // Clear existing content safely
+                resultsContent.textContent = '';
                 
-                resultsContent.innerHTML = `<p>${formattedText}</p>`;
+                // Create secure formatted content without innerHTML
+                this.renderSecureContent(resultsContent, adContent);
             }
             
             // Show results container
@@ -144,6 +138,99 @@ const SocialAdsUtils = {
             this.hideProcessing();
             this.showToast('❌ Failed to generate social ads. Please try again.', 'error');
         }
+    },
+    
+    // Secure content rendering without innerHTML
+    renderSecureContent(container, content) {
+        // Sanitize and validate content
+        if (!content || typeof content !== 'string') {
+            container.textContent = 'No content available';
+            return;
+        }
+        
+        // Create wrapper paragraph
+        const wrapper = document.createElement('p');
+        wrapper.className = 'results-content';
+        
+        // Split content into lines and process safely
+        const lines = content.split('\n');
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            
+            if (!line) {
+                // Add line break for empty lines
+                if (i > 0) wrapper.appendChild(document.createElement('br'));
+                continue;
+            }
+            
+            let element;
+            
+            // Handle headers (but escape content)
+            if (line.startsWith('### ')) {
+                element = document.createElement('h3');
+                element.textContent = line.substring(4);
+            } else if (line.startsWith('## ')) {
+                element = document.createElement('h2');
+                element.textContent = line.substring(3);
+            } else if (line.startsWith('# ')) {
+                element = document.createElement('h1');
+                element.textContent = line.substring(2);
+            } else {
+                // Handle regular text with basic formatting
+                element = document.createElement('span');
+                this.formatTextSecurely(element, line);
+            }
+            
+            wrapper.appendChild(element);
+            
+            // Add line break if not the last line
+            if (i < lines.length - 1) {
+                wrapper.appendChild(document.createElement('br'));
+            }
+        }
+        
+        container.appendChild(wrapper);
+    },
+    
+    // Format text with basic styling while preventing XSS
+    formatTextSecurely(element, text) {
+        // Simple approach: handle bold and italic formatting securely
+        const parts = [];
+        let currentText = text;
+        
+        // Process **bold** text
+        currentText = currentText.replace(/\*\*(.*?)\*\*/g, (match, content) => {
+            const placeholder = `__BOLD_${parts.length}__`;
+            parts.push({type: 'bold', content: content});
+            return placeholder;
+        });
+        
+        // Process *italic* text
+        currentText = currentText.replace(/\*(.*?)\*/g, (match, content) => {
+            const placeholder = `__ITALIC_${parts.length}__`;
+            parts.push({type: 'italic', content: content});
+            return placeholder;
+        });
+        
+        // Split by placeholders and create DOM elements
+        const segments = currentText.split(/(__(?:BOLD|ITALIC)_\d+__)/);
+        
+        segments.forEach(segment => {
+            if (segment.startsWith('__BOLD_')) {
+                const index = parseInt(segment.match(/\d+/)[0]);
+                const strong = document.createElement('strong');
+                strong.textContent = parts[index].content;
+                element.appendChild(strong);
+            } else if (segment.startsWith('__ITALIC_')) {
+                const index = parseInt(segment.match(/\d+/)[0]);
+                const em = document.createElement('em');
+                em.textContent = parts[index].content;
+                element.appendChild(em);
+            } else if (segment) {
+                element.appendChild(document.createTextNode(segment));
+            }
+        });
     }
 };
 
@@ -349,7 +436,7 @@ function handleFormSubmission(e) {
     }
     
     const walletBalance = parseFloat(document.getElementById('walletBalance')?.textContent) || 0;
-    if (walletBalance < 7.00) {
+    if (walletBalance < 4.00) {
         SocialAdsUtils.showToast('Insufficient wallet balance', 'error');
         setTimeout(() => {
             window.location.href = "{% url 'wallet:wallet' %}";
@@ -508,13 +595,13 @@ document.addEventListener('keydown', function(e) {
                     <!-- Submit Button -->
                     <div style="margin-top: var(--spacing-lg);">
                         {% if user.is_authenticated %}
-                            {% if user.wallet_balance >= 7.00 %}
+                            {% if user.wallet_balance >= 4.00 %}
                                 <button type="submit" class="btn btn-primary btn-full" id="generateBtn">
-                                    📢 Generate Social Ads (7.00 AED)
+                                    📢 Generate Social Ads (4.00 AED)
                                 </button>
                             {% else %}
                                 <div style="background: #fef2f2; color: #dc2626; padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); font-size: 14px; font-weight: 500; text-align: center;">
-                                    Insufficient balance! You need 7.00 AED.
+                                    Insufficient balance! You need 4.00 AED.
                                 </div>
                                 <a href="{% url 'wallet:wallet' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
                                     💰 Top Up Wallet

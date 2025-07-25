@@ -18,15 +18,24 @@ class SocialAdsGeneratorProcessor(StandardWebhookProcessor):
         if not request_obj:
             return "Create a social media advertisement"
         
-        # Build comprehensive social ads prompt
+        # Sanitize and validate description content
+        sanitized_description = self.sanitize_user_input(request_obj.description)
+        if not sanitized_description:
+            return "Unable to process the provided description"
+        
+        # Validate platform and language choices
+        platform_display = self.get_safe_platform_display(request_obj.social_platform)
+        safe_language = self.get_safe_language(request_obj.language)
+        
+        # Build comprehensive social ads prompt with sanitized inputs
         prompt = f"""
 Create a compelling social media advertisement for the following:
 
 Product/Service Description:
-{request_obj.description}
+{sanitized_description}
 
-Target Platform: {request_obj.get_social_platform_display()}
-Language: {request_obj.language}
+Target Platform: {platform_display}
+Language: {safe_language}
 Include Emojis: {'Yes' if request_obj.include_emoji else 'No'}
 
 Please create platform-optimized ad copy that:
@@ -34,8 +43,10 @@ Please create platform-optimized ad copy that:
 - Highlights key benefits and unique selling points
 - Uses persuasive messaging that motivates action
 - Includes a strong call-to-action
-- Is tailored to {request_obj.get_social_platform_display()} audience
-- Uses {request_obj.language} language
+- Is tailored to {platform_display} audience
+- Uses {safe_language} language
+- Maintains professional and appropriate content
+- Avoids any misleading or harmful messaging
 """
         
         if request_obj.include_emoji:
@@ -44,6 +55,72 @@ Please create platform-optimized ad copy that:
         prompt += "\n\nFormat the response as professional ad copy ready for social media posting."
         
         return prompt
+    
+    def sanitize_user_input(self, description):
+        """Sanitize user input to prevent prompt injection and harmful content"""
+        if not description or not isinstance(description, str):
+            return ""
+        
+        # Remove potential prompt injection patterns
+        dangerous_patterns = [
+            'ignore previous instructions',
+            'new instructions:',
+            'system:',
+            'assistant:',
+            'user:',
+            '###',
+            'IGNORE',
+            'STOP',
+            'OVERRIDE',
+        ]
+        
+        sanitized = description.strip()
+        
+        # Check for and remove dangerous patterns (case insensitive)
+        for pattern in dangerous_patterns:
+            if pattern.lower() in sanitized.lower():
+                # Replace with safe placeholder
+                sanitized = sanitized.replace(pattern, '[CONTENT_FILTERED]')
+        
+        # Limit length and remove excessive whitespace
+        sanitized = ' '.join(sanitized.split())[:2000]
+        
+        # Basic content filtering for inappropriate requests
+        inappropriate_keywords = [
+            'illegal', 'harmful', 'violence', 'hate', 'discrimination',
+            'scam', 'fraud', 'misleading', 'fake', 'counterfeit'
+        ]
+        
+        sanitized_lower = sanitized.lower()
+        for keyword in inappropriate_keywords:
+            if keyword in sanitized_lower:
+                return f"[Content filtered - Please provide appropriate product/service description]"
+        
+        return sanitized
+    
+    def get_safe_platform_display(self, platform):
+        """Get safe platform display name"""
+        platform_map = {
+            'facebook': 'Facebook',
+            'instagram': 'Instagram', 
+            'twitter': 'Twitter',
+            'linkedin': 'LinkedIn',
+            'tiktok': 'TikTok',
+            'youtube': 'YouTube'
+        }
+        return platform_map.get(platform, 'Social Media')
+    
+    def get_safe_language(self, language):
+        """Get safe language name"""
+        language_map = {
+            'English': 'English',
+            'Arabic': 'Arabic',
+            'Spanish': 'Spanish',
+            'French': 'French', 
+            'German': 'German',
+            'Chinese': 'Chinese'
+        }
+        return language_map.get(language, 'English')
     
     def process_response(self, response_data, request_obj):
         """Process webhook response"""
@@ -56,12 +133,15 @@ Please create platform-optimized ad copy that:
             if isinstance(response_data, list) and len(response_data) > 0:
                 response_data = response_data[0]
             
-            # Extract ad copy content
+            # Extract and validate ad copy content
             ad_copy = ""
             if isinstance(response_data, dict):
                 ad_copy = response_data.get('output', response_data.get('text', response_data.get('content', '')))
             elif isinstance(response_data, str):
                 ad_copy = response_data
+            
+            # Validate and sanitize AI output
+            ad_copy = self.validate_ai_output(ad_copy)
             
             # Parse ad copy for different components (basic parsing)
             hashtags = ""
@@ -76,7 +156,7 @@ Please create platform-optimized ad copy that:
                     hashtags = ' '.join(hashtag_lines)
             
             # Determine success based on response
-            success = bool(ad_copy.strip()) and len(ad_copy.strip()) > 20
+            success = response_data.get('success', False) if isinstance(response_data, dict) else bool(ad_copy.strip())
             
             # Create response object
             response_obj = SocialAdsGeneratorResponse.objects.create(
@@ -112,7 +192,7 @@ Please create platform-optimized ad copy that:
             request_obj.save()
             
             # Create error response
-            error_response = SocialAdsGeneratorResponse.objects.create(
+            SocialAdsGeneratorResponse.objects.create(
                 request=request_obj,
                 success=False,
                 error_message=str(e),
@@ -120,3 +200,33 @@ Please create platform-optimized ad copy that:
             )
             
             raise Exception(f"Failed to process Social Ads Generator response: {e}")
+    
+    def validate_ai_output(self, content):
+        """Validate and sanitize AI-generated content"""
+        if not content or not isinstance(content, str):
+            return "Error: No content generated"
+        
+        # Limit output length for security
+        content = content[:10000]
+        
+        # Remove any potential malicious content
+        malicious_patterns = [
+            '<script',
+            'javascript:',
+            'onclick=',
+            'onerror=',
+            'onload=',
+            'eval(',
+            'document.cookie',
+            'window.location'
+        ]
+        
+        for pattern in malicious_patterns:
+            if pattern.lower() in content.lower():
+                return "Content filtered for security reasons"
+        
+        # Basic content quality check
+        if len(content.strip()) < 10:
+            return "Generated content too short - please try again"
+        
+        return content.strip()
