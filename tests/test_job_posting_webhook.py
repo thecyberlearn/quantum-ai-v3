@@ -15,7 +15,7 @@ def test_job_posting_webhook():
     form_data = {
         'user_id': 'test-user-123',
         'job_title': 'Senior Software Developer',
-        'company_name': 'NetCop Technologies',
+        'company_name': 'Quantum Tasks AI Technologies',
         'industry': 'technology',
         'job_type': 'full-time',
         'experience_level': 'senior',

@@ -28,8 +28,8 @@ class StripePaymentHandler:
             cancel_url = request.build_absolute_uri('/wallet/top-up/cancel/')
         else:
             # Fallback URLs
-            success_url = 'https://netcop.up.railway.app/wallet/top-up/success/?session_id={CHECKOUT_SESSION_ID}'
-            cancel_url = 'https://netcop.up.railway.app/wallet/top-up/cancel/'
+            success_url = 'https://quantumtaskai.com/wallet/top-up/success/?session_id={CHECKOUT_SESSION_ID}'
+            cancel_url = 'https://quantumtaskai.com/wallet/top-up/cancel/'
         
         try:
             print(f"🚀 [STRIPE DEBUG] Starting checkout session creation...")
@@ -39,7 +39,7 @@ class StripePaymentHandler:
             print(f"🔑 API Version: {stripe.api_version}")
             print(f"📍 Success URL: {success_url}")
             print(f"📍 Cancel URL: {cancel_url}")
-            print(f"📍 Expected Webhook URL: https://netcop.up.railway.app/stripe/webhook/")
+            print(f"📍 Expected Webhook URL: https://quantumtaskai.com/stripe/webhook/")
             print(f"🌍 Environment: {'production' if 'railway.app' in (request.get_host() if request else '') else 'development'}")
             
             # Create session with modern Stripe practices
@@ -52,10 +52,10 @@ class StripePaymentHandler:
                     'price_data': {
                         'currency': 'aed',
                         'product_data': {
-                            'name': 'NetCop Wallet Top-up',
+                            'name': 'Quantum Tasks AI Wallet Top-up',
                             'description': f'Add {amount} AED to your wallet balance',
                             'metadata': {
-                                'service': 'netcop_wallet',
+                                'service': 'quantumtaskai_wallet',
                                 'user_id': str(user.id)
                             }
                         },
@@ -82,7 +82,7 @@ class StripePaymentHandler:
                     'amount': str(amount),
                     'currency': 'aed',
                     'type': 'wallet_topup',
-                    'service': 'netcop',
+                    'service': 'quantumtaskai',
                     'environment': 'production' if 'railway.app' in (request.get_host() if request else '') else 'development',
                     'created_at': str(int(time.time())),
                     'app_version': '1.0'
@@ -93,7 +93,7 @@ class StripePaymentHandler:
                     'metadata': {
                         'user_id': str(user.id),
                         'amount': str(amount),
-                        'service': 'netcop_wallet'
+                        'service': 'quantumtaskai_wallet'
                     }
                 },
                 

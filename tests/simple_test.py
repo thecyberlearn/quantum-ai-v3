@@ -7,7 +7,7 @@ import django
 sys.path.insert(0, '/home/amit/Desktop/quantum_ai')
 
 # Set Django settings
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'netcop_hub.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'quantumtaskai_hub.settings')
 django.setup()
 
 from agent_base.models import BaseAgent

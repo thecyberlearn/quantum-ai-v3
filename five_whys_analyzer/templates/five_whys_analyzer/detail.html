@@ -1,133 +1,169 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load static %}
 
-{% block title %}5 Whys Analysis Agent - NetCop AI Hub{% endblock %}
+{% block title %}5 Whys Analysis Agent - Quantum Tasks AI{% endblock %}
 
 {% block extra_css %}
-<!-- Optimized Font Loading -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
-<!-- External Stylesheets -->
-<link rel="stylesheet" href="{% static 'css/themes.css' %}">
-<link rel="stylesheet" href="{% static 'css/agent-base.css' %}">
-
-<!-- Five Whys Analyzer Specific Utilities -->
-<script>
-// Five Whys Analyzer - Self-contained utilities (no shared dependencies)
-const FiveWhysUtils = {
-    /**
-     * Update wallet balance display - Five Whys specific
-     */
-    updateWalletBalance(newBalance) {
-        // Update header balance (anchor tag with emoji)
-        const headerBalance = document.querySelector('a[data-wallet-balance]');
-        if (headerBalance) {
-            headerBalance.textContent = `💰 ${newBalance.toFixed(2)} AED`;
-        }
-        
-        // Update page balance (div without emoji)
-        const pageBalance = document.querySelector('div[data-wallet-balance]');
-        if (pageBalance) {
-            pageBalance.textContent = `${newBalance.toFixed(2)} AED`;
-        }
-        
-        window.currentWalletBalance = newBalance;
-    },
-
-    /**
-     * Show toast notification with duplicate prevention
-     */
-    showToast(message, type = 'info') {
-        // Prevent duplicate toasts
-        const existingToast = document.querySelector('.five-whys-toast');
-        if (existingToast) {
-            existingToast.remove();
-        }
-
-        const toast = document.createElement('div');
-        toast.className = 'five-whys-toast';
-        toast.style.cssText = `
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            padding: 8px 12px;
-            border-radius: 4px;
-            color: white;
-            font-size: 13px;
-            z-index: 1000;
-            max-width: 300px;
-            font-weight: 500;
-            ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
-        `;
-        toast.textContent = message;
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.remove();
-            }
-        }, 2000);
-    },
-
-    /**
-     * Generate text for copy/download functionality
-     */
-    generateTextForExport(contentElementId) {
-        const content = document.getElementById(contentElementId);
-        if (content) {
-            return content.innerText || content.textContent || '';
-        }
-        return 'No content available';
-    },
-
-    /**
-     * Copy content to clipboard
-     */
-    copyToClipboard(text, successMessage = 'Content copied to clipboard!') {
-        navigator.clipboard.writeText(text).then(() => {
-            this.showToast(`📋 ${successMessage}`, 'success');
-        }).catch(() => {
-            this.showToast('Failed to copy content', 'error');
-        });
-    },
-
-    /**
-     * Download content as text file
-     */
-    downloadAsFile(text, filename, successMessage = 'File downloaded!') {
-        const blob = new Blob([text], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename || `content-${Date.now()}.txt`;
-        a.click();
-        URL.revokeObjectURL(url);
-        this.showToast(`💾 ${successMessage}`, 'success');
-    }
-};
-
-// For backward compatibility, create AgentUtils alias
-const AgentUtils = FiveWhysUtils;
-</script>
+<link rel="stylesheet" href="{% static 'css/agent-base.css' %}?v={{ timestamp }}">
 {% endblock %}
 
 {% block content %}
-<div class="agent-page theme-professional">
-    <div class="agent-container">
-        <!-- Quick Agent Access Panel -->
-        {% include "components/quick_agents_panel.html" %}
-        
-        <!-- Main Content -->
-        <div>
-            <div class="card">
-                <h3 class="section-title">🔍 {{ agent.name }}</h3>
-                <p class="form-help">{{ agent.description }}</p>
-            </div>
+<script>
+        // Agent Frontend Template - Common JavaScript Utilities
+
+        // Quick Agent Access Panel Functions
+        function toggleQuickAgents() {
+            const panel = document.getElementById('quickAgentsPanel');
+            const overlay = document.getElementById('quickAgentsOverlay');
+            const toggle = document.querySelector('.quick-agent-toggle');
             
-            <!-- Chat Messages Container -->
-            <div class="card">
+            const isActive = panel.classList.contains('active');
+            
+            if (isActive) {
+                panel.classList.remove('active');
+                overlay.classList.remove('active');
+                toggle.classList.remove('active');
+                toggle.setAttribute('aria-expanded', 'false');
+                panel.setAttribute('aria-hidden', 'true');
+                overlay.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = 'auto';
+            } else {
+                panel.classList.add('active');
+                overlay.classList.add('active');
+                toggle.classList.add('active');
+                toggle.setAttribute('aria-expanded', 'true');
+                panel.setAttribute('aria-hidden', 'false');
+                overlay.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeQuickAgents() {
+            const panel = document.getElementById('quickAgentsPanel');
+            const overlay = document.getElementById('quickAgentsOverlay');
+            const toggle = document.querySelector('.quick-agent-toggle');
+            
+            if (panel && overlay && toggle) {
+                panel.classList.remove('active');
+                overlay.classList.remove('active');
+                toggle.classList.remove('active');
+                toggle.setAttribute('aria-expanded', 'false');
+                panel.setAttribute('aria-hidden', 'true');
+                overlay.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Toast Notification Function
+        function showToast(message, type = 'info') {
+            document.querySelectorAll('.toast').forEach(toast => toast.remove());
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Processing Status Functions
+        function showProcessing() {
+            const processingStatus = document.getElementById('processingStatus');
+            processingStatus.style.display = 'block';
+            processingStatus.classList.add('active');
+        }
+
+        function hideProcessing() {
+            const processingStatus = document.getElementById('processingStatus');
+            processingStatus.style.display = 'none';
+            processingStatus.classList.remove('active');
+        }
+
+        // Wallet Balance Update Function
+        function updateWalletBalance(newBalance) {
+            if (newBalance !== undefined) {
+                const walletBalance = document.getElementById('walletBalance');
+                if (walletBalance) {
+                    walletBalance.textContent = newBalance.toFixed(2);
+                }
+            }
+        }
+
+        // Copy to Clipboard Utility
+        function copyToClipboard(text, successMessage = 'Copied to clipboard!') {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`📋 ${successMessage}`, 'success');
+            }).catch(() => {
+                showToast('Failed to copy to clipboard', 'error');
+            });
+        }
+
+        // Download as File Utility
+        function downloadAsFile(text, filename, successMessage = 'File downloaded!') {
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename || `content-${Date.now()}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast(`💾 ${successMessage}`, 'success');
+        }
+
+        // Close panel on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeQuickAgents();
+            }
+        });
+
+        // Five Whys specific utilities
+        const FiveWhysUtils = {
+            copyReport() {
+                const content = document.getElementById('reportContent');
+                if (content) {
+                    const text = content.textContent || content.innerText || '';
+                    copyToClipboard(text, '5 Whys report copied to clipboard!');
+                }
+            },
+
+            downloadReport() {
+                const content = document.getElementById('reportContent');
+                if (content) {
+                    const text = content.textContent || content.innerText || '';
+                    downloadAsFile(text, `5-whys-report-${Date.now()}.txt`, '5 Whys report downloaded!');
+                }
+            }
+        };
+
+        // Backward compatibility functions
+        function copyReport() { FiveWhysUtils.copyReport(); }
+        function downloadReport() { FiveWhysUtils.downloadReport(); }
+</script>
+<div class="agent-container">
+    <!-- Agent Header -->
+    {% include "components/agent_header.html" with agent_title="5 Whys Analyzer" agent_subtitle="AI-powered root cause analysis using the 5 Whys methodology" %}
+    
+    <!-- Quick Agent Access Panel -->
+    {% include "components/quick_agents_panel.html" %}
+    
+    <!-- Agent Grid -->
+    <div class="agent-grid">
+        <div class="agent-widget widget-large" style="flex: 1; margin-right: var(--spacing-lg);">
+            <div class="widget-header">
+                <h3 class="widget-title">
+                    <span class="widget-icon">💬</span>
+                    5 Whys Analysis Chat
+                </h3>
+            </div>
+            <div class="widget-content">
+                <!-- Chat Messages Container -->
                 <div id="chatContainer" class="chat-container">
                     <h4 class="section-subtitle">💬 Chat with 5 Whys Analyst</h4>
                     
@@ -168,83 +204,93 @@ const AgentUtils = FiveWhysUtils;
                         </button>
                     </div>
                 </form>
-            </div>
-            
-            <!-- Report Generation Section -->
-            <div class="card" id="reportSection">
-                <h4 class="section-subtitle">📋 Generate Final Report</h4>
                 
-                <div id="reportNotReady" class="info-message">
-                    💬 Ask 2-3 questions about your problem first, then I'll generate a comprehensive report
+                <!-- Report Generation Section -->
+                <div id="reportSection" style="margin-top: var(--spacing-lg);">
+                    <h4 class="section-subtitle">📋 Generate Final Report</h4>
+                    
+                    <div id="reportNotReady" class="info-message">
+                        💬 Ask 2-3 questions about your problem first, then I'll generate a comprehensive report
+                    </div>
+                    
+                    <div id="reportReady" class="success-message" style="display: none;">
+                        ✅ Ready! I can now generate a detailed 5 Whys analysis report based on our conversation
+                    </div>
+                    
+                    <button 
+                        id="generateReportBtn" 
+                        onclick="generateReport()" 
+                        class="btn btn-primary"
+                        disabled
+                        style="width: 100%;"
+                    >
+                        🔍 Generate Report ({{ agent.price }} AED)
+                    </button>
                 </div>
                 
-                <div id="reportReady" class="success-message" style="display: none;">
-                    ✅ Ready! I can now generate a detailed 5 Whys analysis report based on our conversation
-                </div>
-                
-                <button 
-                    id="generateReportBtn" 
-                    onclick="generateReport()" 
-                    class="btn btn-primary"
-                    disabled
-                    style="width: 100%;"
-                >
-                    🔍 Generate Report ({{ agent.price }} AED)
-                </button>
-            </div>
-            
-            <!-- Generated Report Display -->
-            <div id="reportResults" class="results-card" style="display: none;">
-                <div class="results-header">
-                    <div style="font-size: 24px;">📊</div>
-                    <h3 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">5 Whys Analysis Report</h3>
-                    <div style="background: var(--primary-color); color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-left: auto;">✅ Complete</div>
-                </div>
-                
-                <div class="results-content" id="reportContent">
-                    <!-- Report content will be displayed here -->
-                </div>
-                
-                <div class="action-buttons">
-                    <button onclick="copyReport()" class="btn btn-primary">📋 Copy Report</button>
-                    <button onclick="downloadReport()" class="btn btn-secondary">💾 Download Report</button>
+                <!-- Generated Report Display -->
+                <div id="reportResults" class="results-card" style="display: none;">
+                    <div class="results-header">
+                        <div style="font-size: 24px;">📊</div>
+                        <h3 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">5 Whys Analysis Report</h3>
+                        <div style="background: var(--primary-color); color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-left: auto;">✅ Complete</div>
+                    </div>
+                    
+                    <div class="results-content" id="reportContent">
+                        <!-- Report content will be displayed here -->
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button onclick="copyReport()" class="btn btn-primary">📋 Copy Report</button>
+                        <button onclick="downloadReport()" class="btn btn-secondary">💾 Download Report</button>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <!-- Wallet Sidebar -->
-        <div class="wallet-section">
-            <div class="card">
-                <h3 class="section-title">💳 Your Wallet</h3>
-                
-                <div class="wallet-balance" data-wallet-balance>{% if user.is_authenticated %}{{ user.wallet_balance|floatformat:2 }} AED{% else %}0.00 AED{% endif %}</div>
-                <div class="balance-label">Available Balance</div>
-                
-                {% if user.is_authenticated %}
-                    <a href="{% url 'wallet:wallet' %}" class="btn btn-primary" style="text-decoration: none; margin-top: 16px;">
-                        💰 Top Up Wallet
-                    </a>
-                {% else %}
-                    <a href="{% url 'authentication:login' %}" class="btn btn-primary process-btn" style="text-decoration: none;">
-                        🔑 Login to Continue
-                    </a>
-                {% endif %}
+
+        <!-- How It Works Widget -->
+        <div class="agent-widget widget-small" style="min-width: min(280px, 100%); max-width: min(280px, 100%); margin-left: auto;">
+            <div class="widget-header">
+                <h3 class="widget-title">
+                    <span class="widget-icon">ℹ️</span>
+                    How It Works
+                </h3>
             </div>
-            
-            <div class="usage-info">
-                <h4>💡 How it works</h4>
-                <ul>
+            <div class="widget-content">
+                <ol class="info-list">
                     <li>Chat freely to explore your problem</li>
                     <li>Get guidance and ask questions</li>
                     <li>Generate final report when ready</li>
                     <li>Pay only for the final report</li>
-                </ul>
+                </ol>
+                
+                <!-- Quick Agents Toggle Button -->
+                <button class="quick-agent-toggle" onclick="toggleQuickAgents()" 
+                        title="Quick access to other agents"
+                        aria-label="Open quick access panel for other AI agents"
+                        aria-expanded="false"
+                        aria-controls="quickAgentsPanel"
+                        style="margin-top: var(--spacing-md);">
+                    <span class="toggle-icon" aria-hidden="true">🚀</span>
+                    <span class="toggle-text">Explore Other Agents</span>
+                </button>
             </div>
         </div>
+    </div>
+    
+    <!-- Processing Status -->
+    <div class="agent-grid">
+        {% include "components/processing_status.html" with status_title="Generating 5 Whys Report..." status_text="Please wait while we analyze your conversation and create a comprehensive report..." %}
+    </div>
+    
+    <!-- Results -->
+    <div class="agent-grid">
+        {% include "components/results_container.html" with results_title="5 Whys Analysis Report" %}
     </div>
 </div>
 
 <style>
+/* Five Whys Analyzer Specific Styles */
 .chat-container {
     background: var(--background-subtle);
     border-radius: 8px;
@@ -268,11 +314,6 @@ const AgentUtils = FiveWhysUtils;
     font-weight: 600;
     color: var(--primary-color);
     margin-bottom: 8px;
-}
-
-.message-content {
-    color: var(--text-primary);
-    line-height: 1.6;
 }
 
 .chat-form {
@@ -306,36 +347,6 @@ const AgentUtils = FiveWhysUtils;
     box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
 }
 
-.input-group .btn {
-    height: 40px;
-    padding: 8px 12px;
-    width: 20%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    box-sizing: border-box;
-    font-size: 13px;
-}
-
-.info-message {
-    padding: 16px;
-    background: var(--background-subtle);
-    border-radius: 8px;
-    text-align: center;
-    color: var(--text-secondary);
-    margin-bottom: 16px;
-}
-
-.success-message {
-    padding: 16px;
-    background: #ecfdf5;
-    border-radius: 8px;
-    text-align: center;
-    color: #059669;
-    margin-bottom: 16px;
-}
-
 .message {
     margin-bottom: 16px;
     animation: fadeIn 0.3s ease;
@@ -358,47 +369,6 @@ const AgentUtils = FiveWhysUtils;
     line-height: 1.6;
 }
 
-.assistant-message .message-content {
-    color: var(--text-primary);
-    line-height: 1.6;
-}
-
-.assistant-message .message-content h3 {
-    color: var(--text-primary);
-    font-size: 16px;
-    font-weight: 600;
-    margin: 16px 0 8px 0;
-}
-
-.assistant-message .message-content h3:first-child {
-    margin-top: 0;
-}
-
-.assistant-message .message-content ul {
-    margin: 8px 0;
-    padding-left: 20px;
-}
-
-.assistant-message .message-content li {
-    margin: 4px 0;
-}
-
-.assistant-message .message-content p {
-    margin: 8px 0;
-}
-
-.assistant-message .message-content p:first-child {
-    margin-top: 0;
-}
-
-.assistant-message .message-content p:last-child {
-    margin-bottom: 0;
-}
-
-.assistant-message .message-content strong {
-    color: var(--text-primary);
-    font-weight: 600;
-}
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -463,7 +433,7 @@ const AgentUtils = FiveWhysUtils;
         const message = input.value.trim();
         
         if (!message) {
-            AgentUtils.showToast('Please enter a message', 'error');
+            showToast('Please enter a message', 'error');
             return;
         }
         
@@ -503,14 +473,14 @@ const AgentUtils = FiveWhysUtils;
                 // Check if report button should be enabled
                 checkReportReadiness();
             } else {
-                AgentUtils.showToast(data.error || 'Failed to send message', 'error');
+                showToast(data.error || 'Failed to send message', 'error');
             }
         })
         .catch(error => {
             // Hide typing indicator on error
             hideTypingIndicator();
             console.error('Error:', error);
-            AgentUtils.showToast('Network error occurred', 'error');
+            showToast('Network error occurred', 'error');
         })
         .finally(() => {
             isProcessing = false;
@@ -665,12 +635,12 @@ const AgentUtils = FiveWhysUtils;
         if (isProcessing) return;
         
         if (!currentSessionId) {
-            AgentUtils.showToast('Please start a chat session first', 'error');
+            showToast('Please start a chat session first', 'error');
             return;
         }
         
         if (messageCount < 2) {
-            AgentUtils.showToast('Please ask at least 2 questions before generating a report', 'error');
+            showToast('Please ask at least 2 questions before generating a report', 'error');
             return;
         }
         
@@ -710,17 +680,17 @@ const AgentUtils = FiveWhysUtils;
                 
                 // Update wallet balance if provided
                 if (data.wallet_balance !== undefined) {
-                    AgentUtils.updateWalletBalance(data.wallet_balance);
+                    updateWalletBalance(data.wallet_balance);
                 }
                 
-                AgentUtils.showToast('✅ Report generated and payment processed!', 'success');
+                showToast('✅ Report generated and payment processed!', 'success');
             } else {
-                AgentUtils.showToast(data.error || 'Failed to generate report', 'error');
+                showToast(data.error || 'Failed to generate report', 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            AgentUtils.showToast('Network error occurred', 'error');
+            showToast('Network error occurred', 'error');
         })
         .finally(() => {
             isProcessing = false;
@@ -771,13 +741,27 @@ const AgentUtils = FiveWhysUtils;
     
     
     function copyReport() {
-        const reportText = AgentUtils.generateTextForExport('reportContent');
-        AgentUtils.copyToClipboard(reportText, '📋 Report copied to clipboard!');
+        const reportText = generateTextForExport('reportContent');
+        copyToClipboard(reportText, '📋 Report copied to clipboard!');
     }
     
     function downloadReport() {
-        const reportText = AgentUtils.generateTextForExport('reportContent');
-        AgentUtils.downloadAsFile(reportText, `five-whys-analysis-${Date.now()}.txt`, '💾 Report downloaded!');
+        const reportText = generateTextForExport('reportContent');
+        downloadAsFile(reportText, `five-whys-analysis-${Date.now()}.txt`, '💾 Report downloaded!');
+    }
+    
+    function generateTextForExport(elementId) {
+        const element = document.getElementById(elementId);
+        if (!element) return '';
+        
+        // Extract text content while preserving some structure
+        let text = element.innerText || element.textContent || '';
+        
+        // Clean up extra whitespace
+        text = text.replace(/\n\s*\n\s*\n/g, '\n\n');
+        text = text.trim();
+        
+        return text;
     }
     
 </script>

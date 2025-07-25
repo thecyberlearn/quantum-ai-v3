@@ -40,11 +40,11 @@ if missing_vars:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver,netcop.up.railway.app').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver,quantumtaskai.com').split(',')
 
 # Site URL configuration for emails
 if config('RAILWAY_ENVIRONMENT', default=''):
-    SITE_URL = 'https://netcop.up.railway.app'
+    SITE_URL = 'https://quantumtaskai.com'
 else:
     SITE_URL = config('SITE_URL', default='http://localhost:8000')
 
@@ -271,7 +271,7 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_FILE_PATH = config('EMAIL_FILE_PATH', default='/tmp/app-messages')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='NetCop <noreply@netcop.com>')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='Quantum Tasks AI <noreply@quantumtaskai.com>')
 
 # Security settings
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in config('CSRF_TRUSTED_ORIGINS', default='').split(',') if origin.strip()]
@@ -281,8 +281,8 @@ if config('RAILWAY_ENVIRONMENT', default=''):
     railway_url = config('RAILWAY_PUBLIC_DOMAIN', default='')
     if railway_url:
         CSRF_TRUSTED_ORIGINS.append(f'https://{railway_url}')
-    # Also add common Railway domain pattern
-    CSRF_TRUSTED_ORIGINS.append('https://netcop.up.railway.app')
+    # Also add production domain
+    CSRF_TRUSTED_ORIGINS.append('https://quantumtaskai.com')
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Default primary key field type
@@ -298,7 +298,7 @@ CACHES = {
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         },
-        'KEY_PREFIX': 'netcop',
+        'KEY_PREFIX': 'quantumtaskai',
         'TIMEOUT': 300,  # 5 minutes default
         'VERSION': 1,
     }
@@ -315,7 +315,7 @@ except (ImportError, Exception):
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-            'LOCATION': 'netcop-cache',
+            'LOCATION': 'quantumtaskai-cache',
             'OPTIONS': {
                 'MAX_ENTRIES': 1000,
                 'CULL_FREQUENCY': 3,

@@ -4,10 +4,10 @@ import sys
 import django
 
 # Add the project root to Python path
-sys.path.insert(0, '/home/amit/projects/netcop_django')
+sys.path.insert(0, '/home/amit/projects/quantumtaskai_django')
 
 # Set Django settings
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'netcop_hub.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'quantumtaskai_hub.settings')
 django.setup()
 
 from django.test import Client

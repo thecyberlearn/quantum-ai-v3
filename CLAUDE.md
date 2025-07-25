@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-NetCop Hub is a Django-based AI agent marketplace platform where users can purchase and interact with specialized AI agents. The system supports both webhook-based and API-based agents with integrated payment processing via Stripe.
+Quantum Tasks AI is a Django-based AI agent marketplace platform where users can purchase and interact with specialized AI agents. The system supports both webhook-based and API-based agents with integrated payment processing via Stripe.
 
 ## Development Commands
 
