@@ -184,31 +184,120 @@ Required environment variables (see `.env.example`):
 1. **Adding New Agent:**
    - Use `python manage.py create_agent` command
    - Follow existing agent patterns (inherit from `BaseAgentProcessor`)
-   - **Convert `agent_template_prototype.html` to Django template** - see `AGENT_CREATION_GUIDE.md`
    - Add URL routing in main `urls.py`
    - Agent will automatically appear in marketplace via `BaseAgent` model
 
-2. **Template Development:**
-   - **ALWAYS use `agent_template_prototype.html` as starting point**
-   - Copy all CSS (lines 8-632) and JavaScript (lines 808-967) from prototype
-   - Replace placeholder sections with agent-specific content
-   - Use existing components: wallet card, processing status, quick access panel
-   - Follow responsive design patterns and accessibility features
+2. **Template Development (Component-First Approach):**
+   - **STEP 0: Check Existing Agents** - Examine `data_analyzer` or `social_ads_generator` templates first
+   - **STEP 1: Use Component Architecture** - Start with the required component includes (see Template Component Architecture section)
+   - **STEP 2: Add Agent-Specific Content** - Write only the unique form/logic for your agent
+   - **STEP 3: Use Shared CSS** - Link to `agent-base.css`, never recreate CSS frameworks
+   - **STEP 4: Verify Consistency** - Ensure template follows established patterns and stays under 500 lines
 
-3. **Agent Template Structure:**
+3. **Agent Template Structure (Component-Based):**
    ```
    templates/agent_name/detail.html:
-   - Copy complete CSS framework from prototype
-   - Replace "Agent Grid Section" with your form
-   - Replace "Results Section" with your results display  
-   - Keep "How It Works" widget and all JavaScript utilities
-   - Preserve responsive design and accessibility features
+   - {% include "components/agent_header.html" %} (replaces custom headers)
+   - {% include "components/quick_agents_panel.html" %} (replaces custom navigation)
+   - Agent-specific form content ONLY (your unique functionality)
+   - {% include "components/processing_status.html" %} (replaces custom loading)
+   - {% include "components/results_container.html" %} (replaces custom results)
+   - Link to agent-base.css (replaces inline CSS)
    ```
 
 4. **Database Changes:**
    - Always run migrations after model changes
    - Use `check_db` command to verify configuration
    - Test with `populate_agents` to ensure agent catalog works
+
+### Template Component Architecture
+
+**CRITICAL: Always Use Component-Based Architecture**
+
+All agent templates MUST use the established component system. Never recreate shared functionality inline.
+
+**Required Components for Every Agent:**
+```django
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/agent-base.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Agent Header Component -->
+{% include "components/agent_header.html" with agent_title="Your Agent Name" agent_subtitle="Description" %}
+
+<!-- Quick Agents Panel Component -->
+{% include "components/quick_agents_panel.html" %}
+
+<!-- Agent-Specific Form Content ONLY -->
+<div class="agent-grid">
+    <div class="agent-widget widget-large">
+        <!-- ONLY write agent-specific form/content here -->
+    </div>
+    <!-- How It Works widget using existing patterns -->
+</div>
+
+<!-- Processing Status Component -->
+{% include "components/processing_status.html" with status_title="Processing..." status_text="Please wait..." %}
+
+<!-- Results Component -->
+{% include "components/results_container.html" with results_title="Results" %}
+{% endblock %}
+```
+
+**Component Checklist:**
+- ✅ `{% include "components/agent_header.html" %}` - Page header and wallet card
+- ✅ `{% include "components/quick_agents_panel.html" %}` - Agent navigation
+- ✅ `{% include "components/processing_status.html" %}` - Loading states
+- ✅ `{% include "components/results_container.html" %}` - Result display
+- ✅ `<link rel="stylesheet" href="{% static 'css/agent-base.css' %}">` - Shared CSS
+
+**Template Best Practices:**
+1. **Check Existing Agents First** - Look at `data_analyzer` or `social_ads_generator` templates for patterns
+2. **Component-First Development** - Use includes for all shared functionality
+3. **Agent-Specific Content Only** - Write only unique form logic and processing
+4. **Line Count Target** - Keep templates under 500 lines by leveraging components
+5. **Consistency Verification** - Ensure all agents follow the same component pattern
+
+**Anti-Pattern Warning:**
+❌ **NEVER recreate these inline:**
+- Agent headers with wallet cards
+- Quick agents navigation panels  
+- Processing status displays
+- Results containers with action buttons
+- CSS frameworks or JavaScript utilities
+
+**Why This Matters:**
+- Maintains consistent UI/UX across all agents
+- Ensures easier maintenance and updates
+- Reduces code duplication and template bloat
+- Provides shared functionality improvements automatically
+
+### How to Request Component Architecture
+
+When asking Claude to work on agent templates, use these specific phrases to ensure component architecture is applied:
+
+**For New Agents:**
+- "Apply Template Component Architecture from CLAUDE.md to create [agent name]"
+- "Create [agent name] using the component architecture pattern"
+- "Follow Template Component Architecture guidelines for [agent name]"
+
+**For Existing Agents:**
+- "Convert [agent name] to Template Component Architecture from CLAUDE.md"
+- "Optimize [agent name] template using component architecture"
+- "Apply component pattern to [agent name] like data_analyzer and social_ads_generator"
+
+**Key Trigger Phrase:** "Template Component Architecture"
+
+This ensures Claude will:
+✅ Use component includes instead of inline HTML
+✅ Link to agent-base.css instead of recreating CSS
+✅ Keep templates under 500 lines
+✅ Follow established patterns from working agents
+✅ Maintain consistency across the platform
 
 ### Deployment
 

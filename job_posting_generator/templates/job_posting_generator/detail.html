@@ -5,1110 +5,189 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/agent-base.css' %}?v={{ timestamp }}">
-<style>
-/* Job Posting Generator - Additional Styles */
-
-* {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    box-sizing: border-box;
-}
-
-:root {
-    --primary: #000000;
-    --surface: #ffffff;
-    --surface-variant: #f8fafc;
-    --background: #f3f4f6;
-    --outline: #e4e7eb;
-    --outline-variant: #e1e4e7;
-    --on-surface: #1a1a1a;
-    --on-surface-variant: #6b7280;
-    --success: #10b981;
-    --error: #ef4444;
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --spacing-xs: 4px;
-    --spacing-sm: 8px;
-    --spacing-md: 16px;
-    --spacing-lg: 24px;
-    --spacing-xl: 32px;
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
-}
-
-html {
-    /* Prevent page shake by maintaining consistent scrollbar space */
-    scrollbar-gutter: stable;
-}
-
-body {
-    background: var(--background);
-    color: var(--on-surface);
-    line-height: 1.5;
-    font-weight: 400;
-}
-
-/* Layout */
-.agent-container {
-    margin: 0 auto;
-    padding: var(--spacing-lg);
-    max-width: 1600px;
-}
-
-.agent-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-xl);
-}
-
-.header-controls {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-lg);
-}
-
-.agent-grid {
-    display: flex;
-    gap: var(--spacing-lg);
-    align-items: flex-start;
-    flex-wrap: wrap;
-}
-
-/* Typography */
-.agent-title {
-    font-size: 32px;
-    font-weight: 700;
-    color: var(--on-surface);
-    margin: 0;
-    letter-spacing: -0.5px;
-}
-
-.agent-subtitle {
-    font-size: 16px;
-    color: var(--on-surface-variant);
-    margin: 4px 0 0 0;
-}
-
-/* Widgets */
-.agent-widget {
-    background: var(--surface);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-xl);
-    border: 1px solid var(--outline-variant);
-    box-shadow: var(--shadow-sm);
-    transition: all 0.2s ease;
-    display: flex;
-    flex-direction: column;
-}
-
-.widget-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-lg);
-    padding-bottom: var(--spacing-md);
-    border-bottom: 1px solid var(--outline-variant);
-}
-
-.widget-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--on-surface);
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-}
-
-.widget-icon {
-    font-size: 20px;
-    padding: 6px;
-    border-radius: var(--radius-sm);
-    background: var(--surface-variant);
-}
-
-.widget-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-}
-
-/* Widget Sizes */
-.widget-large {
-    flex: 1;
-    min-width: 400px;
-}
-
-.widget-small {
-    flex: 0 0 280px;
-}
-
-.widget-wide {
-    flex: 1 1 100%;
-    width: 100%;
-}
-
-/* Forms */
-.form-group {
-    margin-bottom: var(--spacing-lg);
-}
-
-.form-label {
-    display: block;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--on-surface);
-    margin-bottom: var(--spacing-sm);
-}
-
-.form-input, .form-textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid var(--outline-variant);
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    line-height: 1.5;
-    transition: all 0.2s ease;
-    background: var(--surface);
-    color: var(--on-surface);
-}
-
-.form-input:focus, .form-textarea:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
-}
-
-.form-textarea {
-    min-height: 120px;
-    resize: vertical;
-}
-
-.form-help {
-    font-size: 12px;
-    color: var(--on-surface-variant);
-    margin-top: var(--spacing-xs);
-}
-
-/* Buttons */
-.btn {
-    padding: 12px 24px;
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-sm);
-    text-decoration: none;
-    min-height: 44px;
-}
-
-.btn-primary {
-    background: var(--primary);
-    color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-    background: #333333;
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
-.btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.btn-secondary {
-    background: var(--surface);
-    color: var(--on-surface);
-    border: 2px solid var(--outline);
-}
-
-.btn-secondary:hover {
-    background: var(--surface-variant);
-    border-color: var(--outline);
-}
-
-.btn-full {
-    width: 100%;
-}
-
-/* Wallet Card */
-.wallet-card {
-    background: linear-gradient(135deg, #000000 0%, #333333 100%);
-    color: white;
-    border-radius: var(--radius-md);
-    padding: var(--spacing-md);
-    border: none;
-    box-shadow: var(--shadow-md);
-    position: relative;
-    overflow: hidden;
-    margin-bottom: 0;
-    min-height: auto;
-}
-
-.wallet-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 100px;
-    height: 100px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    transform: translate(30px, -30px);
-}
-
-.wallet-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-sm);
-}
-
-.wallet-title {
-    font-size: 14px;
-    font-weight: 600;
-    margin: 0;
-    opacity: 0.9;
-}
-
-.wallet-icon {
-    font-size: 20px;
-}
-
-.balance-display {
-    margin-bottom: 0;
-}
-
-.balance-amount {
-    font-size: 24px;
-    font-weight: 700;
-    line-height: 1;
-    margin-bottom: 0;
-    letter-spacing: -0.5px;
-}
-
-.balance-label {
-    font-size: 12px;
-    opacity: 0.8;
-    font-weight: 400;
-}
-
-/* Processing Status */
-.processing-status {
-    display: none;
-}
-
-.processing-status.active {
-    display: block;
-}
-
-.status-icon {
-    font-size: 48px;
-    margin-bottom: var(--spacing-md);
-    animation: pulse 2s infinite;
-}
-
-.status-text {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--on-surface);
-    margin-bottom: var(--spacing-sm);
-}
-
-.status-detail {
-    font-size: 14px;
-    color: var(--on-surface-variant);
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-/* Results */
-.results-card {
-    display: none;
-}
-
-.results-card.active {
-    display: block;
-}
-
-.results-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.results-content {
-    background: var(--surface-variant);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-xl);
-    margin-bottom: var(--spacing-lg);
-    line-height: 1.7;
-    color: var(--on-surface);
-    font-size: 15px;
-}
-
-/* Enhanced Results Typography - From Data Analyzer */
-.results-content h1,
-.results-content h2,
-.results-content h3 {
-    color: var(--primary);
-    font-weight: 700;
-    margin: var(--spacing-xl) 0 var(--spacing-md) 0;
-    line-height: 1.3;
-}
-
-.results-content h1 {
-    font-size: 24px;
-    border-bottom: 3px solid var(--primary);
-    padding-bottom: var(--spacing-sm);
-    margin-bottom: var(--spacing-lg);
-}
-
-.results-content h2 {
-    font-size: 20px;
-    margin-top: var(--spacing-xl);
-    position: relative;
-    padding-left: var(--spacing-md);
-}
-
-.results-content h2::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: var(--primary);
-    border-radius: 2px;
-}
-
-.results-content h3 {
-    font-size: 18px;
-    color: var(--on-surface);
-    font-weight: 600;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    padding: var(--spacing-md) var(--spacing-lg);
-    border-radius: var(--radius-sm);
-    border-left: 4px solid var(--primary);
-    margin: var(--spacing-lg) 0 var(--spacing-md) 0;
-}
-
-.results-content p {
-    margin: var(--spacing-md) 0;
-    text-align: justify;
-}
-
-.results-content ul,
-.results-content ol {
-    margin: var(--spacing-md) 0;
-    padding-left: var(--spacing-xl);
-}
-
-.results-content li {
-    margin: var(--spacing-sm) 0;
-    position: relative;
-}
-
-.results-content ul li::marker {
-    color: var(--primary);
-    font-weight: bold;
-}
-
-.results-content ol li::marker {
-    color: var(--primary);
-    font-weight: bold;
-}
-
-/* Modern Info Boxes */
-.results-content .key-points,
-.results-content .insights,
-.results-content .summary {
-    background: var(--surface);
-    border: 1px solid var(--outline-variant);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-lg);
-    margin: var(--spacing-lg) 0;
-    box-shadow: var(--shadow-sm);
-}
-
-.results-content .key-points {
-    border-left: 4px solid #3b82f6;
-}
-
-.results-content .insights {
-    border-left: 4px solid #10b981;
-}
-
-.results-content .summary {
-    border-left: 4px solid #f59e0b;
-}
-
-/* Strong text styling */
-.results-content strong {
-    color: var(--primary);
-    font-weight: 600;
-}
-
-/* Code and technical terms */
-.results-content code {
-    background: #f1f5f9;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-    font-size: 14px;
-    color: #1e293b;
-}
-
-.action-buttons {
-    display: flex;
-    gap: var(--spacing-md);
-    flex-wrap: wrap;
-}
-
-/* Alerts */
-.alert {
-    padding: var(--spacing-md);
-    border-radius: var(--radius-md);
-    margin-bottom: var(--spacing-md);
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.alert-error {
-    background: #fef2f2;
-    color: #dc2626;
-    border: 1px solid #fecaca;
-}
-
-/* Toast Notifications */
-.toast {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: var(--surface);
-    border: 1px solid var(--outline);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-md) var(--spacing-lg);
-    box-shadow: var(--shadow-lg);
-    z-index: 1000;
-    max-width: 400px;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.toast.success {
-    border-color: var(--success);
-    background: #f0fdf4;
-    color: #16a34a;
-}
-
-.toast.error {
-    border-color: var(--error);
-    background: #fef2f2;
-    color: #dc2626;
-}
-
-/* Section Styling */
-.section-container {
-    margin-bottom: var(--spacing-xl);
-    padding-bottom: var(--spacing-lg);
-    border-bottom: 1px solid var(--outline-variant);
-}
-
-.section-container:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-}
-
-.section-subtitle {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--on-surface);
-    margin: 0 0 var(--spacing-lg) 0;
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-}
-
-.section-subtitle::before {
-    content: '';
-    width: 3px;
-    height: 16px;
-    background: var(--primary);
-    border-radius: 2px;
-}
-
-/* Loading State */
-.btn.loading {
-    pointer-events: none;
-    opacity: 0.7;
-}
-
-.btn.loading::after {
-    content: '';
-    width: 16px;
-    height: 16px;
-    border: 2px solid currentColor;
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-left: var(--spacing-sm);
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Info List - From Data Analyzer */
-.info-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    counter-reset: step-counter;
-}
-
-.info-list li {
-    padding: var(--spacing-sm) 0;
-    color: var(--on-surface-variant);
-    font-size: 14px;
-    border-bottom: 1px solid var(--outline-variant);
-    position: relative;
-    padding-left: var(--spacing-lg);
-}
-
-.info-list li:last-child {
-    border-bottom: none;
-}
-
-.info-list li::before {
-    content: counter(step-counter);
-    counter-increment: step-counter;
-    position: absolute;
-    left: 0;
-    top: var(--spacing-sm);
-    width: 20px;
-    height: 20px;
-    background: var(--primary);
-    color: var(--surface);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-/* Quick Agent Access Panel - Copied from Data Analyzer */
-.quick-agent-toggle {
-    position: relative;
-    overflow: hidden;
-    transition: all 0.2s ease;
-}
-
-.quick-agent-toggle:hover {
-    border-color: var(--primary);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
-}
-
-.quick-agent-toggle.active {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
-}
-
-.toggle-icon {
-    font-size: 16px;
-    transition: transform 0.2s ease;
-}
-
-.quick-agent-toggle.active .toggle-icon {
-    transform: rotate(180deg);
-}
-
-.quick-agents-panel {
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: min(400px, 90vw);
-    height: 100vh;
-    background: var(--surface);
-    border-left: 1px solid var(--outline);
-    box-shadow: var(--shadow-lg);
-    z-index: 1000;
-    transform: translateX(100%);
-    transition: transform 0.3s ease;
-    overflow-y: auto;
-}
-
-.quick-agents-panel.active {
-    transform: translateX(0);
-}
-
-.quick-agents-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-lg);
-    border-bottom: 1px solid var(--outline-variant);
-    background: var(--surface-variant);
-}
-
-.quick-agents-header h3 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--on-surface);
-}
-
-.close-panel {
-    background: none;
-    border: none;
-    font-size: 24px;
-    color: var(--on-surface-variant);
-    cursor: pointer;
-    padding: 4px;
-    border-radius: var(--radius-sm);
-    transition: all 0.2s ease;
-}
-
-.close-panel:hover {
-    background: var(--surface);
-    color: var(--on-surface);
-}
-
-.quick-agents-grid {
-    padding: var(--spacing-lg);
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-}
-
-.quick-agent-card {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-    padding: var(--spacing-md);
-    border: 1px solid var(--outline-variant);
-    border-radius: var(--radius-md);
-    text-decoration: none;
-    color: var(--on-surface);
-    transition: all 0.2s ease;
-    background: var(--surface);
-}
-
-.quick-agent-card:hover {
-    border-color: var(--primary);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
-}
-
-.agent-icon {
-    font-size: 24px;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--surface-variant);
-    border-radius: var(--radius-md);
-    flex-shrink: 0;
-}
-
-.agent-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.agent-info h4 {
-    margin: 0 0 4px 0;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--on-surface);
-}
-
-.agent-info p {
-    margin: 0;
-    font-size: 12px;
-    color: var(--on-surface-variant);
-    line-height: 1.4;
-}
-
-.agent-price {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--primary);
-    background: rgba(0, 0, 0, 0.05);
-    padding: 2px 8px;
-    border-radius: var(--radius-sm);
-    margin-top: 4px;
-    display: inline-block;
-}
-
-.quick-agents-footer {
-    padding: var(--spacing-md) var(--spacing-lg);
-    border-top: 1px solid var(--outline-variant);
-    background: var(--surface-variant);
-}
-
-.view-all-agents {
-    display: block;
-    text-align: center;
-    padding: var(--spacing-md);
-    background: var(--primary);
-    color: white;
-    text-decoration: none;
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.view-all-agents:hover {
-    background: #333333;
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
-}
-
-/* Overlay for mobile */
-.quick-agents-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-}
-
-.quick-agents-overlay.active {
-    opacity: 1;
-    visibility: visible;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .agent-container {
-        padding: var(--spacing-md);
-    }
-    
-    .agent-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--spacing-sm);
-    }
-    
-    .header-controls {
-        width: 100%;
-        justify-content: space-between;
-    }
-    
-    .agent-title {
-        font-size: 24px;
-    }
-    
-    .agent-grid {
-        flex-direction: column;
-        gap: var(--spacing-md);
-    }
-    
-    .widget-large,
-    .widget-small {
-        min-width: auto;
-        flex: none;
-    }
-    
-    .balance-amount {
-        font-size: 20px;
-    }
-    
-    .widget-large {
-        margin-right: 0 !important;
-    }
-    
-    .quick-agent-toggle {
-        flex: 1;
-        margin-right: var(--spacing-md);
-        justify-content: center;
-    }
-    
-    .quick-agents-panel {
-        width: 100%;
-        max-width: 100%;
-        right: 0;
-        left: 0;
-    }
-}
-</style>
-
-<script>
-// Job Posting Generator - Self-contained utilities (no shared dependencies)
-const JobPostingUtils = {
-    /**
-     * Update wallet balance display - Job Posting Generator specific
-     */
-    updateWalletBalance(newBalance) {
-        if (newBalance !== undefined) {
-            // Update header balance (anchor tag with emoji)
-            const headerBalance = document.querySelector('a[data-wallet-balance]');
-            if (headerBalance) {
-                headerBalance.textContent = `💰 ${newBalance.toFixed(2)} AED`;
-            }
-            
-            // Update page balance (span without emoji)
-            const pageBalance = document.getElementById('walletBalance');
-            if (pageBalance) {
-                pageBalance.textContent = newBalance.toFixed(2);
-            }
-        }
-    },
-
-    /**
-     * Show toast notification with duplicate prevention
-     */
-    showToast(message, type = 'info') {
-        // Prevent duplicate toasts
-        const existingToast = document.querySelector('.job-posting-toast');
-        if (existingToast) {
-            existingToast.remove();
-        }
-
-        const toast = document.createElement('div');
-        toast.className = 'job-posting-toast';
-        toast.style.cssText = `
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            padding: 8px 12px;
-            border-radius: 4px;
-            color: white;
-            font-size: 13px;
-            z-index: 1000;
-            max-width: 300px;
-            font-weight: 500;
-            ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
-        `;
-        toast.textContent = message;
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.remove();
-            }
-        }, 2000);
-    },
-
-    /**
-     * Generate text for copy/download functionality
-     */
-    generateTextForExport(contentElementId) {
-        const content = document.getElementById(contentElementId);
-        if (content) {
-            return content.innerText || content.textContent || '';
-        }
-        return 'No content available';
-    },
-
-    /**
-     * Copy content to clipboard
-     */
-    copyToClipboard(text, successMessage = 'Content copied to clipboard!') {
-        navigator.clipboard.writeText(text).then(() => {
-            this.showToast(`📋 ${successMessage}`, 'success');
-        }).catch(() => {
-            this.showToast('Failed to copy content', 'error');
-        });
-    },
-
-    /**
-     * Download content as text file
-     */
-    downloadAsFile(text, filename, successMessage = 'File downloaded!') {
-        const blob = new Blob([text], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename || `content-${Date.now()}.txt`;
-        a.click();
-        URL.revokeObjectURL(url);
-        this.showToast(`💾 ${successMessage}`, 'success');
-    }
-};
-
-// For backward compatibility, create AgentUtils alias
-const AgentUtils = JobPostingUtils;
-</script>
 {% endblock %}
 
 {% block content %}
 <script>
-// Consolidated DOMContentLoaded initialization
-document.addEventListener('DOMContentLoaded', function() {
-    // Set data for JavaScript access
-    document.body.setAttribute('data-user-authenticated', '{{ user.is_authenticated|yesno:"true,false" }}');
-    document.body.setAttribute('data-login-url', '{% url "authentication:login" %}');
-    document.body.setAttribute('data-wallet-balance', '{{ user.wallet_balance|default:0 }}');
-    document.body.setAttribute('data-wallet-url', '{% url "wallet:wallet" %}');
-    
-    // Initialize form enhancements
-    initializeFormEnhancements();
-    
-    // Initialize agent features
-    initializeAgent();
-    
-    // Initialize accessibility features
-    initializeAccessibility();
-    
-    // Initialize quick agents panel
-    const quickAgentsButton = document.querySelector('.quick-agent-toggle');
-    if (quickAgentsButton) {
-        quickAgentsButton.setAttribute('aria-expanded', 'false');
-    }
-});
+    // Set user authentication status for JavaScript access
+    document.addEventListener('DOMContentLoaded', function() {
+        document.body.setAttribute('data-user-authenticated', '{{ user.is_authenticated|yesno:"true,false" }}');
+        document.body.setAttribute('data-login-url', '{% url "authentication:login" %}');
+        document.body.setAttribute('data-wallet-url', '{% url "wallet:wallet" %}');
+    });
+</script>
+<script>
+        // Agent Frontend Template - Common JavaScript Utilities
 
-// HTML sanitization function
-function safeSetHTML(element, htmlString) {
-    if (!element || typeof htmlString !== 'string') return;
-    
-    // Create a temporary element to parse HTML
-    const temp = document.createElement('div');
-    temp.innerHTML = htmlString;
-    
-    // Remove script tags and event handlers
-    const scripts = temp.querySelectorAll('script');
-    scripts.forEach(script => script.remove());
-    
-    // Remove dangerous attributes
-    const allElements = temp.querySelectorAll('*');
-    allElements.forEach(el => {
-        const attrs = Array.from(el.attributes);
-        attrs.forEach(attr => {
-            if (attr.name.startsWith('on') || attr.name === 'javascript:') {
-                el.removeAttribute(attr.name);
+        // Quick Agent Access Panel Functions
+        function toggleQuickAgents() {
+            const panel = document.getElementById('quickAgentsPanel');
+            const overlay = document.getElementById('quickAgentsOverlay');
+            const toggle = document.querySelector('.quick-agent-toggle');
+            
+            const isActive = panel.classList.contains('active');
+            
+            if (isActive) {
+                // Close panel
+                panel.classList.remove('active');
+                overlay.classList.remove('active');
+                toggle.classList.remove('active');
+                toggle.setAttribute('aria-expanded', 'false');
+                panel.setAttribute('aria-hidden', 'true');
+                overlay.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = 'auto';
+            } else {
+                // Open panel
+                panel.classList.add('active');
+                overlay.classList.add('active');
+                toggle.classList.add('active');
+                toggle.setAttribute('aria-expanded', 'true');
+                panel.setAttribute('aria-hidden', 'false');
+                overlay.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeQuickAgents() {
+            const panel = document.getElementById('quickAgentsPanel');
+            const overlay = document.getElementById('quickAgentsOverlay');
+            const toggle = document.querySelector('.quick-agent-toggle');
+            
+            if (panel && overlay && toggle) {
+                panel.classList.remove('active');
+                overlay.classList.remove('active');
+                toggle.classList.remove('active');
+                toggle.setAttribute('aria-expanded', 'false');
+                panel.setAttribute('aria-hidden', 'true');
+                overlay.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Toast Notification Function
+        function showToast(message, type = 'info') {
+            // Remove existing toasts
+            document.querySelectorAll('.toast').forEach(toast => toast.remove());
+            
+            // Create new toast
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            
+            // Add to page
+            document.body.appendChild(toast);
+            
+            // Show toast with animation
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Processing Status Functions
+        function showProcessing() {
+            const processingStatus = document.getElementById('processingStatus');
+            processingStatus.style.display = 'block';
+            processingStatus.classList.add('active');
+        }
+
+        function hideProcessing() {
+            const processingStatus = document.getElementById('processingStatus');
+            processingStatus.style.display = 'none';
+            processingStatus.classList.remove('active');
+        }
+
+        // Wallet Balance Update Function
+        function updateWalletBalance(newBalance) {
+            if (newBalance !== undefined) {
+                const walletBalance = document.getElementById('walletBalance');
+                if (walletBalance) {
+                    walletBalance.textContent = newBalance.toFixed(2);
+                }
+            }
+        }
+
+        // Copy to Clipboard Utility
+        function copyToClipboard(text, successMessage = 'Copied to clipboard!') {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`📋 ${successMessage}`, 'success');
+            }).catch(() => {
+                showToast('Failed to copy to clipboard', 'error');
+            });
+        }
+
+        // Download as File Utility
+        function downloadAsFile(text, filename, successMessage = 'File downloaded!') {
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename || `content-${Date.now()}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast(`💾 ${successMessage}`, 'success');
+        }
+
+        // Close panel on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeQuickAgents();
             }
         });
-    });
-    
-    // Set the sanitized HTML
-    element.innerHTML = temp.innerHTML;
-}
 
-// Debounced form validation
-function createDebouncer(func, delay) {
-    let timeoutId;
-    return function(...args) {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => func.apply(this, args), delay);
-    };
-}
-
-// Initialize accessibility features
-function initializeAccessibility() {
-    // Add ARIA labels to form inputs that don't have them
-    const inputs = document.querySelectorAll('input, textarea, select');
-    inputs.forEach(input => {
-        if (!input.getAttribute('aria-label') && !input.getAttribute('aria-labelledby')) {
-            const label = input.closest('.form-group')?.querySelector('label');
-            if (label) {
-                const labelText = label.textContent.replace(/[^a-zA-Z0-9\s]/g, '').trim();
-                input.setAttribute('aria-label', labelText);
+        // Initialize accessibility features
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set initial ARIA states
+            const quickAgentsButton = document.querySelector('.quick-agent-toggle');
+            if (quickAgentsButton) {
+                quickAgentsButton.setAttribute('aria-expanded', 'false');
             }
-        }
-    });
-    
-    // Improve button accessibility
-    const buttons = document.querySelectorAll('button');
-    buttons.forEach(button => {
-        if (!button.getAttribute('aria-label') && button.textContent) {
-            const buttonText = button.textContent.replace(/[^a-zA-Z0-9\s]/g, '').trim();
-            button.setAttribute('aria-label', buttonText);
-        }
-    });
-}
+            
+            const panel = document.getElementById('quickAgentsPanel');
+            const overlay = document.getElementById('quickAgentsOverlay');
+            if (panel) panel.setAttribute('aria-hidden', 'true');
+            if (overlay) overlay.setAttribute('aria-hidden', 'true');
+        });
 
-// Initialize agent features
-function initializeAgent() {
-    // Add form interaction tracking
-    const form = document.getElementById('jobPostingForm');
-    if (form) {
-        // Add focus management
-        const firstInput = form.querySelector('input, textarea, select');
-        if (firstInput) {
-            firstInput.focus();
-        }
-    }
-}
+        // Job Posting specific utilities
+        const JobPostingUtils = {
+            renderSecureContent(container, content) {
+                // Secure rendering without innerHTML
+                const wrapper = document.createElement('div');
+                wrapper.className = 'results-content';
+                
+                // Basic text processing for job postings
+                const lines = content.split('\n');
+                lines.forEach(line => {
+                    if (line.trim()) {
+                        const p = document.createElement('p');
+                        p.textContent = line.trim();
+                        wrapper.appendChild(p);
+                    }
+                });
+                
+                container.appendChild(wrapper);
+            },
 
-// Quick Agent Access Toggle Functions - Copied from Data Analyzer
-function toggleQuickAgents() {
-    const panel = document.getElementById('quickAgentsPanel');
-    const overlay = document.getElementById('quickAgentsOverlay');
-    const toggle = document.querySelector('.quick-agent-toggle');
-    
-    const isActive = panel.classList.contains('active');
-    
-    if (isActive) {
-        // Close panel
-        panel.classList.remove('active');
-        overlay.classList.remove('active');
-        toggle.classList.remove('active');
-        // Update ARIA attributes
-        toggle.setAttribute('aria-expanded', 'false');
-        panel.setAttribute('aria-hidden', 'true');
-        overlay.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = 'auto';
-    } else {
-        // Open panel
-        panel.classList.add('active');
-        overlay.classList.add('active');
-        toggle.classList.add('active');
-        // Update ARIA attributes
-        toggle.setAttribute('aria-expanded', 'true');
-        panel.setAttribute('aria-hidden', 'false');
-        overlay.setAttribute('aria-hidden', 'false');
-        document.body.style.overflow = 'hidden';
-    }
-}
+            copyJobPosting() {
+                const content = document.getElementById('jobContent');
+                if (content) {
+                    const text = content.textContent || content.innerText || '';
+                    copyToClipboard(text, 'Job posting copied to clipboard!');
+                }
+            },
 
-function closeQuickAgents() {
-    const panel = document.getElementById('quickAgentsPanel');
-    const overlay = document.getElementById('quickAgentsOverlay');
-    const toggle = document.querySelector('.quick-agent-toggle');
-    
-    if (panel && overlay && toggle) {
-        panel.classList.remove('active');
-        overlay.classList.remove('active');
-        toggle.classList.remove('active');
-        toggle.setAttribute('aria-expanded', 'false');
-        panel.setAttribute('aria-hidden', 'true');
-        overlay.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = 'auto';
-    }
-}
-
-// Close panel on Escape key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeQuickAgents();
-    }
-});
+            downloadJobPosting() {
+                const content = document.getElementById('jobContent');
+                if (content) {
+                    const text = content.textContent || content.innerText || '';
+                    downloadAsFile(text, `job-posting-${Date.now()}.txt`, 'Job posting downloaded!');
+                }
+            }
+        };
 </script>
 <div class="agent-container">
     <!-- Agent Header -->
@@ -1117,632 +196,258 @@ document.addEventListener('keydown', function(e) {
     <!-- Quick Agent Access Panel -->
     {% include "components/quick_agents_panel.html" %}
 
-    <!-- Messages -->
-    {% if messages %}
-        {% for message in messages %}
-            <div class="{% if message.tags == 'error' %}alert alert-error{% else %}alert{% endif %}">
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
-    
-    <!-- Agent Grid -->
-    <div class="agent-grid">
-        <!-- Job Posting Form Widget -->
-        <div class="agent-widget widget-large" style="flex: 1; margin-right: clamp(0px, var(--spacing-lg), 2vw);">
-            <div class="widget-header">
-                <h3 class="widget-title">
-                    <span class="widget-icon">📝</span>
-                    Job Posting Details
-                </h3>
-            </div>
-            <div class="widget-content">
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="{% if message.tags == 'error' %}alert alert-error{% else %}alert{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Agent Grid -->
+        <div class="agent-grid">
+            <div class="agent-widget widget-large" style="flex: 1; margin-right: var(--spacing-lg);">
+                <div class="widget-header">
+                    <h3 class="widget-title">
+                        <span class="widget-icon">📝</span>
+                        Job Posting Form
+                    </h3>
+                </div>
+                <div class="widget-content">
                 
-                <form method="POST" id="jobPostingForm">
-                    {% csrf_token %}
-                    
-                    <!-- Basic Information Section -->
-                    <div class="section-container basic-info">
-                        <h4 class="section-subtitle">Basic Information</h4>
+                    <form method="POST" id="jobPostingForm">
+                        {% csrf_token %}
                         
                         <div class="form-group">
-                            <label class="form-label" for="job_title">💼 Job Title *</label>
-                            <input type="text" name="job_title" id="job_title" class="form-input" placeholder="e.g., Senior Software Engineer" required aria-describedby="job_title_help">
-                            <div id="job_title_help" class="form-help">Enter the exact position title you're hiring for</div>
+                            <label class="form-label" for="job_title">Job Title *</label>
+                            <input type="text" name="job_title" id="job_title" class="form-input" placeholder="e.g., Senior Software Engineer" required>
                         </div>
                         
                         <div class="form-group">
-                            <label class="form-label" for="company_name">🏢 Company Name *</label>
-                            <input type="text" name="company_name" id="company_name" class="form-input" placeholder="e.g., TechCorp Inc." required aria-describedby="company_name_help">
-                            <div id="company_name_help" class="form-help">Your organization's official name</div>
+                            <label class="form-label" for="company_name">Company Name *</label>
+                            <input type="text" name="company_name" id="company_name" class="form-input" placeholder="e.g., TechCorp Inc." required>
                         </div>
                         
                         <div class="form-group">
-                            <label class="form-label" for="job_description">📝 Job Description *</label>
-                            <textarea name="job_description" id="job_description" class="form-textarea" placeholder="Describe the role, key requirements, company culture, etc." rows="4" required aria-describedby="job_description_help"></textarea>
-                            <div id="job_description_help" class="form-help">Provide detailed information about the role and what you're looking for</div>
+                            <label class="form-label" for="job_description">Job Description *</label>
+                            <textarea name="job_description" id="job_description" class="form-textarea" placeholder="Describe the role, requirements, and company culture" rows="4" required></textarea>
                         </div>
-                    </div>
-                    
-                    <!-- Job Requirements Section -->
-                    <div class="section-container requirements">
-                        <h4 class="section-subtitle">Job Requirements</h4>
                         
                         <div class="form-group">
-                            <label class="form-label" for="seniority_level">📊 Seniority Level *</label>
-                            <select name="seniority_level" id="seniority_level" class="form-input" required aria-describedby="seniority_help">
-                                <option value="">Select seniority level...</option>
+                            <label class="form-label" for="seniority_level">Seniority Level *</label>
+                            <select name="seniority_level" id="seniority_level" class="form-input" required>
+                                <option value="">Select level...</option>
                                 <option value="entry">Entry Level</option>
                                 <option value="mid">Mid Level</option>
                                 <option value="senior">Senior Level</option>
                                 <option value="lead">Lead/Principal</option>
-                                <option value="executive">Executive/C-Level</option>
+                                <option value="executive">Executive</option>
                             </select>
-                            <div id="seniority_help" class="form-help">Choose the experience level required for this position</div>
                         </div>
                         
                         <div class="form-group">
-                            <label class="form-label" for="contract_type">📋 Contract Type *</label>
-                            <select name="contract_type" id="contract_type" class="form-input" required aria-describedby="contract_help">
-                                <option value="">Select contract type...</option>
+                            <label class="form-label" for="contract_type">Contract Type *</label>
+                            <select name="contract_type" id="contract_type" class="form-input" required>
+                                <option value="">Select type...</option>
                                 <option value="full-time">Full-time</option>
                                 <option value="part-time">Part-time</option>
                                 <option value="contract">Contract</option>
                                 <option value="freelance">Freelance</option>
                                 <option value="internship">Internship</option>
                             </select>
-                            <div id="contract_help" class="form-help">Select the type of employment relationship</div>
                         </div>
                         
                         <div class="form-group">
-                            <label class="form-label" for="location">📍 Location *</label>
-                            <input type="text" name="location" id="location" class="form-input" placeholder="e.g., Dubai, UAE or Remote" required aria-describedby="location_help">
-                            <div id="location_help" class="form-help">Specify where the role is based or if it's remote</div>
+                            <label class="form-label" for="location">Location *</label>
+                            <input type="text" name="location" id="location" class="form-input" placeholder="e.g., Dubai, UAE or Remote" required>
                         </div>
-                    </div>
-                    
-                    <!-- Additional Details Section -->
-                    <div class="section-container additional">
-                        <h4 class="section-subtitle">Additional Details (Optional)</h4>
                         
                         <div class="form-group">
-                            <label class="form-label" for="language">🌐 Language</label>
-                            <select name="language" id="language" class="form-input" aria-describedby="language_help">
+                            <label class="form-label" for="language">Language</label>
+                            <select name="language" id="language" class="form-input">
                                 <option value="English">English</option>
-                                <option value="Arabic">Arabic (العربية)</option>
-                                <option value="Spanish">Spanish (Español)</option>
-                                <option value="French">French (Français)</option>
-                                <option value="German">German (Deutsch)</option>
+                                <option value="Arabic">Arabic</option>
+                                <option value="Spanish">Spanish</option>
+                                <option value="French">French</option>
+                                <option value="German">German</option>
                             </select>
-                            <div id="language_help" class="form-help">Select the primary language for the job posting</div>
                         </div>
                         
-                        <div class="form-group">
-                            <label class="form-label" for="company_website">🌍 Company Website</label>
-                            <input type="url" name="company_website" id="company_website" class="form-input" placeholder="https://www.company.com" aria-describedby="website_help">
-                            <div id="website_help" class="form-help">Your company's official website URL</div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="how_to_apply">📧 How to Apply</label>
-                            <textarea name="how_to_apply" id="how_to_apply" class="form-textarea" placeholder="Instructions for candidates on how to apply for this position" rows="3" aria-describedby="apply_help"></textarea>
-                            <div id="apply_help" class="form-help">Provide clear application instructions for candidates</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Action Button -->
-                    <div style="margin-top: var(--spacing-lg);">
                         {% if user.is_authenticated %}
                             {% if user.wallet_balance >= 4.00 %}
                                 <button type="submit" class="btn btn-primary btn-full" id="processButton">
                                     💼 Generate Job Posting (4.00 AED)
                                 </button>
                             {% else %}
-                                <div style="background: #fef2f2; color: #dc2626; padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); font-size: 14px; font-weight: 500; text-align: center;">
+                                <div class="alert alert-error">
                                     Insufficient balance! You need 4.00 AED.
                                 </div>
-                                <a href="{% url 'wallet:wallet' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
+                                <a href="{% url 'wallet:wallet' %}" class="btn btn-primary btn-full">
                                     💰 Top Up Wallet
                                 </a>
                             {% endif %}
                         {% else %}
-                            <a href="{% url 'authentication:login' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
+                            <a href="{% url 'authentication:login' %}" class="btn btn-primary btn-full">
                                 🔑 Login to Continue
                             </a>
                         {% endif %}
-                    </div>
-                </form>
+                    </form>
+                </div>
+            </div>
+
+            <!-- How It Works Widget -->
+            <div class="agent-widget widget-small" style="min-width: min(280px, 100%); max-width: min(280px, 100%); margin-left: auto;">
+                <div class="widget-header">
+                    <h3 class="widget-title">
+                        <span class="widget-icon">ℹ️</span>
+                        How It Works
+                    </h3>
+                </div>
+                <div class="widget-content">
+                    <ol class="info-list">
+                        <li>Enter job requirements</li>
+                        <li>Configure position details</li>
+                        <li>Process with AI</li>
+                        <li>Get professional posting</li>
+                    </ol>
+                    
+                    <!-- Quick Agents Toggle Button -->
+                    <button class="quick-agent-toggle" onclick="toggleQuickAgents()" 
+                            title="Quick access to other agents"
+                            aria-label="Open quick access panel for other AI agents"
+                            aria-expanded="false"
+                            aria-controls="quickAgentsPanel"
+                            style="margin-top: var(--spacing-md);">
+                        <span class="toggle-icon" aria-hidden="true">🚀</span>
+                        <span class="toggle-text">Explore Other Agents</span>
+                    </button>
+                </div>
             </div>
         </div>
-        
-        <!-- How It Works Widget - Positioned on the right -->
-        <div class="agent-widget widget-small" style="min-width: min(280px, 100%); max-width: min(280px, 100%); margin-left: auto;">
-            <div class="widget-header">
-                <h3 class="widget-title">
-                    <span class="widget-icon">ℹ️</span>
-                    How It Works
-                </h3>
-            </div>
-            <div class="widget-content">
-                <ol class="info-list">
-                    <li>Fill in job details and requirements</li>
-                    <li>Add company info and culture</li>
-                    <li>Choose seniority and contract type</li>
-                    <li>Get professional job posting</li>
-                </ol>
-                
-                <!-- Other Agents Button -->
-                <button class="quick-agent-toggle btn btn-secondary btn-full" onclick="toggleQuickAgents()" 
-                        title="Quick access to other agents"
-                        aria-label="Open quick access panel for other AI agents"
-                        aria-expanded="false"
-                        aria-controls="quickAgentsPanel"
-                        style="margin-top: var(--spacing-md);">
-                    <span class="toggle-icon" aria-hidden="true">🚀</span>
-                    <span class="toggle-text">Explore Other Agents</span>
-                </button>
-            </div>
-        </div>
-    </div>
-    
+
     <!-- Processing Status -->
-    <div class="agent-grid" style="margin-top: var(--spacing-lg);">
-        {% include "components/processing_status.html" with status_title="Creating Job Posting..." status_text="Crafting professional job description..." %}
+    <div class="agent-grid">
+        {% include "components/processing_status.html" with status_title="Creating Job Posting..." status_text="Please wait while we generate your professional job posting..." %}
     </div>
-    
+
     <!-- Results -->
-    <div class="agent-grid" style="margin-top: var(--spacing-lg);">
+    <div class="agent-grid">
         {% include "components/results_container.html" with results_title="Generated Job Posting" %}
     </div>
-        
     </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     // Form validation
     function isFormValid() {
-        const jobTitle = document.getElementById('job_title').value.trim();
-        const companyName = document.getElementById('company_name').value.trim();
-        const description = document.getElementById('job_description').value.trim();
-        const seniority = document.getElementById('seniority_level').value;
-        const contractType = document.getElementById('contract_type').value;
-        const location = document.getElementById('location').value.trim();
-        
-        return jobTitle && companyName && description && seniority && contractType && location;
-    }
-    
-    // Copy job posting to clipboard
-    function copyJobPosting() {
-        const jobText = AgentUtils.generateTextForExport('jobContent');
-        AgentUtils.copyToClipboard(jobText, 'Job posting copied to clipboard!');
-    }
-    
-    // Download job posting as text file
-    function downloadJobPosting() {
-        const jobText = AgentUtils.generateTextForExport('jobContent');
-        AgentUtils.downloadAsFile(jobText, `job-posting-${Date.now()}.txt`, 'Job posting downloaded!');
+        const required = ['job_title', 'company_name', 'job_description', 'seniority_level', 'contract_type', 'location'];
+        return required.every(id => document.getElementById(id).value.trim());
     }
 
-    // Reset form for creating another job posting
-    function resetForm() {
-        // Clear any active polling
-        if (currentPollInterval) {
-            clearInterval(currentPollInterval);
-            currentPollInterval = null;
-        }
-        resultsDisplayed = false;
-        
-        // Reset form and UI
-        document.getElementById('jobPostingForm').reset();
-        const jobResults = document.getElementById('jobResults');
-        jobResults.style.display = 'none';
-        jobResults.classList.remove('active');
-        resetUIState();
-        
-        AgentUtils.showToast('Form reset! Ready for another job posting.', 'success');
-    }
-    
-
-    // Enhanced form validation with visual feedback and debouncing
-    const debouncedValidateField = createDebouncer(function(field) {
-        const isValid = field.value.trim() !== '';
-        const container = field.closest('.form-group') || field.parentElement;
-        
-        if (isValid) {
-            field.style.borderColor = 'var(--success)';
-            field.style.boxShadow = '0 0 0 2px rgba(16, 185, 129, 0.1)';
-            container.classList.remove('error');
-        } else {
-            field.style.borderColor = 'var(--error)';
-            field.style.boxShadow = '0 0 0 2px rgba(239, 68, 68, 0.1)';
-            container.classList.add('error');
-        }
-        
-        return isValid;
-    }, 300);
-    
-    function validateField(field) {
-        return debouncedValidateField(field);
-    }
-
-    // Progressive form enhancement with debouncing
-    function initializeFormEnhancements() {
-        const requiredFields = document.querySelectorAll('[required]');
-        
-        // Debounced textarea auto-resize
-        const debouncedResize = createDebouncer(function(textarea) {
-            textarea.style.height = 'auto';
-            textarea.style.height = Math.max(120, textarea.scrollHeight) + 'px';
-        }, 100);
-        
-        requiredFields.forEach(field => {
-            // Real-time validation with debouncing
-            field.addEventListener('input', () => {
-                if (field.value.trim()) {
-                    debouncedValidateField(field);
-                }
-            });
-            
-            field.addEventListener('blur', () => validateField(field));
-            
-            // Reset validation on focus
-            field.addEventListener('focus', () => {
-                field.style.borderColor = 'var(--primary)';
-                field.style.boxShadow = '0 0 0 2px rgba(0, 0, 0, 0.1)';
-                field.closest('.form-group')?.classList.remove('error');
-            });
-            
-            // Auto-resize textareas with debouncing
-            if (field.tagName === 'TEXTAREA') {
-                field.addEventListener('input', function() {
-                    debouncedResize(this);
-                });
-            }
-        });
-    }
-
-    // Form enhancements are initialized in the main DOMContentLoaded listener above
-
-
-
-    // Display job posting results with professional formatting
+    // Display results
     function displayResults(result) {
         const resultsContainer = document.getElementById('jobResults');
         const contentElement = document.getElementById('jobContent');
         
-        if (!resultsContainer || !contentElement) {
-            console.error('Job results elements not found');
-            return;
-        }
-        
-        // Update wallet balance if provided
         if (result.wallet_balance !== undefined) {
-            AgentUtils.updateWalletBalance(result.wallet_balance);
+            updateWalletBalance(result.wallet_balance);
         }
         
-        // Handle errors
         if (result.error) {
-            AgentUtils.showToast(`❌ ${result.error}`, 'error');
+            showToast(`❌ ${result.error}`, 'error');
             return;
         }
         
-        // Handle failed status
-        if (result.status === 'failed') {
-            AgentUtils.showToast('❌ Failed to generate job posting - no charge applied', 'error');
-            return;
-        }
+        let content = result.job_posting_content || result.content || 'Job posting generated successfully!';
+        JobPostingUtils.renderSecureContent(contentElement, content);
         
-        // Extract job posting content with priority order
-        let content = '';
-        
-        if (result.job_posting_content && typeof result.job_posting_content === 'string') {
-            content = result.job_posting_content;
-        } else if (result.content && typeof result.content === 'string') {
-            content = result.content;
-        } else if (result.formatted_report && typeof result.formatted_report === 'string') {
-            content = result.formatted_report;
-        } else if (result.output_text && typeof result.output_text === 'string') {
-            content = result.output_text;
-        } else {
-            content = 'Job posting generated successfully!';
-        }
-        
-        // Format job posting content with professional styling
-        const formattedContent = formatJobPostingContent(content);
-        
-        // Update content with safe HTML
-        safeSetHTML(contentElement, formattedContent);
-        
-        // Show results
         resultsContainer.style.display = 'block';
-        resultsContainer.classList.add('active');
         resultsContainer.scrollIntoView({ behavior: 'smooth' });
-        
-        // Show success message
-        const successMessage = result.success ? '✅ Job posting created and payment processed!' : '✅ Job posting generated!';
-        AgentUtils.showToast(successMessage, 'success');
-    }
-    
-    // Professional job posting formatter
-    function formatJobPostingContent(content) {
-        if (!content || typeof content !== 'string') {
-            return '<p>No job posting content available.</p>';
-        }
-        
-        // Convert markdown-style headers to HTML
-        content = content.replace(/### (.+)/g, '<h3>$1</h3>');
-        content = content.replace(/## (.+)/g, '<h2>$1</h2>');
-        content = content.replace(/# (.+)/g, '<h1>$1</h1>');
-        
-        // First, handle numbered lists that are embedded in paragraphs
-        content = content.replace(/(\d+\.\s[^\.]+\.)\s*/g, '$1\n');
-        
-        // Convert line breaks to proper paragraphs
-        let paragraphs = content.split('\n\n');
-        let formattedContent = '';
-        
-        paragraphs.forEach(paragraph => {
-            paragraph = paragraph.trim();
-            if (paragraph) {
-                // Check if it's a header
-                if (paragraph.includes('<h1>') || paragraph.includes('<h2>') || paragraph.includes('<h3>')) {
-                    formattedContent += paragraph;
-                }
-                // Check if paragraph contains numbered list items
-                else if (/\d+\.\s/.test(paragraph)) {
-                    // Split the paragraph by numbered items
-                    let parts = paragraph.split(/(?=\d+\.\s)/);
-                    let beforeList = parts[0].trim();
-                    
-                    // Handle any content before the list
-                    if (beforeList && !beforeList.match(/^\d+\./)) {
-                        if (beforeList.toLowerCase().includes('responsibilities') || beforeList.toLowerCase().includes('duties')) {
-                            formattedContent += `<div class="key-points"><p>${beforeList}</p>`;
-                        } else if (beforeList.toLowerCase().includes('requirements') || beforeList.toLowerCase().includes('qualifications')) {
-                            formattedContent += `<div class="insights"><p>${beforeList}</p>`;
-                        } else if (beforeList.toLowerCase().includes('benefits') || beforeList.toLowerCase().includes('compensation')) {
-                            formattedContent += `<div class="summary"><p>${beforeList}</p>`;
-                        } else {
-                            formattedContent += `<p>${beforeList}</p>`;
-                        }
-                    }
-                    
-                    // Process the numbered items
-                    let hasNumberedItems = false;
-                    let listItems = [];
-                    
-                    for (let i = 0; i < parts.length; i++) {
-                        let part = parts[i].trim();
-                        if (part && part.match(/^\d+\./)) {
-                            hasNumberedItems = true;
-                            let cleanItem = part.replace(/^\d+\.\s*/, '').trim();
-                            listItems.push(cleanItem);
-                        }
-                    }
-                    
-                    if (hasNumberedItems && listItems.length > 0) {
-                        formattedContent += '<ol>';
-                        listItems.forEach(item => {
-                            formattedContent += `<li>${item}</li>`;
-                        });
-                        formattedContent += '</ol>';
-                    }
-                    
-                    // Close the special div if we opened one
-                    if (beforeList && (beforeList.toLowerCase().includes('responsibilities') || 
-                                     beforeList.toLowerCase().includes('requirements') || 
-                                     beforeList.toLowerCase().includes('benefits'))) {
-                        formattedContent += '</div>';
-                    }
-                }
-                // Check for bullet lists
-                else if (paragraph.includes('- ') || paragraph.includes('• ')) {
-                    let listItems = paragraph.split('\n').filter(item => item.trim().startsWith('-') || item.trim().startsWith('•'));
-                    if (listItems.length > 0) {
-                        formattedContent += '<ul>';
-                        listItems.forEach(item => {
-                            let cleanItem = item.replace(/^[•-] /, '').trim();
-                            formattedContent += `<li>${cleanItem}</li>`;
-                        });
-                        formattedContent += '</ul>';
-                    }
-                }
-                // Regular paragraph
-                else {
-                    // Convert single line breaks to <br>
-                    paragraph = paragraph.replace(/\n/g, '<br>');
-                    
-                    // Add special styling for job posting sections
-                    if (paragraph.toLowerCase().includes('responsibilities') || paragraph.toLowerCase().includes('duties')) {
-                        formattedContent += `<div class="key-points">${paragraph}</div>`;
-                    } else if (paragraph.toLowerCase().includes('requirements') || paragraph.toLowerCase().includes('qualifications')) {
-                        formattedContent += `<div class="insights">${paragraph}</div>`;
-                    } else if (paragraph.toLowerCase().includes('benefits') || paragraph.toLowerCase().includes('compensation')) {
-                        formattedContent += `<div class="summary">${paragraph}</div>`;
-                    } else {
-                        formattedContent += `<p>${paragraph}</p>`;
-                    }
-                }
-            }
-        });
-        
-        // Enhance strong text
-        formattedContent = formattedContent.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-        formattedContent = formattedContent.replace(/\*(.+?)\*/g, '<em>$1</em>');
-        
-        return formattedContent;
+        showToast('✅ Job posting created successfully!', 'success');
     }
 
-    // Track if results have been displayed to prevent duplicates
-    let resultsDisplayed = false;
-    let currentPollInterval = null;
-
-    // Poll for results with improved error handling
+    // Poll for results
     function pollForResults(requestId) {
         let pollCount = 0;
-        const maxPolls = 30; // 30 seconds maximum
-        resultsDisplayed = false; // Reset flag
+        const maxPolls = 30;
         
-        // Clear any existing polling
-        if (currentPollInterval) {
-            clearInterval(currentPollInterval);
-            currentPollInterval = null;
-        }
-        
-        currentPollInterval = setInterval(() => {
+        const pollInterval = setInterval(() => {
             pollCount++;
             
             fetch(`/agents/job-posting-generator/status/${requestId}/`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(result => {
                     if (result.status === 'completed' || result.status === 'failed') {
-                        // Stop polling immediately
-                        clearInterval(currentPollInterval);
-                        currentPollInterval = null;
-                        
-                        // Reset UI
-                        resetUIState();
-                        
-                        // Display results only once
-                        if (!resultsDisplayed) {
-                            resultsDisplayed = true;
-                            displayResults(result);
-                        }
+                        clearInterval(pollInterval);
+                        hideProcessing();
+                        document.getElementById('processButton').disabled = false;
+                        displayResults(result);
                     } else if (pollCount >= maxPolls) {
-                        clearInterval(currentPollInterval);
-                        currentPollInterval = null;
-                        resetUIState();
-                        AgentUtils.showToast('❌ Processing timeout - please try again', 'error');
+                        clearInterval(pollInterval);
+                        hideProcessing();
+                        document.getElementById('processButton').disabled = false;
+                        showToast('❌ Timeout - please try again', 'error');
                     }
                 })
                 .catch(error => {
-                    console.error('Error polling results:', error);
-                    clearInterval(currentPollInterval);
-                    currentPollInterval = null;
-                    resetUIState();
-                    AgentUtils.showToast('❌ Network error during processing - please try again', 'error');
+                    clearInterval(pollInterval);
+                    hideProcessing();
+                    document.getElementById('processButton').disabled = false;
+                    showToast('❌ Network error', 'error');
                 });
         }, 1000);
     }
-    
-    // Helper function to reset UI state
-    function resetUIState() {
-        const processingStatus = document.getElementById('processingStatus');
-        processingStatus.style.display = 'none';
-        processingStatus.classList.remove('active');
-        const processButton = document.getElementById('processButton');
-        processButton.disabled = false;
-        processButton.classList.remove('loading');
-        processButton.innerHTML = '💼 Generate Job Posting (4.00 AED)';
-    }
-    
+
     // Handle form submission
     document.getElementById('jobPostingForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
         if (!isFormValid()) {
-            AgentUtils.showToast('Please fill in all required fields', 'error');
+            showToast('Please fill in all required fields', 'error');
             return;
         }
         
-        // Prevent multiple submissions
         const processButton = document.getElementById('processButton');
-        if (processButton.disabled) {
-            return; // Already processing
+        if (processButton.disabled) return;
+        
+        const isAuthenticated = document.body.getAttribute('data-user-authenticated') === 'true';
+        if (!isAuthenticated) {
+            window.location.href = document.body.getAttribute('data-login-url');
+            return;
         }
         
-        // Check user authentication
-        {% if not user.is_authenticated %}
-        window.location.href = "{% url 'authentication:login' %}";
-        return;
-        {% endif %}
-        
-        // Check wallet balance dynamically from DOM
-        const walletBalanceElement = document.getElementById('walletBalance');
-        const currentBalance = walletBalanceElement ? parseFloat(walletBalanceElement.textContent) : 0;
+        const currentBalance = parseFloat(document.getElementById('walletBalance').textContent) || 0;
         if (currentBalance < 4.00) {
-            AgentUtils.showToast('Insufficient balance! You need 4.00 AED.', 'error');
-            setTimeout(() => {
-                window.location.href = "{% url 'wallet:wallet' %}";
-            }, 2000);
+            showToast('Insufficient balance! You need 4.00 AED.', 'error');
+            setTimeout(() => window.location.href = document.body.getAttribute('data-wallet-url'), 2000);
             return;
         }
 
-        // Clear any existing polling and reset flags
-        if (currentPollInterval) {
-            clearInterval(currentPollInterval);
-            currentPollInterval = null;
-        }
-        resultsDisplayed = false;
-
-        // Show processing status with enhanced loading
-        const processingStatus = document.getElementById('processingStatus');
-        processingStatus.style.display = 'block';
-        processingStatus.classList.add('active');
+        showProcessing();
         processButton.disabled = true;
-        processButton.classList.add('loading');
-        processButton.innerHTML = '⏳ Processing...';
-        const jobResults = document.getElementById('jobResults');
-        jobResults.style.display = 'none';
-        jobResults.classList.remove('active');
-        
-        const steps = [
-            'Analyzing job requirements and company details...',
-            'Structuring professional job description...',
-            'Optimizing content for recruitment platforms...',
-            'Adding company branding and tone...',
-            'Finalizing professional format and review...'
-        ];
-        
-        let currentStep = 0;
-        const stepInterval = setInterval(() => {
-            if (currentStep < steps.length) {
-                document.getElementById('statusText').textContent = steps[currentStep];
-                currentStep++;
-            } else {
-                clearInterval(stepInterval);
-            }
-        }, 800);
-
-        // Submit form via AJAX
-        const formData = new FormData(this);
+        document.getElementById('jobResults').style.display = 'none';
         
         fetch(window.location.href, {
             method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            body: new FormData(this),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(response => response.json())
         .then(result => {
-            clearInterval(stepInterval);
             if (result.success && result.request_id) {
-                // Start polling for results
                 pollForResults(result.request_id);
             } else {
-                // Handle immediate response
-                resetUIState();
-                
-                if (result.error) {
-                    AgentUtils.showToast(`❌ ${result.error}`, 'error');
-                } else {
-                    displayResults(result);
-                }
+                hideProcessing();
+                processButton.disabled = false;
+                displayResults(result);
             }
         })
         .catch(error => {
-            clearInterval(stepInterval);
-            console.error('Error:', error);
-            resetUIState();
-            AgentUtils.showToast('❌ Network error - please try again', 'error');
+            hideProcessing();
+            processButton.disabled = false;
+            showToast('❌ Network error', 'error');
         });
     });
 </script>
