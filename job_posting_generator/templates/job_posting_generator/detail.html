@@ -95,8 +95,19 @@
         // Processing Status Functions
         function showProcessing() {
             const processingStatus = document.getElementById('processingStatus');
-            processingStatus.style.display = 'block';
-            processingStatus.classList.add('active');
+            const resultsContainer = document.getElementById('resultsContainer');
+            
+            if (processingStatus) {
+                processingStatus.style.display = 'block';
+                processingStatus.classList.add('active');
+                
+                // Smooth scroll to processing section
+                processingStatus.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+            }
+            if (resultsContainer) resultsContainer.style.display = 'none';
         }
 
         function hideProcessing() {
@@ -484,7 +495,7 @@
                 resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
             
-            showToast('✅ Job posting created successfully!', 'success');
+            // No toast needed - results display is confirmation enough
             
         } else {
             // Handle error case
@@ -604,7 +615,7 @@
             // Get clean text content without HTML formatting
             const text = content.textContent || content.innerText || '';
             navigator.clipboard.writeText(text).then(() => {
-                showToast('📋 Job posting copied to clipboard!', 'success');
+                // No toast for successful copy - clipboard action is confirmation enough
             }).catch(() => {
                 showToast('❌ Failed to copy to clipboard', 'error');
             });
@@ -635,7 +646,7 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
-            showToast('💾 Job posting downloaded!', 'success');
+            // No toast for download - file download is confirmation enough
         } else {
             showToast('❌ No job posting content to download', 'error');
         }
@@ -646,6 +657,14 @@
         const resultsContainer = document.getElementById('resultsContainer');
         if (resultsContainer) resultsContainer.style.display = 'none';
         document.getElementById('processButton').disabled = false;
+        
+        // Scroll back to form for new input
+        const formSection = document.getElementById('jobPostingForm');
+        if (formSection) {
+            formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        // No toast for reset - visual feedback is enough
     }
 </script>
 
