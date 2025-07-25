@@ -14,6 +14,9 @@
         document.body.setAttribute('data-user-authenticated', '{{ user.is_authenticated|yesno:"true,false" }}');
         document.body.setAttribute('data-login-url', '{% url "authentication:login" %}');
         document.body.setAttribute('data-wallet-url', '{% url "wallet:wallet" %}');
+        
+        // Initialize agent configuration
+        window.AGENT_PRICE = {{ agent.price }};
     });
 </script>
 <script>
@@ -275,13 +278,13 @@
                         </div>
                         
                         {% if user.is_authenticated %}
-                            {% if user.wallet_balance >= 4.00 %}
+                            {% if user.wallet_balance >= agent.price %}
                                 <button type="submit" class="btn btn-primary btn-full" id="processButton">
-                                    💼 Generate Job Posting (4.00 AED)
+                                    💼 Generate Job Posting ({{ agent.price }} AED)
                                 </button>
                             {% else %}
                                 <div class="alert alert-error">
-                                    Insufficient balance! You need 4.00 AED.
+                                    Insufficient balance! You need {{ agent.price }} AED.
                                 </div>
                                 <a href="{% url 'wallet:wallet' %}" class="btn btn-primary btn-full">
                                     💰 Top Up Wallet
@@ -371,31 +374,49 @@
     // Poll for results
     function pollForResults(requestId) {
         let pollCount = 0;
-        const maxPolls = 30;
+        const maxPolls = 30; // 30 seconds max
+        
+        console.log(`Starting polling for request: ${requestId}`);
         
         const pollInterval = setInterval(() => {
             pollCount++;
+            console.log(`Poll attempt ${pollCount}/${maxPolls} for request: ${requestId}`);
             
             fetch(`/agents/job-posting-generator/status/${requestId}/`)
-                .then(response => response.json())
+                .then(response => {
+                    console.log(`Status response: ${response.status}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(result => {
-                    if (result.status === 'completed' || result.status === 'failed') {
+                    console.log('Poll result:', result);
+                    
+                    if (result.status === 'completed') {
                         clearInterval(pollInterval);
                         hideProcessing();
                         document.getElementById('processButton').disabled = false;
                         displayResults(result);
+                    } else if (result.status === 'failed') {
+                        clearInterval(pollInterval);
+                        hideProcessing();
+                        document.getElementById('processButton').disabled = false;
+                        showToast(`❌ Processing failed: ${result.error || 'Unknown error'}`, 'error');
                     } else if (pollCount >= maxPolls) {
                         clearInterval(pollInterval);
                         hideProcessing();
                         document.getElementById('processButton').disabled = false;
-                        showToast('❌ Timeout - please try again', 'error');
+                        showToast('⏰ Processing is taking longer than expected. Please check back later.', 'error');
                     }
+                    // Continue polling if status is 'processing' or 'pending'
                 })
                 .catch(error => {
+                    console.error('Polling error:', error);
                     clearInterval(pollInterval);
                     hideProcessing();
                     document.getElementById('processButton').disabled = false;
-                    showToast('❌ Network error', 'error');
+                    showToast(`❌ Error checking status: ${error.message}`, 'error');
                 });
         }, 1000);
     }
@@ -419,8 +440,9 @@
         }
         
         const currentBalance = parseFloat(document.getElementById('walletBalance').textContent) || 0;
-        if (currentBalance < 4.00) {
-            showToast('Insufficient balance! You need 4.00 AED.', 'error');
+        const requiredBalance = window.AGENT_PRICE || 3.00;
+        if (currentBalance < requiredBalance) {
+            showToast(`Insufficient balance! You need ${requiredBalance} AED.`, 'error');
             setTimeout(() => window.location.href = document.body.getAttribute('data-wallet-url'), 2000);
             return;
         }
