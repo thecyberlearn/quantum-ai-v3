@@ -351,8 +351,8 @@
 
     // Display results
     function displayResults(result) {
-        const resultsContainer = document.getElementById('jobResults');
-        const contentElement = document.getElementById('jobContent');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const contentElement = document.getElementById('resultsContent');
         
         if (result.wallet_balance !== undefined) {
             updateWalletBalance(result.wallet_balance);
@@ -364,10 +364,14 @@
         }
         
         let content = result.job_posting_content || result.content || 'Job posting generated successfully!';
-        JobPostingUtils.renderSecureContent(contentElement, content);
+        if (contentElement) {
+            contentElement.innerHTML = `<pre style="white-space: pre-wrap; word-wrap: break-word;">${content}</pre>`;
+        }
         
-        resultsContainer.style.display = 'block';
-        resultsContainer.scrollIntoView({ behavior: 'smooth' });
+        if (resultsContainer) {
+            resultsContainer.style.display = 'block';
+            resultsContainer.scrollIntoView({ behavior: 'smooth' });
+        }
         showToast('✅ Job posting created successfully!', 'success');
     }
 
@@ -449,7 +453,8 @@
 
         showProcessing();
         processButton.disabled = true;
-        document.getElementById('jobResults').style.display = 'none';
+        const resultsContainer = document.getElementById('resultsContainer');
+        if (resultsContainer) resultsContainer.style.display = 'none';
         
         fetch(window.location.href, {
             method: 'POST',
@@ -472,5 +477,29 @@
             showToast('❌ Network error', 'error');
         });
     });
+
+    // Add functions expected by the results component
+    function copyResults() {
+        const content = document.getElementById('resultsContent');
+        if (content) {
+            const text = content.textContent || content.innerText || '';
+            copyToClipboard(text, 'Job posting copied to clipboard!');
+        }
+    }
+
+    function downloadResults() {
+        const content = document.getElementById('resultsContent');
+        if (content) {
+            const text = content.textContent || content.innerText || '';
+            downloadAsFile(text, `job-posting-${Date.now()}.txt`, 'Job posting downloaded!');
+        }
+    }
+
+    function resetForm() {
+        document.getElementById('jobPostingForm').reset();
+        const resultsContainer = document.getElementById('resultsContainer');
+        if (resultsContainer) resultsContainer.style.display = 'none';
+        document.getElementById('processButton').disabled = false;
+    }
 </script>
 {% endblock %}
