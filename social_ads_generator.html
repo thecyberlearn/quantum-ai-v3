@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Ads Generator - NetCop AI Hub</title>
+    <style>
+        /* Agent Frontend Template - Common Components CSS */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #000000;
+            --surface: #ffffff;
+            --surface-variant: #f8fafc;
+            --background: #f3f4f6;
+            --outline: #e4e7eb;
+            --outline-variant: #e1e4e7;
+            --on-surface: #1a1a1a;
+            --on-surface-variant: #6b7280;
+            --success: #10b981;
+            --error: #ef4444;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        html {
+            scrollbar-gutter: stable;
+        }
+
+        body {
+            background: var(--background);
+            color: var(--on-surface);
+            line-height: 1.5;
+            font-weight: 400;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Layout */
+        .agent-container {
+            margin: 0 auto;
+            padding: var(--spacing-lg);
+            max-width: 1600px;
+        }
+
+        .agent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+        }
+
+        .agent-grid {
+            display: flex;
+            gap: var(--spacing-lg);
+            align-items: flex-start;
+            flex-wrap: wrap;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        /* Typography */
+        .agent-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--on-surface);
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .agent-subtitle {
+            font-size: 16px;
+            color: var(--on-surface-variant);
+            margin: 4px 0 0 0;
+        }
+
+        /* Widgets */
+        .agent-widget {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            border: 1px solid var(--outline-variant);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 1px solid var(--outline-variant);
+        }
+
+        .widget-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--on-surface);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .widget-icon {
+            font-size: 20px;
+            padding: 6px;
+            border-radius: var(--radius-sm);
+            background: var(--surface-variant);
+        }
+
+        .widget-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        /* Widget Sizes */
+        .widget-large {
+            flex: 1;
+            min-width: 400px;
+        }
+
+        .widget-small {
+            flex: 0 0 280px;
+        }
+
+        .widget-wide {
+            flex: 1 1 100%;
+            width: 100%;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--on-surface);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--outline-variant);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            line-height: 1.5;
+            transition: all 0.2s ease;
+            background: var(--surface);
+            color: var(--on-surface);
+            font-family: inherit;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-input:hover, .form-textarea:hover, .form-select:hover {
+            border-color: var(--on-surface-variant);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-help {
+            color: var(--on-surface-variant);
+            font-size: 12px;
+            margin-top: var(--spacing-xs);
+        }
+
+        .required::after {
+            content: " *";
+            color: var(--error);
+        }
+
+        /* Radio Buttons */
+        .radio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+        }
+
+        .radio-card {
+            position: relative;
+            padding: var(--spacing-md);
+            border: 1px solid var(--outline-variant);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .radio-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .radio-card.selected {
+            border-color: var(--primary);
+            background: var(--surface-variant);
+        }
+
+        .radio-card input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .radio-button {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--outline);
+            border-radius: 50%;
+            position: relative;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .radio-card:hover .radio-button,
+        .radio-card.selected .radio-button {
+            border-color: var(--primary);
+        }
+
+        .radio-card.selected .radio-button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            background: var(--primary);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .radio-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--on-surface);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            pointer-events: none;
+        }
+
+        /* Checkbox Grid */
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: var(--spacing-sm);
+        }
+
+        .checkbox-card {
+            position: relative;
+            padding: var(--spacing-sm);
+            border: 1px solid var(--outline-variant);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-size: 13px;
+        }
+
+        .checkbox-card:hover {
+            border-color: var(--primary);
+            background: var(--surface-variant);
+        }
+
+        .checkbox-card.selected {
+            border-color: var(--primary);
+            background: var(--surface-variant);
+        }
+
+        .checkbox-card input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .checkbox-button {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--outline);
+            border-radius: 3px;
+            position: relative;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .checkbox-card:hover .checkbox-button,
+        .checkbox-card.selected .checkbox-button {
+            border-color: var(--primary);
+        }
+
+        .checkbox-card.selected .checkbox-button::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            font-size: 10px;
+            color: var(--primary);
+            font-weight: bold;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            text-decoration: none;
+            min-height: 44px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #333333;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--on-surface);
+            border: 2px solid var(--outline);
+        }
+
+        .btn-secondary:hover {
+            background: var(--surface-variant);
+            border-color: var(--outline);
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        /* Wallet Card */
+        .wallet-card {
+            background: linear-gradient(135deg, #000000 0%, #333333 100%);
+            color: white;
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            border: none;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 0;
+            min-height: auto;
+        }
+
+        .wallet-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: translate(30px, -30px);
+        }
+
+        .wallet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .wallet-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .wallet-icon {
+            font-size: 20px;
+        }
+
+        .balance-display {
+            margin-bottom: 0;
+        }
+
+        .balance-amount {
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .balance-label {
+            font-size: 12px;
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        .wallet-topup-btn {
+            width: 100%;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 12px;
+        }
+
+        .wallet-topup-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Processing Status */
+        .processing-status {
+            background: var(--surface);
+            border: 1px solid var(--outline-variant);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            text-align: center;
+            display: none;
+        }
+
+        .processing-status.active {
+            display: block;
+        }
+
+        .status-icon {
+            font-size: 48px;
+            margin-bottom: var(--spacing-md);
+            animation: pulse 2s infinite;
+        }
+
+        .status-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--on-surface);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .status-text {
+            font-size: 14px;
+            color: var(--on-surface-variant);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Results Container */
+        .results-container {
+            background: var(--surface);
+            border: 1px solid var(--outline-variant);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            display: none;
+        }
+
+        .results-container.active {
+            display: block;
+        }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 1px solid var(--outline-variant);
+        }
+
+        .results-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--on-surface);
+            margin: 0;
+        }
+
+        .status-badge {
+            background: var(--success);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .results-content {
+            background: var(--surface-variant);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-lg);
+            line-height: 1.7;
+            color: var(--on-surface);
+            font-size: 15px;
+        }
+
+        .results-content h1,
+        .results-content h2,
+        .results-content h3 {
+            color: var(--primary);
+            font-weight: 700;
+            margin: var(--spacing-xl) 0 var(--spacing-md) 0;
+            line-height: 1.3;
+        }
+
+        .results-content h1 {
+            font-size: 24px;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .results-content h2 {
+            font-size: 20px;
+            margin-top: var(--spacing-xl);
+            position: relative;
+            padding-left: var(--spacing-md);
+        }
+
+        .results-content h2::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        .results-content h3 {
+            font-size: 18px;
+            color: var(--on-surface);
+            font-weight: 600;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--radius-sm);
+            border-left: 4px solid var(--primary);
+            margin: var(--spacing-lg) 0 var(--spacing-md) 0;
+        }
+
+        .results-content p {
+            margin: var(--spacing-md) 0;
+        }
+
+        .results-content strong {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .results-actions {
+            display: flex;
+            gap: var(--spacing-md);
+            flex-wrap: wrap;
+        }
+
+        /* Quick Agent Access Panel - Same as template */
+        .quick-agent-toggle {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md) var(--spacing-lg);
+            background: var(--surface);
+            border: 1px solid var(--outline-variant);
+            border-radius: var(--radius-md);
+            color: var(--on-surface);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .quick-agent-toggle:hover {
+            background: var(--surface-variant);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .quick-agent-toggle.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .toggle-icon {
+            font-size: 16px;
+            transition: transform 0.2s ease;
+        }
+
+        .quick-agent-toggle.active .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .quick-agents-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: min(400px, 90vw);
+            height: 100vh;
+            background: var(--surface);
+            border-left: 1px solid var(--outline);
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .quick-agents-panel.active {
+            transform: translateX(0);
+        }
+
+        .quick-agents-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--outline-variant);
+            background: var(--surface-variant);
+        }
+
+        .quick-agents-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--on-surface);
+        }
+
+        .close-panel {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--on-surface-variant);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s ease;
+        }
+
+        .close-panel:hover {
+            background: var(--surface);
+            color: var(--on-surface);
+        }
+
+        .quick-agents-grid {
+            padding: var(--spacing-lg);
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .quick-agent-card {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            border: 1px solid var(--outline-variant);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            color: var(--on-surface);
+            transition: all 0.2s ease;
+            background: var(--surface);
+        }
+
+        .quick-agent-card:hover {
+            background: var(--surface-variant);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .agent-icon {
+            font-size: 24px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface-variant);
+            border-radius: var(--radius-md);
+            flex-shrink: 0;
+        }
+
+        .agent-info {
+            flex: 1;
+        }
+
+        .agent-info h4 {
+            margin: 0 0 4px 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--on-surface);
+        }
+
+        .agent-info p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--on-surface-variant);
+            line-height: 1.4;
+        }
+
+        .agent-price {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--primary);
+            background: rgba(0, 0, 0, 0.05);
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+        .quick-agents-footer {
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-top: 1px solid var(--outline-variant);
+            background: var(--surface-variant);
+        }
+
+        .view-all-agents {
+            display: block;
+            text-align: center;
+            padding: var(--spacing-md);
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .view-all-agents:hover {
+            background: #333333;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .quick-agents-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .quick-agents-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Info List */
+        .info-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            counter-reset: step-counter;
+        }
+
+        .info-list li {
+            padding: var(--spacing-sm) 0;
+            color: var(--on-surface-variant);
+            font-size: 14px;
+            border-bottom: 1px solid var(--outline-variant);
+            position: relative;
+            padding-left: var(--spacing-lg);
+        }
+
+        .info-list li:last-child {
+            border-bottom: none;
+        }
+
+        .info-list li::before {
+            content: counter(step-counter);
+            counter-increment: step-counter;
+            position: absolute;
+            left: 0;
+            top: var(--spacing-sm);
+            background: var(--primary);
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--surface);
+            border: 1px solid var(--outline);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md) var(--spacing-lg);
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            max-width: 400px;
+            font-size: 14px;
+            font-weight: 500;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            border-color: var(--success);
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .toast.error {
+            border-color: var(--error);
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        /* Alert */
+        .alert {
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-md);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        /* Section Styling */
+        .section-container {
+            margin-bottom: var(--spacing-xl);
+            padding-bottom: var(--spacing-lg);
+            border-bottom: 1px solid var(--outline-variant);
+        }
+
+        .section-container:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .section-subtitle {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--on-surface);
+            margin: 0 0 var(--spacing-lg) 0;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .section-subtitle::before {
+            content: '';
+            width: 3px;
+            height: 16px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .agent-container {
+                padding: var(--spacing-md);
+            }
+            
+            .agent-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-sm);
+            }
+            
+            .header-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .agent-title {
+                font-size: 24px;
+            }
+            
+            .agent-grid {
+                flex-direction: column;
+                gap: var(--spacing-md);
+            }
+            
+            .widget-large,
+            .widget-small {
+                min-width: auto;
+                flex: none;
+            }
+            
+            .balance-amount {
+                font-size: 20px;
+            }
+            
+            .quick-agents-panel {
+                width: 100%;
+                max-width: 100%;
+                right: 0;
+                left: 0;
+            }
+
+            .radio-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .checkbox-grid {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="agent-container">
+        <!-- Agent Header Component -->
+        <div class="agent-header">
+            <div>
+                <h1 class="agent-title">Social Ads Generator</h1>
+                <p class="agent-subtitle">Create compelling social media advertisements with AI-powered content generation</p>
+            </div>
+            <div class="header-controls">
+                <!-- Wallet Card Component -->
+                <div class="wallet-card widget-small">
+                    <div class="wallet-header">
+                        <h3 class="wallet-title">Your Wallet</h3>
+                        <div class="wallet-icon">💳</div>
+                    </div>
+                    <div class="balance-display">
+                        <div class="balance-amount">
+                            <span id="walletBalance">25.50</span> AED
+                        </div>
+                        <div class="balance-label">Available Balance</div>
+                    </div>
+                    <button type="button" class="wallet-topup-btn" onclick="showToast('Top-up feature demo!', 'success')">
+                        💳 Top Up Wallet
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Agent Access Panel Overlay -->
+        <div class="quick-agents-overlay" id="quickAgentsOverlay" onclick="closeQuickAgents()"></div>
+
+        <!-- Quick Agent Access Panel -->
+        <div class="quick-agents-panel" id="quickAgentsPanel">
+            <div class="quick-agents-header">
+                <h3>Quick Access</h3>
+                <button class="close-panel" onclick="closeQuickAgents()" aria-label="Close panel">×</button>
+            </div>
+            <div class="quick-agents-grid">
+                <!-- Sample Agent Cards -->
+                <a href="#" class="quick-agent-card">
+                    <div class="agent-icon">🌤️</div>
+                    <div class="agent-info">
+                        <h4>Weather Reporter</h4>
+                        <p>Get real-time weather data</p>
+                        <span class="agent-price">2.00 AED</span>
+                    </div>
+                </a>
+                <a href="#" class="quick-agent-card">
+                    <div class="agent-icon">📊</div>
+                    <div class="agent-info">
+                        <h4>Data Analyzer</h4>
+                        <p>AI-powered data analysis</p>
+                        <span class="agent-price">5.00 AED</span>
+                    </div>
+                </a>
+                <a href="#" class="quick-agent-card">
+                    <div class="agent-icon">💼</div>
+                    <div class="agent-info">
+                        <h4>Job Posting Generator</h4>
+                        <p>Create professional job postings</p>
+                        <span class="agent-price">4.00 AED</span>
+                    </div>
+                </a>
+            </div>
+            <div class="quick-agents-footer">
+                <a href="#" class="view-all-agents">View All Agents</a>
+            </div>
+        </div>
+
+        <!-- Social Ads Generator Form - Agent-Specific Content -->
+        <div class="agent-grid">
+            <div class="agent-widget widget-large" style="flex: 1; margin-right: var(--spacing-lg);">
+                <div class="widget-header">
+                    <h3 class="widget-title">
+                        <span class="widget-icon">📱</span>
+                        Ad Creation Details
+                    </h3>
+                </div>
+                <div class="widget-content">
+                    <form id="socialAdsForm" method="POST">
+                        <!-- Basic Information Section -->
+                        <div class="section-container">
+                            <h4 class="section-subtitle">Basic Information</h4>
+                            
+                            <div class="form-group">
+                                <label class="form-label required" for="business_name">🏢 Business/Brand Name</label>
+                                <input type="text" name="business_name" id="business_name" class="form-input" 
+                                       placeholder="e.g., TechCorp Solutions" required>
+                                <div class="form-help">Enter your business or brand name</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label required" for="product_service">🎯 Product/Service</label>
+                                <input type="text" name="product_service" id="product_service" class="form-input" 
+                                       placeholder="e.g., Premium Smartphones, Digital Marketing Services" required>
+                                <div class="form-help">What are you advertising?</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label required" for="ad_description">📝 Campaign Description</label>
+                                <textarea name="ad_description" id="ad_description" class="form-textarea" 
+                                          placeholder="Describe your campaign goals, key features, benefits, and what makes your offering unique..." 
+                                          rows="4" required></textarea>
+                                <div class="form-help">Provide detailed information about your campaign</div>
+                            </div>
+                        </div>
+
+                        <!-- Platform & Format Section -->
+                        <div class="section-container">
+                            <h4 class="section-subtitle">Platform & Format</h4>
+                            
+                            <div class="form-group">
+                                <label class="form-label required">📱 Social Media Platform</label>
+                                <div class="radio-grid">
+                                    <div class="radio-card selected" onclick="selectRadio('facebook')">
+                                        <input type="radio" id="facebook" name="platform" value="facebook" checked>
+                                        <div class="radio-button"></div>
+                                        <label for="facebook" class="radio-label">📘 Facebook</label>
+                                    </div>
+                                    <div class="radio-card" onclick="selectRadio('instagram')">
+                                        <input type="radio" id="instagram" name="platform" value="instagram">
+                                        <div class="radio-button"></div>
+                                        <label for="instagram" class="radio-label">📸 Instagram</label>
+                                    </div>
+                                    <div class="radio-card" onclick="selectRadio('twitter')">
+                                        <input type="radio" id="twitter" name="platform" value="twitter">
+                                        <div class="radio-button"></div>
+                                        <label for="twitter" class="radio-label">🐦 Twitter/X</label>
+                                    </div>
+                                    <div class="radio-card" onclick="selectRadio('linkedin')">
+                                        <input type="radio" id="linkedin" name="platform" value="linkedin">
+                                        <div class="radio-button"></div>
+                                        <label for="linkedin" class="radio-label">💼 LinkedIn</label>
+                                    </div>
+                                    <div class="radio-card" onclick="selectRadio('tiktok')">
+                                        <input type="radio" id="tiktok" name="platform" value="tiktok">
+                                        <div class="radio-button"></div>
+                                        <label for="tiktok" class="radio-label">🎵 TikTok</label>
+                                    </div>
+                                    <div class="radio-card" onclick="selectRadio('youtube')">
+                                        <input type="radio" id="youtube" name="platform" value="youtube">
+                                        <div class="radio-button"></div>
+                                        <label for="youtube" class="radio-label">📺 YouTube</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label required" for="ad_format">📐 Ad Format</label>
+                                <select name="ad_format" id="ad_format" class="form-select" required>
+                                    <option value="">Select ad format...</option>
+                                    <option value="image_post">Single Image Post</option>
+                                    <option value="carousel">Carousel (Multiple Images)</option>
+                                    <option value="video">Video Ad</option>
+                                    <option value="story">Story Format</option>
+                                    <option value="reel">Reel/Short Video</option>
+                                    <option value="text_only">Text Only</option>
+                                </select>
+                                <div class="form-help">Choose the format that best fits your campaign</div>
+                            </div>
+                        </div>
+
+                        <!-- Target Audience Section -->
+                        <div class="section-container">
+                            <h4 class="section-subtitle">Target Audience</h4>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="target_audience">👥 Target Audience</label>
+                                <textarea name="target_audience" id="target_audience" class="form-textarea" 
+                                          placeholder="e.g., Tech enthusiasts aged 25-40, Small business owners, Young professionals..." 
+                                          rows="3"></textarea>
+                                <div class="form-help">Describe your ideal customer demographics and interests</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">🎭 Tone & Style</label>
+                                <div class="checkbox-grid">
+                                    <div class="checkbox-card" onclick="toggleCheckbox('professional')">
+                                        <input type="checkbox" id="professional" name="tone[]" value="professional">
+                                        <div class="checkbox-button"></div>
+                                        <span>Professional</span>
+                                    </div>
+                                    <div class="checkbox-card" onclick="toggleCheckbox('casual')">
+                                        <input type="checkbox" id="casual" name="tone[]" value="casual">
+                                        <div class="checkbox-button"></div>
+                                        <span>Casual & Friendly</span>
+                                    </div>
+                                    <div class="checkbox-card" onclick="toggleCheckbox('exciting')">
+                                        <input type="checkbox" id="exciting" name="tone[]" value="exciting">
+                                        <div class="checkbox-button"></div>
+                                        <span>Exciting & Energetic</span>
+                                    </div>
+                                    <div class="checkbox-card" onclick="toggleCheckbox('trustworthy')">
+                                        <input type="checkbox" id="trustworthy" name="tone[]" value="trustworthy">
+                                        <div class="checkbox-button"></div>
+                                        <span>Trustworthy</span>
+                                    </div>
+                                    <div class="checkbox-card" onclick="toggleCheckbox('humorous')">
+                                        <input type="checkbox" id="humorous" name="tone[]" value="humorous">
+                                        <div class="checkbox-button"></div>
+                                        <span>Humorous</span>
+                                    </div>
+                                    <div class="checkbox-card" onclick="toggleCheckbox('luxury')">
+                                        <input type="checkbox" id="luxury" name="tone[]" value="luxury">
+                                        <div class="checkbox-button"></div>
+                                        <span>Luxury & Premium</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campaign Goals Section -->
+                        <div class="section-container">
+                            <h4 class="section-subtitle">Campaign Goals</h4>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="call_to_action">📢 Call to Action</label>
+                                <select name="call_to_action" id="call_to_action" class="form-select">
+                                    <option value="">Select primary goal...</option>
+                                    <option value="shop_now">Shop Now</option>
+                                    <option value="learn_more">Learn More</option>
+                                    <option value="sign_up">Sign Up</option>
+                                    <option value="download">Download</option>
+                                    <option value="book_now">Book Now</option>
+                                    <option value="contact_us">Contact Us</option>
+                                    <option value="get_quote">Get Quote</option>
+                                    <option value="try_free">Try Free</option>
+                                </select>
+                                <div class="form-help">What action do you want users to take?</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="special_offer">🎁 Special Offer/Promotion</label>
+                                <input type="text" name="special_offer" id="special_offer" class="form-input" 
+                                       placeholder="e.g., 20% off, Free shipping, Limited time offer">
+                                <div class="form-help">Any special deals or promotions to highlight</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="budget_range">💰 Budget Range (Optional)</label>
+                                <select name="budget_range" id="budget_range" class="form-select">
+                                    <option value="">Select budget range...</option>
+                                    <option value="small">Small Budget (Under $500)</option>
+                                    <option value="medium">Medium Budget ($500 - $2000)</option>
+                                    <option value="large">Large Budget ($2000 - $10000)</option>
+                                    <option value="enterprise">Enterprise Budget ($10000+)</option>
+                                </select>
+                                <div class="form-help">This helps optimize the ad content for your budget</div>
+                            </div>
+                        </div>
+
+                        <!-- Action Button -->
+                        <div style="margin-top: var(--spacing-lg);">
+                            <button type="submit" class="btn btn-primary btn-full" id="generateAdBtn">
+                                🚀 Generate Social Ad (3.50 AED)
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- How It Works Widget -->
+            <div class="agent-widget widget-small" style="min-width: min(280px, 100%); max-width: min(280px, 100%); margin-left: auto;">
+                <div class="widget-header">
+                    <h3 class="widget-title">
+                        <span class="widget-icon">ℹ️</span>
+                        How It Works
+                    </h3>
+                </div>
+                <div class="widget-content">
+                    <ol class="info-list">
+                        <li>Enter business and product details</li>
+                        <li>Choose platform and ad format</li>
+                        <li>Define target audience and tone</li>
+                        <li>Get optimized ad content and copy</li>
+                    </ol>
+                    
+                    <!-- Quick Agents Toggle Button -->
+                    <button class="quick-agent-toggle" onclick="toggleQuickAgents()" 
+                            title="Quick access to other agents"
+                            aria-label="Open quick access panel for other AI agents"
+                            aria-expanded="false"
+                            aria-controls="quickAgentsPanel"
+                            style="margin-top: var(--spacing-md);">
+                        <span class="toggle-icon" aria-hidden="true">🚀</span>
+                        <span class="toggle-text">Explore Other Agents</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Processing Status Component -->
+        <div class="agent-grid">
+            <div id="processingStatus" class="agent-widget widget-wide processing-status">
+                <div class="widget-header">
+                    <h3 class="widget-title">
+                        <span class="widget-icon">⏳</span>
+                        Creating Your Ad
+                    </h3>
+                </div>
+                <div class="widget-content" style="text-align: center;">
+                    <div class="status-icon">🎨</div>
+                    <div class="status-title" id="statusTitle">Generating social media advertisement...</div>
+                    <div class="status-text" id="statusText">Analyzing your requirements and creating compelling ad content...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Container - Agent-Specific Results -->
+        <div class="agent-grid">
+            <div class="agent-widget widget-wide results-container" id="resultsContainer">
+                <div class="results-header">
+                    <h3 class="widget-title">
+                        <span class="widget-icon">📱</span>
+                        Generated Social Ad
+                    </h3>
+                    <span class="status-badge">Success</span>
+                </div>
+
+                <div class="widget-content">
+                    <div class="results-content" id="resultsContent">
+                        <!-- Results will be populated here by JavaScript -->
+                    </div>
+                    
+                    <div class="results-actions">
+                        <button onclick="copyResults()" class="btn btn-primary">📋 Copy Ad Content</button>
+                        <button onclick="downloadResults()" class="btn btn-secondary">💾 Download</button>
+                        <button onclick="resetForm()" class="btn btn-secondary">🔄 Create New Ad</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo Controls -->
+        <div class="agent-grid" style="margin-top: var(--spacing-xl); border-top: 1px solid var(--outline-variant); padding-top: var(--spacing-lg);">
+            <div class="agent-widget widget-wide">
+                <div class="widget-header">
+                    <h3 class="widget-title">
+                        <span class="widget-icon">🧪</span>
+                        Demo Controls
+                    </h3>
+                </div>
+                <div class="widget-content">
+                    <p style="margin-bottom: var(--spacing-md); color: var(--on-surface-variant);">
+                        Test the Social Ads Generator functionality:
+                    </p>
+                    <div style="display: flex; gap: var(--spacing-md); flex-wrap: wrap;">
+                        <button onclick="showProcessing()" style="padding: var(--spacing-sm) var(--spacing-md); background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer;">
+                            Show Processing
+                        </button>
+                        <button onclick="showSampleResults()" style="padding: var(--spacing-sm) var(--spacing-md); background: var(--success); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer;">
+                            Show Sample Ad
+                        </button>
+                        <button onclick="hideResults()" style="padding: var(--spacing-sm) var(--spacing-md); background: var(--surface); color: var(--on-surface); border: 1px solid var(--outline); border-radius: var(--radius-sm); cursor: pointer;">
+                            Hide Results
+                        </button>
+                        <button onclick="testFormValidation()" style="padding: var(--spacing-sm) var(--spacing-md); background: var(--error); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer;">
+                            Test Validation
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Social Ads Generator - Common JavaScript Utilities
+
+        let currentAdContent = '';
+
+        // Quick Agent Access Panel Functions (from template)
+        function toggleQuickAgents() {
+            const panel = document.getElementById('quickAgentsPanel');
+            const overlay = document.getElementById('quickAgentsOverlay');
+            const toggle = document.querySelector('.quick-agent-toggle');
+            
+            const isActive = panel.classList.contains('active');
+            
+            if (isActive) {
+                panel.classList.remove('active');
+                overlay.classList.remove('active');
+                toggle.classList.remove('active');
+                toggle.setAttribute('aria-expanded', 'false');
+                panel.setAttribute('aria-hidden', 'true');
+                overlay.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = 'auto';
+            } else {
+                panel.classList.add('active');
+                overlay.classList.add('active');
+                toggle.classList.add('active');
+                toggle.setAttribute('aria-expanded', 'true');
+                panel.setAttribute('aria-hidden', 'false');
+                overlay.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeQuickAgents() {
+            const panel = document.getElementById('quickAgentsPanel');
+            const overlay = document.getElementById('quickAgentsOverlay');
+            const toggle = document.querySelector('.quick-agent-toggle');
+            
+            if (panel && overlay && toggle) {
+                panel.classList.remove('active');
+                overlay.classList.remove('active');
+                toggle.classList.remove('active');
+                toggle.setAttribute('aria-expanded', 'false');
+                panel.setAttribute('aria-hidden', 'true');
+                overlay.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Toast Notification Function (from template)
+        function showToast(message, type = 'info') {
+            document.querySelectorAll('.toast').forEach(toast => toast.remove());
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Radio Selection Functions
+        function selectRadio(value) {
+            // Remove selected class from all cards
+            document.querySelectorAll('.radio-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked card
+            const selectedCard = document.querySelector(`input[value="${value}"]`).closest('.radio-card');
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+            }
+            
+            // Select the radio button
+            const radioInput = document.getElementById(value);
+            if (radioInput) {
+                radioInput.checked = true;
+            }
+        }
+
+        // Checkbox Selection Functions
+        function toggleCheckbox(value) {
+            const checkboxCard = document.querySelector(`input[value="${value}"]`).closest('.checkbox-card');
+            const checkbox = document.getElementById(value);
+            
+            if (checkbox.checked) {
+                checkbox.checked = false;
+                checkboxCard.classList.remove('selected');
+            } else {
+                checkbox.checked = true;
+                checkboxCard.classList.add('selected');
+            }
+        }
+
+        // Form Validation
+        function isFormValid() {
+            const businessName = document.getElementById('business_name').value.trim();
+            const productService = document.getElementById('product_service').value.trim();
+            const adDescription = document.getElementById('ad_description').value.trim();
+            const platform = document.querySelector('input[name="platform"]:checked');
+            const adFormat = document.getElementById('ad_format').value;
+            
+            return businessName && productService && adDescription && platform && adFormat;
+        }
+
+        // Processing Status Functions
+        function showProcessing() {
+            const processingStatus = document.getElementById('processingStatus');
+            const resultsContainer = document.getElementById('resultsContainer');
+            
+            processingStatus.style.display = 'block';
+            processingStatus.classList.add('active');
+            resultsContainer.style.display = 'none';
+            resultsContainer.classList.remove('active');
+            
+            // Simulate processing steps
+            const steps = [
+                'Analyzing your business and target audience...',
+                'Crafting compelling ad headlines and copy...',
+                'Optimizing content for selected platform...',
+                'Adding persuasive call-to-action elements...',
+                'Finalizing your social media advertisement...'
+            ];
+            
+            let currentStep = 0;
+            const stepInterval = setInterval(() => {
+                if (currentStep < steps.length) {
+                    document.getElementById('statusText').textContent = steps[currentStep];
+                    currentStep++;
+                } else {
+                    clearInterval(stepInterval);
+                }
+            }, 1000);
+            
+            showToast('Processing started...', 'success');
+        }
+
+        function hideProcessing() {
+            const processingStatus = document.getElementById('processingStatus');
+            processingStatus.style.display = 'none';
+            processingStatus.classList.remove('active');
+        }
+
+        // Results Functions
+        function showSampleResults() {
+            hideProcessing();
+            
+            const sampleAd = `
+                <h2>🚀 TechCorp Solutions - Premium Smartphones</h2>
+                
+                <h3>📱 Facebook Ad Copy</h3>
+                <div class="ad-preview" style="background: #f8f9fa; padding: var(--spacing-lg); border-radius: var(--radius-md); margin: var(--spacing-md) 0;">
+                    <p><strong>🔥 Experience the Future in Your Hands!</strong></p>
+                    
+                    <p>Discover TechCorp's latest premium smartphones - where cutting-edge technology meets sleek design. Get lightning-fast performance, professional-grade cameras, and all-day battery life.</p>
+                    
+                    <p><strong>✨ Key Features:</strong></p>
+                    <ul>
+                        <li>🚀 Ultra-fast 5G connectivity</li>
+                        <li>📸 AI-powered triple camera system</li>
+                        <li>🔋 48-hour battery life</li>
+                        <li>🛡️ Military-grade durability</li>
+                    </ul>
+                    
+                    <p><strong>🎁 Limited Time Offer: 20% off + Free Shipping!</strong></p>
+                    
+                    <p style="background: var(--primary); color: white; padding: var(--spacing-sm); border-radius: var(--radius-sm); text-align: center; font-weight: bold;">
+                        👆 Shop Now - Upgrade Your Tech Game Today!
+                    </p>
+                </div>
+
+                <h3>📊 Platform Optimization</h3>
+                <p><strong>Platform:</strong> Facebook</p>
+                <p><strong>Format:</strong> Single Image Post</p>
+                <p><strong>Target Audience:</strong> Tech enthusiasts aged 25-40</p>
+                <p><strong>Tone:</strong> Professional, Exciting & Energetic</p>
+
+                <h3>📈 Performance Tips</h3>
+                <ul>
+                    <li>Use high-quality product images showing the smartphone in use</li>
+                    <li>Test different headlines to see what resonates best</li>
+                    <li>Consider A/B testing different call-to-action buttons</li>
+                    <li>Monitor engagement rates and adjust targeting as needed</li>
+                </ul>
+            `;
+            
+            currentAdContent = sampleAd.replace(/<[^>]*>/g, ''); // Strip HTML for copying
+            document.getElementById('resultsContent').innerHTML = sampleAd;
+            
+            const resultsContainer = document.getElementById('resultsContainer');
+            resultsContainer.style.display = 'block';
+            resultsContainer.classList.add('active');
+            resultsContainer.scrollIntoView({ behavior: 'smooth' });
+            
+            showToast('✅ Social media ad generated successfully!', 'success');
+        }
+
+        function hideResults() {
+            const resultsContainer = document.getElementById('resultsContainer');
+            resultsContainer.style.display = 'none';
+            resultsContainer.classList.remove('active');
+            showToast('Results hidden', 'success');
+        }
+
+        // Copy Results Function
+        function copyResults() {
+            if (currentAdContent) {
+                navigator.clipboard.writeText(currentAdContent).then(() => {
+                    showToast('📋 Ad content copied to clipboard!', 'success');
+                }).catch(() => {
+                    showToast('Failed to copy ad content', 'error');
+                });
+            } else {
+                showToast('No ad content to copy', 'error');
+            }
+        }
+
+        // Download Results Function
+        function downloadResults() {
+            if (currentAdContent) {
+                const blob = new Blob([currentAdContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `social-ad-${Date.now()}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('💾 Ad content downloaded!', 'success');
+            } else {
+                showToast('No ad content to download', 'error');
+            }
+        }
+
+        // Reset Form Function
+        function resetForm() {
+            document.getElementById('socialAdsForm').reset();
+            hideResults();
+            hideProcessing();
+            
+            // Reset radio selections
+            document.querySelectorAll('.radio-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector('.radio-card').classList.add('selected');
+            document.querySelector('input[name="platform"]').checked = true;
+            
+            // Reset checkbox selections
+            document.querySelectorAll('.checkbox-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            currentAdContent = '';
+            showToast('🔄 Form reset - ready for new ad creation!', 'success');
+        }
+
+        // Test Form Validation
+        function testFormValidation() {
+            if (isFormValid()) {
+                showToast('✅ Form validation passed!', 'success');
+            } else {
+                showToast('❌ Please fill in all required fields', 'error');
+            }
+        }
+
+        // Wallet Balance Update Function
+        function updateWalletBalance(newBalance) {
+            if (newBalance !== undefined) {
+                const walletBalance = document.getElementById('walletBalance');
+                if (walletBalance) {
+                    walletBalance.textContent = newBalance.toFixed(2);
+                }
+                showToast(`Wallet updated: ${newBalance.toFixed(2)} AED`, 'success');
+            }
+        }
+
+        // Form Submission Handler
+        document.getElementById('socialAdsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!isFormValid()) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            // Simulate processing
+            showProcessing();
+            
+            // Simulate API delay
+            setTimeout(() => {
+                showSampleResults();
+                updateWalletBalance(22.00); // Deduct 3.50 AED
+            }, 6000); // 6 seconds to show all processing steps
+        });
+
+        // Close panel on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeQuickAgents();
+            }
+        });
+
+        // Initialize accessibility features
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set initial ARIA states
+            const quickAgentsButton = document.querySelector('.quick-agent-toggle');
+            if (quickAgentsButton) {
+                quickAgentsButton.setAttribute('aria-expanded', 'false');
+            }
+            
+            const panel = document.getElementById('quickAgentsPanel');
+            const overlay = document.getElementById('quickAgentsOverlay');
+            if (panel) panel.setAttribute('aria-hidden', 'true');
+            if (overlay) overlay.setAttribute('aria-hidden', 'true');
+            
+            // Show welcome message
+            setTimeout(() => {
+                showToast('Social Ads Generator ready! 📱✨', 'success');
+            }, 500);
+        });
+    </script>
+</body>
+</html>
