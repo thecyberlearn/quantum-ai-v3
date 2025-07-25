@@ -88,16 +88,29 @@ const SocialAdsUtils = {
         const processingStatus = document.getElementById('processingStatus');
         const resultsContainer = document.getElementById('resultsContainer');
         
-        if (processingStatus) processingStatus.style.display = 'block';
+        if (processingStatus) {
+            processingStatus.style.display = 'block';
+            
+            // Smooth scroll to processing section
+            processingStatus.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+        }
         if (resultsContainer) resultsContainer.style.display = 'none';
-        
-        this.showToast('🚀 Creating your social ads...', 'success');
     },
     
     // Hide processing status
     hideProcessing() {
         const processingStatus = document.getElementById('processingStatus');
         if (processingStatus) processingStatus.style.display = 'none';
+        
+        // Re-enable submit button
+        const submitBtn = document.getElementById('generateBtn');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '📢 Generate Social Ads (4.00 AED)';
+        }
     },
     
     // Display social ads results
@@ -120,9 +133,17 @@ const SocialAdsUtils = {
                 this.renderSecureContent(resultsContent, adContent);
             }
             
-            // Show results container
+            // Show results container and scroll to it
             if (resultsContainer) {
                 resultsContainer.style.display = 'block';
+                
+                // Smooth scroll to results after a brief delay for rendering
+                setTimeout(() => {
+                    resultsContainer.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'start' 
+                    });
+                }, 300);
             }
             
             // Update wallet balance if provided
@@ -130,6 +151,7 @@ const SocialAdsUtils = {
                 this.updateWalletBalance(result.wallet_balance);
             }
             
+            // Show success notification only for final result
             this.showToast('✅ Social ads created successfully!', 'success');
         } else if (result.error) {
             this.hideProcessing();
@@ -329,9 +351,9 @@ function copyResults() {
     if (content) {
         const text = content.textContent || '';
         navigator.clipboard.writeText(text).then(() => {
-            SocialAdsUtils.showToast('📋 Social ads copied to clipboard!', 'success');
+            SocialAdsUtils.showToast('📋 Copied to clipboard!', 'success');
         }).catch(() => {
-            SocialAdsUtils.showToast('❌ Failed to copy to clipboard', 'error');
+            SocialAdsUtils.showToast('❌ Copy failed', 'error');
         });
     }
 }
@@ -348,7 +370,7 @@ function downloadResults() {
         a.download = 'social-ads-results.txt';
         a.click();
         URL.revokeObjectURL(url);
-        SocialAdsUtils.showToast('💾 Social ads downloaded!', 'success');
+        // No toast for download - file download is confirmation enough
     }
 }
 
@@ -369,7 +391,13 @@ function resetForm() {
     const fields = ['description', 'social_platform', 'include_emoji'];
     fields.forEach(fieldName => clearFieldError(fieldName));
     
-    SocialAdsUtils.showToast('🔄 Form reset - ready for new social ads', 'success');
+    // Scroll back to form
+    const form_section = document.getElementById('agentForm');
+    if (form_section) {
+        form_section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    
+    // No toast for reset - visual feedback is enough
 }
 
 // Quick Agent Access Functions
@@ -444,8 +472,14 @@ function handleFormSubmission(e) {
         return;
     }
     
-    // Show processing status
+    // Show processing status and disable submit button
     SocialAdsUtils.showProcessing();
+    
+    const submitBtn = document.getElementById('generateBtn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Generating...';
+    }
     
     // Submit form with AJAX
     const formData = new FormData(e.target);
