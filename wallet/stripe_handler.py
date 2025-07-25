@@ -5,12 +5,15 @@ from django.http import JsonResponse
 from decimal import Decimal
 import json
 import time
+import logging
 
 User = get_user_model()
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 # ✅ CRITICAL: Set API version to match webhook configuration
 stripe.api_version = "2025-05-28.basil"
+
+logger = logging.getLogger('wallet.payments')
 
 
 class StripePaymentHandler:
@@ -32,15 +35,9 @@ class StripePaymentHandler:
             cancel_url = 'https://quantumtaskai.com/wallet/top-up/cancel/'
         
         try:
-            print(f"🚀 [STRIPE DEBUG] Starting checkout session creation...")
-            print(f"👤 User: {user.id} ({user.email})")
-            print(f"💰 Amount: {amount} AED")
-            print(f"🔑 Stripe API Key configured: {bool(settings.STRIPE_SECRET_KEY)}")
-            print(f"🔑 API Version: {stripe.api_version}")
-            print(f"📍 Success URL: {success_url}")
-            print(f"📍 Cancel URL: {cancel_url}")
-            print(f"📍 Expected Webhook URL: https://quantumtaskai.com/stripe/webhook/")
-            print(f"🌍 Environment: {'production' if 'railway.app' in (request.get_host() if request else '') else 'development'}")
+            logger.info(f"Creating checkout session for user {user.id}, amount: {amount} AED")
+            environment = 'production' if 'railway.app' in (request.get_host() if request else '') else 'development'
+            logger.debug(f"Environment: {environment}, API version: {stripe.api_version}")
             
             # Create session with modern Stripe practices
             session = stripe.checkout.Session.create(
@@ -104,32 +101,16 @@ class StripePaymentHandler:
                 expires_at=int(time.time()) + (30 * 60),  # 30 minutes from now
             )
             
-            print(f"✅ [STRIPE DEBUG] Session created successfully!")
-            print(f"   💳 Session ID: {session.id}")
-            print(f"   👤 Client Reference: {session.client_reference_id}")
-            print(f"   👤 Customer Email: {session.customer_email}")
-            print(f"   💰 Amount Total: {session.amount_total} fils ({session.amount_total / 100} AED)")
-            print(f"   💱 Currency: {session.currency}")
-            print(f"   🔗 Payment URL: {session.url}")
-            print(f"   📊 Status: {session.status}")
-            print(f"   💳 Payment Status: {session.payment_status}")
-            print(f"   ⏰ Created: {session.created}")
-            print(f"   ⏰ Expires: {session.expires_at}")
-            print(f"   🏷️ Mode: {session.mode}")
-            print(f"   🆔 Object Type: {session.object}")
-            print(f"   📝 Metadata: {session.metadata}")
+            logger.info(f"Checkout session created successfully: {session.id}")
+            logger.debug(f"Session details - Amount: {session.amount_total / 100} AED, Status: {session.status}")
             
-            # CRITICAL: Verify session was created in correct Stripe account
-            print(f"🔍 [STRIPE DEBUG] Verifying session exists immediately...")
+            # Verify session was created in correct Stripe account
             try:
                 verification_session = stripe.checkout.Session.retrieve(session.id)
-                print(f"✅ [STRIPE DEBUG] Session verification successful!")
-                print(f"   🔗 Retrieved Session ID: {verification_session.id}")
-                print(f"   📊 Retrieved Status: {verification_session.status}")
-                print(f"   👤 Retrieved Customer Email: {verification_session.customer_email}")
+                logger.debug(f"Session verification successful: {verification_session.id}")
             except Exception as verify_error:
-                print(f"❌ [STRIPE DEBUG] Session verification FAILED: {verify_error}")
-                print(f"❌ This means the session was NOT created in the expected Stripe account!")
+                logger.error(f"Session verification failed: {verify_error}")
+                raise ValueError("Session creation verification failed")
             
             return {
                 'payment_url': session.url,
@@ -140,60 +121,36 @@ class StripePaymentHandler:
             }
             
         except stripe.error.StripeError as e:
-            print(f"❌ [MODERN] Stripe error: {str(e)}")
-            raise ValueError(f"Failed to create checkout session: {str(e)}")
+            logger.error(f"Stripe error creating checkout session: {e}")
+            raise ValueError(f"Failed to create checkout session")
     
     def verify_payment(self, session_id):
         """Verify payment directly from Stripe (bypasses webhook issues)"""
         try:
-            print(f"🔍 [STRIPE DEBUG] Starting payment verification...")
-            print(f"🔑 Stripe API Key configured: {bool(settings.STRIPE_SECRET_KEY)}")
-            print(f"🔑 API Version: {stripe.api_version}")
-            print(f"💳 Session ID to verify: {session_id}")
+            logger.info(f"Starting payment verification for session: {session_id}")
             
             session = stripe.checkout.Session.retrieve(session_id)
             
-            print(f"✅ [STRIPE DEBUG] Session retrieved successfully!")
-            print(f"   💳 Session ID: {session.id}")
-            print(f"   📊 Session Status: {session.status}")
-            print(f"   💳 Payment Status: {session.payment_status}")
-            print(f"   👤 Client Reference ID: {session.client_reference_id}")
-            print(f"   👤 Customer Email: {session.customer_email}")
-            print(f"   💰 Amount Total: {session.amount_total} fils ({session.amount_total / 100} AED)")
-            print(f"   💱 Currency: {session.currency}")
-            print(f"   ⏰ Created: {session.created}")
-            print(f"   ⏰ Expires At: {session.expires_at}")
-            print(f"   🏷️ Mode: {session.mode}")
-            print(f"   📝 Metadata: {session.metadata}")
-            print(f"   💳 Payment Intent: {getattr(session, 'payment_intent', 'None')}")
-            print(f"   🧾 Invoice: {getattr(session, 'invoice', 'None')}")
-            print(f"   🎯 Success URL: {getattr(session, 'success_url', 'None')}")
+            logger.debug(f"Session retrieved - Status: {session.status}, Payment Status: {session.payment_status}")
+            logger.debug(f"Amount: {session.amount_total / 100} AED, User: {session.client_reference_id}")
             
             # Check if payment was actually completed
             if hasattr(session, 'payment_intent') and session.payment_intent:
                 try:
                     payment_intent = stripe.PaymentIntent.retrieve(session.payment_intent)
-                    print(f"💳 [STRIPE DEBUG] Payment Intent Details:")
-                    print(f"   🆔 Payment Intent ID: {payment_intent.id}")
-                    print(f"   📊 Status: {payment_intent.status}")
-                    print(f"   💰 Amount: {payment_intent.amount} fils ({payment_intent.amount / 100} AED)")
-                    print(f"   💱 Currency: {payment_intent.currency}")
-                    print(f"   ⏰ Created: {payment_intent.created}")
-                    print(f"   📝 Description: {payment_intent.description}")
+                    logger.debug(f"Payment intent status: {payment_intent.status}")
                 except Exception as pi_error:
-                    print(f"❌ [STRIPE DEBUG] Could not retrieve Payment Intent: {pi_error}")
+                    logger.warning(f"Could not retrieve payment intent: {pi_error}")
             
             if session.payment_status == 'paid' and session.status == 'complete':
                 user_id = session.client_reference_id
                 amount = session.amount_total / 100  # Convert from cents
                 
-                print(f"✅ VERIFY: Payment successful - User: {user_id}, Amount: {amount}")
+                logger.info(f"Payment successful - User: {user_id}, Amount: {amount} AED")
                 
                 # Process the payment manually (bypass webhook)
                 if user_id:
                     try:
-                        from django.contrib.auth import get_user_model
-                        User = get_user_model()
                         user = User.objects.get(id=user_id)
                         
                         # Check if already processed to avoid double-charging
@@ -201,13 +158,13 @@ class StripePaymentHandler:
                         existing = WalletTransaction.objects.filter(stripe_session_id=session_id).first()
                         
                         if not existing:
-                            print(f"💰 VERIFY: Processing payment for {user.email}")
+                            logger.info(f"Processing payment for user {user_id}")
                             user.add_balance(
                                 amount=amount,
                                 description=f"Wallet top-up via Stripe",
                                 stripe_session_id=session_id
                             )
-                            print(f"✅ VERIFY: Balance updated successfully")
+                            logger.info(f"Balance updated successfully for user {user_id}")
                             return {
                                 'success': True,
                                 'amount': amount,
@@ -216,7 +173,7 @@ class StripePaymentHandler:
                                 'message': 'Payment processed via manual verification'
                             }
                         else:
-                            print(f"⚠️ VERIFY: Payment already processed")
+                            logger.info(f"Payment already processed for session {session_id}")
                             return {
                                 'success': True,
                                 'amount': amount,
@@ -226,8 +183,8 @@ class StripePaymentHandler:
                             }
                             
                     except Exception as e:
-                        print(f"❌ VERIFY: Error processing payment: {e}")
-                        return {'success': False, 'error': f'Processing error: {e}'}
+                        logger.error(f"Error processing payment for user {user_id}: {e}")
+                        return {'success': False, 'error': 'Processing error'}
                 else:
                     return {'success': False, 'error': 'No user ID in session'}
                     
@@ -237,59 +194,67 @@ class StripePaymentHandler:
                 return {'success': False, 'error': f'Payment status: {session.payment_status}'}
                 
         except stripe.error.StripeError as e:
-            print(f"❌ VERIFY: Stripe error: {e}")
-            return {'success': False, 'error': str(e)}
+            logger.error(f"Stripe error during payment verification: {e}")
+            return {'success': False, 'error': 'Payment verification failed'}
     
     def handle_webhook(self, payload, signature):
         """Handle Stripe webhook events"""
-        print(f"🔍 Processing webhook with signature: {bool(signature)}")
+        logger.info("Processing webhook event")
         
         try:
             event = stripe.Webhook.construct_event(
                 payload, signature, settings.STRIPE_WEBHOOK_SECRET
             )
-            print(f"📋 Event type: {event['type']}")
+            logger.info(f"Webhook event type: {event['type']}")
         except ValueError as e:
-            print(f"❌ Invalid payload: {e}")
+            logger.error(f"Invalid webhook payload: {e}")
             return {'success': False, 'error': 'Invalid payload'}
         except stripe.error.SignatureVerificationError as e:
-            print(f"❌ Invalid signature: {e}")
+            logger.error(f"Invalid webhook signature: {e}")
             return {'success': False, 'error': 'Invalid signature'}
         
         if event['type'] == 'checkout.session.completed':
             session = event['data']['object']
-            print(f"💳 Processing checkout session: {session['id']}")
+            session_id = session['id']
+            logger.info(f"Processing checkout session completion: {session_id}")
             
             # Process successful payment
             user_id = session.get('client_reference_id')
             amount = session['amount_total'] / 100  # Convert from cents
             
-            print(f"👤 User ID: {user_id}, Amount: {amount} AED")
-            print(f"📋 Session data: client_reference_id={session.get('client_reference_id')}")
-            print(f"📋 Session metadata: {session.get('metadata', {})}")
+            logger.info(f"Webhook payment - User: {user_id}, Amount: {amount} AED")
             
             if user_id:
                 try:
                     user = User.objects.get(id=user_id)
-                    print(f"✅ Found user: {user.email}, Current balance: {user.wallet_balance}")
+                    logger.info(f"Found user for webhook payment: {user_id}")
                     
-                    user.add_balance(
-                        amount=amount,
-                        description=f"Wallet top-up via Stripe",
-                        stripe_session_id=session['id']
-                    )
-                    user.refresh_from_db()
-                    print(f"💰 New balance: {user.wallet_balance}")
+                    # Check if already processed to avoid double-charging
+                    from wallet.models import WalletTransaction
+                    existing = WalletTransaction.objects.filter(stripe_session_id=session_id).first()
+                    
+                    if not existing:
+                        user.add_balance(
+                            amount=amount,
+                            description=f"Wallet top-up via Stripe",
+                            stripe_session_id=session_id
+                        )
+                        logger.info(f"Webhook payment processed for user {user_id}")
+                    else:
+                        logger.info(f"Webhook payment already processed: {session_id}")
                     
                     return {'success': True, 'message': 'Payment processed successfully'}
                 except User.DoesNotExist:
-                    print(f"❌ User not found: {user_id}")
+                    logger.error(f"User not found for webhook: {user_id}")
                     return {'success': False, 'error': 'User not found'}
+                except Exception as e:
+                    logger.error(f"Error processing webhook payment: {e}")
+                    return {'success': False, 'error': 'Processing error'}
             else:
-                print("❌ No user_id in session")
+                logger.error("No user ID in webhook session")
                 return {'success': False, 'error': 'No user reference'}
         else:
-            print(f"ℹ️ Ignored event type: {event['type']}")
+            logger.debug(f"Ignored webhook event type: {event['type']}")
         
         return {'success': True, 'message': 'Event processed'}
     

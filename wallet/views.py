@@ -1,15 +1,27 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django_ratelimit.decorators import ratelimit
+from django_ratelimit import UNSAFE
 from .stripe_handler import StripePaymentHandler
 import datetime
 import stripe
 from django.conf import settings
+import logging
+import ipaddress
 
-# Global webhook logs for debugging (in production, use proper logging)
-webhook_logs = []
+logger = logging.getLogger(__name__)
+
+# Stripe webhook IP ranges for security validation
+STRIPE_WEBHOOK_IPS = [
+    '3.18.12.0/24', '3.130.192.0/24', '13.235.14.0/24', '13.235.122.0/24',
+    '18.211.135.0/24', '35.154.171.0/24', '52.15.183.0/24', '54.187.174.0/24',
+    '54.187.205.0/24', '54.187.216.0/24', '54.241.31.0/24', '54.241.31.99/32',
+    '54.241.31.102/32'
+]
 
 
 @login_required
@@ -32,14 +44,22 @@ def wallet_view(request):
 
 
 @login_required
+@ratelimit(key='user', rate='5/m', method=UNSAFE, block=False)
 def wallet_topup_view(request):
-    """Wallet top-up page"""
+    """Wallet top-up page with rate limiting (5 attempts per minute per user)"""
+    # Check if rate limited
+    if getattr(request, 'limited', False):
+        logger.warning(f"Wallet top-up rate limit exceeded for user {request.user.id}")
+        messages.error(request, 'Too many top-up attempts. Please try again in a few minutes.')
+        return render(request, 'wallet/wallet_topup.html')
+    
     if request.method == 'POST':
         amount = request.POST.get('amount')
         
         try:
             amount = float(amount)
             if amount not in [10, 50, 100, 500]:
+                logger.warning(f"Invalid amount attempted by user {request.user.id}: {amount}")
                 messages.error(request, 'Invalid amount selected')
                 return redirect('wallet:wallet_topup')
             
@@ -47,44 +67,58 @@ def wallet_topup_view(request):
             stripe_handler = StripePaymentHandler()
             session_data = stripe_handler.create_checkout_session(request.user, amount, request)
             
+            logger.info(f"Checkout session created for user {request.user.id}, amount: {amount} AED")
             return redirect(session_data['payment_url'])
             
-        except (ValueError, TypeError):
+        except (ValueError, TypeError) as e:
+            logger.error(f"Invalid amount format from user {request.user.id}: {e}")
             messages.error(request, 'Invalid amount')
+            return redirect('wallet:wallet_topup')
+        except Exception as e:
+            logger.error(f"Checkout session creation failed for user {request.user.id}: {e}")
+            messages.error(request, 'Unable to process payment at this time. Please try again.')
             return redirect('wallet:wallet_topup')
     
     return render(request, 'wallet/wallet_topup.html')
 
 
 @login_required
+@ratelimit(key='user', rate='10/m', method='GET', block=False)
 def wallet_topup_success_view(request):
-    """Payment success page with automatic payment verification (NO WEBHOOKS NEEDED)"""
+    """Payment success page with automatic payment verification"""
+    # Check if rate limited
+    if getattr(request, 'limited', False):
+        logger.warning(f"Payment success page rate limit exceeded for user {request.user.id}")
+        messages.error(request, 'Too many verification attempts. Please wait a moment.')
+        return redirect('wallet:wallet')
+    
     session_id = request.GET.get('session_id')
     
     if not session_id:
+        logger.warning(f"No session ID provided for user {request.user.id}")
         messages.error(request, 'No payment session found. Please contact support if you completed a payment.')
         return redirect('wallet:wallet')
     
-    # Verify payment directly with Stripe API (bypasses webhook issues)
+    # Verify payment directly with Stripe API
     try:
         stripe_handler = StripePaymentHandler()
         
-        print(f"💳 [SUCCESS PAGE] Verifying payment for session: {session_id}")
+        logger.info(f"Verifying payment for user {request.user.id}, session: {session_id}")
         result = stripe_handler.verify_payment(session_id)
         
         if result['success']:
             if result['processed']:
                 messages.success(request, f'Payment successful! {result["amount"]} AED has been added to your wallet.')
-                print(f"✅ [SUCCESS PAGE] Payment verified and wallet updated for user {request.user.id}")
+                logger.info(f"Payment verified and wallet updated for user {request.user.id}")
             else:
                 messages.info(request, 'Payment already processed. Your wallet balance is up to date.')
-                print(f"ℹ️ [SUCCESS PAGE] Payment already processed for session {session_id}")
+                logger.info(f"Payment already processed for session {session_id}")
         else:
-            messages.warning(request, f'Payment verification failed: {result.get("error", "Unknown error")}. Please contact support.')
-            print(f"❌ [SUCCESS PAGE] Payment verification failed: {result}")
+            messages.warning(request, 'Payment verification failed. Please contact support.')
+            logger.error(f"Payment verification failed for user {request.user.id}: {result.get('error', 'Unknown error')}")
         
     except Exception as e:
-        print(f"❌ [SUCCESS PAGE] Error verifying payment: {e}")
+        logger.error(f"Error verifying payment for user {request.user.id}: {e}")
         messages.error(request, 'Unable to verify payment. Please contact support if you completed a payment.')
     
     return redirect('wallet:wallet')
@@ -98,147 +132,103 @@ def wallet_topup_cancel_view(request):
 
 
 @login_required
+@user_passes_test(lambda u: u.is_superuser)
+@ratelimit(key='user', rate='3/m', method='GET', block=True)
 def stripe_debug_view(request):
-    """Debug endpoint to show Stripe API configuration and test connectivity"""
+    """Secure debug endpoint for superusers only"""
+    if not request.user.is_superuser:
+        logger.warning(f"Unauthorized debug access attempt by user {request.user.id}")
+        return JsonResponse({'error': 'Unauthorized access'}, status=403)
+    
     debug_info = {
         'timestamp': datetime.datetime.now().isoformat(),
         'user_id': request.user.id,
-        'user_email': request.user.email,
+        'environment': 'production' if not settings.DEBUG else 'development',
     }
     
     try:
-        # Test Stripe API connectivity
-        print(f"🔍 [STRIPE DEBUG] Testing Stripe API connectivity...")
-        
-        # Get API key info (masked)
+        # Basic connectivity test without exposing sensitive data
         api_key = settings.STRIPE_SECRET_KEY
-        debug_info['stripe_api_key_last4'] = api_key[-4:] if api_key else 'Not set'
-        debug_info['stripe_api_key_prefix'] = api_key[:7] if api_key else 'Not set'
+        debug_info['stripe_api_configured'] = bool(api_key)
         debug_info['stripe_api_version'] = stripe.api_version
         
-        # Test account connectivity
+        # Test account connectivity (minimal info)
         try:
             account = stripe.Account.retrieve()
             debug_info['stripe_account'] = {
-                'id': account.id,
-                'email': account.email,
-                'display_name': account.display_name,
-                'country': account.country,
-                'default_currency': account.default_currency,
-                'business_profile': account.business_profile,
+                'id': account.id[:8] + '...',  # Partial ID only
                 'charges_enabled': account.charges_enabled,
                 'payouts_enabled': account.payouts_enabled,
             }
-            print(f"✅ [STRIPE DEBUG] Account connected: {account.id}")
+            logger.info(f"Stripe debug accessed by superuser {request.user.id}")
         except Exception as account_error:
-            debug_info['stripe_account_error'] = str(account_error)
-            print(f"❌ [STRIPE DEBUG] Account error: {account_error}")
+            debug_info['stripe_account_error'] = 'Connection failed'
+            logger.error(f"Stripe account error in debug: {account_error}")
         
-        # Test recent checkout sessions
-        try:
-            sessions = stripe.checkout.Session.list(limit=5)
-            debug_info['recent_sessions'] = []
-            for session in sessions.data:
-                debug_info['recent_sessions'].append({
-                    'id': session.id,
-                    'status': session.status,
-                    'payment_status': session.payment_status,
-                    'amount_total': session.amount_total,
-                    'currency': session.currency,
-                    'customer_email': session.customer_email,
-                    'client_reference_id': session.client_reference_id,
-                    'created': session.created,
-                    'metadata': session.metadata,
-                })
-            print(f"✅ [STRIPE DEBUG] Retrieved {len(sessions.data)} recent sessions")
-        except Exception as sessions_error:
-            debug_info['sessions_error'] = str(sessions_error)
-            print(f"❌ [STRIPE DEBUG] Sessions error: {sessions_error}")
-        
-        # Test recent payments
-        try:
-            charges = stripe.Charge.list(limit=5)
-            debug_info['recent_charges'] = []
-            for charge in charges.data:
-                debug_info['recent_charges'].append({
-                    'id': charge.id,
-                    'amount': charge.amount,
-                    'currency': charge.currency,
-                    'status': charge.status,
-                    'paid': charge.paid,
-                    'customer': charge.customer,
-                    'description': charge.description,
-                    'created': charge.created,
-                    'metadata': charge.metadata,
-                })
-            print(f"✅ [STRIPE DEBUG] Retrieved {len(charges.data)} recent charges")
-        except Exception as charges_error:
-            debug_info['charges_error'] = str(charges_error)
-            print(f"❌ [STRIPE DEBUG] Charges error: {charges_error}")
-            
         debug_info['status'] = 'success'
         
     except Exception as e:
-        debug_info['error'] = str(e)
+        debug_info['error'] = 'Configuration error'
         debug_info['status'] = 'error'
-        print(f"❌ [STRIPE DEBUG] General error: {e}")
+        logger.error(f"Stripe debug error: {e}")
     
     return JsonResponse(debug_info, indent=2)
 
 
+def is_stripe_ip(ip_address):
+    """Check if IP address is from Stripe's webhook IP ranges"""
+    try:
+        ip = ipaddress.ip_address(ip_address)
+        for ip_range in STRIPE_WEBHOOK_IPS:
+            if ip in ipaddress.ip_network(ip_range):
+                return True
+    except ValueError:
+        return False
+    return False
+
 @csrf_exempt
+@require_http_methods(["POST"])
+@ratelimit(key='ip', rate='50/m', method='POST', block=True)
 def stripe_webhook_view(request):
-    """Handle Stripe webhook events with comprehensive logging"""
-    timestamp = datetime.datetime.now().strftime("%H:%M:%S")
+    """Secure Stripe webhook handler with IP validation and rate limiting"""
+    timestamp = datetime.datetime.now().isoformat()
+    remote_ip = request.META.get('REMOTE_ADDR', 'unknown')
     
-    # Log everything for debugging
-    print(f"🎯 [{timestamp}] Stripe webhook received!")
-    print(f"🎯 Method: {request.method}")
-    print(f"🎯 Content-Type: {request.content_type}")
-    print(f"🎯 Remote IP: {request.META.get('REMOTE_ADDR', 'unknown')}")
-    print(f"🎯 User Agent: {request.META.get('HTTP_USER_AGENT', 'unknown')}")
-    print(f"🎯 Full headers: {dict(request.META)}")
+    # Security: Validate request comes from Stripe
+    if not is_stripe_ip(remote_ip) and not settings.DEBUG:
+        logger.warning(f"Webhook from unauthorized IP: {remote_ip}")
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=401)
     
-    # Store in webhook logs for the test page
-    webhook_log_entry = {
-        'timestamp': timestamp,
-        'method': request.method,
-        'headers': dict(request.META),
-        'body': request.body.decode('utf-8') if request.body else '',
-        'content_type': request.content_type,
-        'source': 'stripe_webhook',
-        'ip_address': request.META.get('REMOTE_ADDR', 'unknown'),
-        'user_agent': request.META.get('HTTP_USER_AGENT', 'unknown')
-    }
+    # Security: Validate content type
+    if request.content_type != 'application/json':
+        logger.warning(f"Invalid content type from {remote_ip}: {request.content_type}")
+        return JsonResponse({'status': 'error', 'message': 'Invalid content type'}, status=400)
     
-    # Add to webhook logs
-    webhook_logs.append(webhook_log_entry)
-    if len(webhook_logs) > 50:
-        webhook_logs.pop(0)
-    
-    if request.method != 'POST':
-        print(f"❌ Invalid method: {request.method}")
-        return JsonResponse({'status': 'error', 'message': f'Method {request.method} not allowed'}, status=405)
+    # Security: Validate payload size (max 64KB)
+    if len(request.body) > 65536:
+        logger.warning(f"Oversized payload from {remote_ip}: {len(request.body)} bytes")
+        return JsonResponse({'status': 'error', 'message': 'Payload too large'}, status=413)
     
     payload = request.body
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
     
-    print(f"📦 Payload length: {len(payload)} bytes")
-    print(f"📦 Payload preview: {payload[:200]}...")
-    print(f"🔐 Signature header: {sig_header is not None}")
-    print(f"🔐 Full signature header: {sig_header}")
+    logger.info(f"Webhook received from {remote_ip}, payload size: {len(payload)} bytes")
     
-    # Always return success first to see if Stripe is reaching us
     if not sig_header:
-        print(f"⚠️ No Stripe signature - might be a test request")
-        return JsonResponse({'status': 'received', 'message': 'No signature verification'})
+        logger.warning(f"No Stripe signature from {remote_ip}")
+        return JsonResponse({'status': 'error', 'message': 'No signature'}, status=400)
     
-    stripe_handler = StripePaymentHandler()
-    result = stripe_handler.handle_webhook(payload, sig_header)
-    
-    print(f"✅ Webhook result: {result}")
-    
-    if result['success']:
-        return JsonResponse({'status': 'success'})
-    else:
-        return JsonResponse({'status': 'error', 'message': result['error']}, status=400)
+    try:
+        stripe_handler = StripePaymentHandler()
+        result = stripe_handler.handle_webhook(payload, sig_header)
+        
+        if result['success']:
+            logger.info(f"Webhook processed successfully from {remote_ip}")
+            return JsonResponse({'status': 'success'})
+        else:
+            logger.error(f"Webhook processing failed from {remote_ip}: {result['error']}")
+            return JsonResponse({'status': 'error', 'message': 'Processing failed'}, status=400)
+            
+    except Exception as e:
+        logger.error(f"Webhook error from {remote_ip}: {e}")
+        return JsonResponse({'status': 'error', 'message': 'Internal error'}, status=500)
