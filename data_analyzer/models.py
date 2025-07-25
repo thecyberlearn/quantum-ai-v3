@@ -10,7 +10,11 @@ class DataAnalysisAgentRequest(BaseAgentRequest):
     """Data Analysis Agent request tracking"""
     
     # Agent-specific request fields  
-    data_file = models.FileField(upload_to='uploads/data_analyzer/', blank=True)
+    data_file = models.FileField(
+        upload_to='uploads/data_analyzer/', 
+        blank=True,
+        help_text='PDF file for analysis'
+    )
     analysis_type = models.CharField(
         max_length=50,
         choices=[
