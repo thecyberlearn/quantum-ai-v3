@@ -1,480 +1,618 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Social Ads Generator Agent - NetCop AI Hub{% endblock %}
+{% block title %}Social Ads Generator - NetCop AI Hub{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/agent-base.css' %}">
+<link rel="stylesheet" href="{% static 'css/agent-base.css' %}?v={{ timestamp }}">
+{% endblock %}
+
+{% block content %}
+<script>
+// Consolidated DOMContentLoaded initialization
+document.addEventListener('DOMContentLoaded', function() {
+    // Set data for JavaScript access
+    document.body.setAttribute('data-user-authenticated', '{{ user.is_authenticated|yesno:"true,false" }}');
+    document.body.setAttribute('data-agent-price', '7.00');
+    
+    // Initialize form submission
+    const form = document.getElementById('agentForm');
+    if (form) {
+        form.addEventListener('submit', handleFormSubmission);
+    }
+    
+    // Initialize form validation
+    initializeFormValidation();
+    
+    // Set initial radio selection if any exist
+    const firstRadio = document.querySelector('.radio-card');
+    if (firstRadio && !document.querySelector('.radio-card.selected')) {
+        firstRadio.classList.add('selected');
+        const input = firstRadio.querySelector('input[type="radio"]');
+        if (input) input.checked = true;
+    }
+});
+
+// Social Ads Generator Utils
+const SocialAdsUtils = {
+    // Update wallet balance display
+    updateWalletBalance(newBalance) {
+        if (newBalance !== undefined) {
+            // Update header balance
+            const headerBalance = document.querySelector('a[data-wallet-balance]');
+            if (headerBalance) {
+                headerBalance.textContent = `💰 ${newBalance.toFixed(2)} AED`;
+            }
+            
+            // Update page balance
+            const pageBalance = document.getElementById('walletBalance');
+            if (pageBalance) {
+                pageBalance.textContent = newBalance.toFixed(2);
+            }
+            
+            // Update all data attributes
+            document.querySelectorAll('[data-wallet-balance]').forEach(element => {
+                element.textContent = `${newBalance.toFixed(2)} AED`;
+            });
+            
+            // Store current balance globally
+            window.currentWalletBalance = newBalance;
+        }
+    },
+    
+    // Show toast notification
+    showToast(message, type = 'info') {
+        // Remove existing toasts
+        document.querySelectorAll('.toast').forEach(toast => toast.remove());
+        
+        // Create new toast
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        
+        // Add to page
+        document.body.appendChild(toast);
+        
+        // Show toast
+        setTimeout(() => toast.classList.add('show'), 100);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    },
+    
+    // Display processing status
+    showProcessing() {
+        const processingStatus = document.getElementById('processingStatus');
+        const resultsContainer = document.getElementById('resultsContainer');
+        
+        if (processingStatus) processingStatus.style.display = 'block';
+        if (resultsContainer) resultsContainer.style.display = 'none';
+        
+        this.showToast('🚀 Creating your social ads...', 'success');
+    },
+    
+    // Hide processing status
+    hideProcessing() {
+        const processingStatus = document.getElementById('processingStatus');
+        if (processingStatus) processingStatus.style.display = 'none';
+    },
+    
+    // Display social ads results
+    displayResults(result) {
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsContent = document.getElementById('resultsContent');
+        const processingStatus = document.getElementById('processingStatus');
+        
+        if (result.success) {
+            // Hide processing status
+            this.hideProcessing();
+            
+            // Show results with rich formatting for social ads
+            const adContent = result.ad_copy_content || result.content || result.ad_copy || result.formatted_ad || 'Social ads generated successfully!';
+            if (resultsContent) {
+                // Convert social ad content to HTML with enhanced formatting
+                const formattedText = adContent
+                    .replace(/\n\n/g, '</p><p>')
+                    .replace(/\n/g, '<br>')
+                    .replace(/### (.*?)(<br>|$)/g, '<h3>$1</h3>')
+                    .replace(/## (.*?)(<br>|$)/g, '<h2>$1</h2>')
+                    .replace(/# (.*?)(<br>|$)/g, '<h1>$1</h1>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>');
+                
+                resultsContent.innerHTML = `<p>${formattedText}</p>`;
+            }
+            
+            // Show results container
+            if (resultsContainer) {
+                resultsContainer.style.display = 'block';
+            }
+            
+            // Update wallet balance if provided
+            if (result.wallet_balance !== undefined) {
+                this.updateWalletBalance(result.wallet_balance);
+            }
+            
+            this.showToast('✅ Social ads created successfully!', 'success');
+        } else if (result.error) {
+            this.hideProcessing();
+            this.showToast(`❌ Error: ${result.error}`, 'error');
+        } else {
+            this.hideProcessing();
+            this.showToast('❌ Failed to generate social ads. Please try again.', 'error');
+        }
+    }
+};
+
+// For backward compatibility
+const AgentUtils = SocialAdsUtils;
+
+// Form validation
+function initializeFormValidation() {
+    const fields = ['description', 'social_platform', 'include_emoji'];
+    
+    fields.forEach(fieldName => {
+        const field = document.getElementById(fieldName);
+        if (field) {
+            field.addEventListener('blur', () => validateField(fieldName));
+            field.addEventListener('input', () => clearFieldError(fieldName));
+        }
+    });
+}
+
+function validateField(fieldName) {
+    const field = document.getElementById(fieldName);
+    const value = field.value.trim();
+    
+    switch (fieldName) {
+        case 'description':
+            if (!value) {
+                showFieldError(fieldName, 'Please provide a description of your product or service');
+                return false;
+            } else if (value.length < 10) {
+                showFieldError(fieldName, 'Description must be at least 10 characters long');
+                return false;
+            }
+            break;
+        case 'social_platform':
+            if (!value) {
+                showFieldError(fieldName, 'Please select a social media platform');
+                return false;
+            }
+            break;
+        case 'include_emoji':
+            if (!value) {
+                showFieldError(fieldName, 'Please select whether to include emojis');
+                return false;
+            }
+            break;
+    }
+    
+    clearFieldError(fieldName);
+    return true;
+}
+
+function showFieldError(fieldName, message) {
+    const field = document.getElementById(fieldName);
+    const errorElement = document.getElementById(`${fieldName}-error`);
+    
+    if (field) {
+        field.classList.add('error');
+    }
+    
+    if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+    }
+}
+
+function clearFieldError(fieldName) {
+    const field = document.getElementById(fieldName);
+    const errorElement = document.getElementById(`${fieldName}-error`);
+    
+    if (field) {
+        field.classList.remove('error');
+    }
+    
+    if (errorElement) {
+        errorElement.textContent = '';
+        errorElement.style.display = 'none';
+    }
+}
+
+function isFormValid() {
+    const fields = ['description', 'social_platform', 'include_emoji'];
+    let isValid = true;
+    
+    fields.forEach(fieldName => {
+        if (!validateField(fieldName)) {
+            isValid = false;
+        }
+    });
+    
+    return isValid;
+}
+
+// Copy social ads results
+function copyResults() {
+    const content = document.getElementById('resultsContent');
+    if (content) {
+        const text = content.textContent || '';
+        navigator.clipboard.writeText(text).then(() => {
+            SocialAdsUtils.showToast('📋 Social ads copied to clipboard!', 'success');
+        }).catch(() => {
+            SocialAdsUtils.showToast('❌ Failed to copy to clipboard', 'error');
+        });
+    }
+}
+
+// Download social ads results
+function downloadResults() {
+    const content = document.getElementById('resultsContent');
+    if (content) {
+        const text = content.textContent || '';
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'social-ads-results.txt';
+        a.click();
+        URL.revokeObjectURL(url);
+        SocialAdsUtils.showToast('💾 Social ads downloaded!', 'success');
+    }
+}
+
+// Reset form for new social ads
+function resetForm() {
+    const form = document.getElementById('agentForm');
+    if (form) {
+        form.reset();
+    }
+    
+    const resultsContainer = document.getElementById('resultsContainer');
+    const processingStatus = document.getElementById('processingStatus');
+    
+    if (resultsContainer) resultsContainer.style.display = 'none';
+    if (processingStatus) processingStatus.style.display = 'none';
+    
+    // Clear validation errors
+    const fields = ['description', 'social_platform', 'include_emoji'];
+    fields.forEach(fieldName => clearFieldError(fieldName));
+    
+    SocialAdsUtils.showToast('🔄 Form reset - ready for new social ads', 'success');
+}
+
+// Quick Agent Access Functions
+function toggleQuickAgents() {
+    const panel = document.getElementById('quickAgentsPanel');
+    const overlay = document.getElementById('quickAgentsOverlay');
+    const toggle = document.querySelector('.quick-agent-toggle');
+    
+    if (!panel || !overlay) return;
+    
+    const isActive = panel.classList.contains('active');
+    
+    if (isActive) {
+        // Close panel
+        panel.classList.remove('active');
+        overlay.classList.remove('active');
+        if (toggle) toggle.classList.remove('active');
+        // Update ARIA attributes
+        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        panel.setAttribute('aria-hidden', 'true');
+        overlay.setAttribute('aria-hidden', 'true');
+    } else {
+        // Open panel
+        panel.classList.add('active');
+        overlay.classList.add('active');
+        if (toggle) toggle.classList.add('active');
+        // Update ARIA attributes
+        if (toggle) toggle.setAttribute('aria-expanded', 'true');
+        panel.setAttribute('aria-hidden', 'false');
+        overlay.setAttribute('aria-hidden', 'false');
+    }
+}
+
+function closeQuickAgents() {
+    const panel = document.getElementById('quickAgentsPanel');
+    const overlay = document.getElementById('quickAgentsOverlay');
+    const toggle = document.querySelector('.quick-agent-toggle');
+    
+    if (panel) panel.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
+    if (toggle) toggle.classList.remove('active');
+    
+    // Update ARIA attributes
+    if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    if (panel) panel.setAttribute('aria-hidden', 'true');
+    if (overlay) overlay.setAttribute('aria-hidden', 'true');
+}
+
+// Form submission handler
+function handleFormSubmission(e) {
+    e.preventDefault();
+    
+    if (!isFormValid()) {
+        SocialAdsUtils.showToast('Please fill in all required fields correctly', 'error');
+        return;
+    }
+    
+    // Check authentication and balance
+    const isAuthenticated = document.body.getAttribute('data-user-authenticated') === 'true';
+    if (!isAuthenticated) {
+        SocialAdsUtils.showToast('Please login to continue', 'error');
+        window.location.href = "{% url 'authentication:login' %}";
+        return;
+    }
+    
+    const walletBalance = parseFloat(document.getElementById('walletBalance')?.textContent) || 0;
+    if (walletBalance < 7.00) {
+        SocialAdsUtils.showToast('Insufficient wallet balance', 'error');
+        setTimeout(() => {
+            window.location.href = "{% url 'wallet:wallet' %}";
+        }, 2000);
+        return;
+    }
+    
+    // Show processing status
+    SocialAdsUtils.showProcessing();
+    
+    // Submit form with AJAX
+    const formData = new FormData(e.target);
+    
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success && result.request_id) {
+            // Start polling for results
+            checkResults(result.request_id);
+            SocialAdsUtils.updateWalletBalance(result.wallet_balance);
+        } else {
+            SocialAdsUtils.hideProcessing();
+            SocialAdsUtils.showToast(`❌ ${result.error || 'Processing failed'}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Form submission error:', error);
+        SocialAdsUtils.hideProcessing();
+        SocialAdsUtils.showToast('❌ Connection error. Please try again.', 'error');
+    });
+}
+
+// Check results (polling for completion)
+function checkResults(requestId) {
+    let pollCount = 0;
+    const maxPolls = 30; // 5 minutes max
+    
+    const pollInterval = setInterval(() => {
+        pollCount++;
+        
+        fetch(`/agents/social-ads-generator/status/${requestId}/`)
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'completed') {
+                    clearInterval(pollInterval);
+                    SocialAdsUtils.displayResults(result);
+                } else if (result.status === 'failed') {
+                    clearInterval(pollInterval);
+                    SocialAdsUtils.hideProcessing();
+                    SocialAdsUtils.showToast('❌ Social ads generation failed. Please try again.', 'error');
+                } else if (pollCount >= maxPolls) {
+                    clearInterval(pollInterval);
+                    SocialAdsUtils.hideProcessing();
+                    SocialAdsUtils.showToast('⏰ Processing is taking longer than expected. Please check back later.', 'error');
+                }
+                // Continue polling if still processing
+            })
+            .catch(error => {
+                console.error('Status check error:', error);
+                if (pollCount >= maxPolls) {
+                    clearInterval(pollInterval);
+                    SocialAdsUtils.hideProcessing();
+                    SocialAdsUtils.showToast('❌ Connection error during processing.', 'error');
+                }
+            });
+    }, 10000); // Check every 10 seconds
+}
+
+// Close panel with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeQuickAgents();
+    }
+});
+</script>
+
+<div class="agent-container">
+    <!-- Agent Header -->
+    {% include "components/agent_header.html" with agent_title="Social Ads Generator" agent_subtitle="Create compelling social media advertisements optimized for different platforms" %}
+
+    <!-- Quick Agent Access Panel -->
+    {% include "components/quick_agents_panel.html" %}
+
+    <!-- Agent Grid -->
+    <div class="agent-grid">
+        <!-- Social Ads Form Widget -->
+        <div class="agent-widget widget-large" style="flex: 1; margin-right: clamp(0px, var(--spacing-lg), 2vw);">
+            <div class="widget-header">
+                <h3 class="widget-title">
+                    <span class="widget-icon">📢</span>
+                    Social Ads Configuration
+                </h3>
+            </div>
+            <div class="widget-content">
+                <form id="agentForm" method="POST">
+                    {% csrf_token %}
+                    
+                    <!-- Product Description -->
+                    <div class="form-group">
+                        <label class="form-label" for="description">📝 Product/Service Description *</label>
+                        <textarea id="description" name="description" class="form-textarea" 
+                                  placeholder="Describe what you'd like to create ads for. Include key features, benefits, target audience, and any specific messaging you want to emphasize." 
+                                  required rows="4"></textarea>
+                        <div class="form-help">Provide clear, specific information about your product or service for better ad copy</div>
+                        <div id="description-error" class="form-error" style="display: none;"></div>
+                    </div>
+                    
+                    <!-- Social Platform Selection -->
+                    <div class="form-group">
+                        <label class="form-label" for="social_platform">📱 Target Platform *</label>
+                        <select id="social_platform" name="social_platform" class="form-input" required>
+                            <option value="">Select a platform...</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="linkedin">LinkedIn</option>
+                            <option value="twitter">X (Twitter)</option>
+                            <option value="tiktok">TikTok</option>
+                            <option value="youtube">YouTube</option>
+                        </select>
+                        <div class="form-help">Choose the primary social media platform for optimization</div>
+                        <div id="social_platform-error" class="form-error" style="display: none;"></div>
+                    </div>
+                    
+                    <!-- Emoji Preference -->
+                    <div class="form-group">
+                        <label class="form-label" for="include_emoji">😊 Include Emojis *</label>
+                        <select id="include_emoji" name="include_emoji" class="form-input" required>
+                            <option value="">Select preference...</option>
+                            <option value="yes">Yes - Include emojis</option>
+                            <option value="no">No - Text only</option>
+                        </select>
+                        <div class="form-help">Whether to include emojis in the ad copy</div>
+                        <div id="include_emoji-error" class="form-error" style="display: none;"></div>
+                    </div>
+                    
+                    <!-- Language Selection -->
+                    <div class="form-group">
+                        <label class="form-label" for="language">🌐 Language</label>
+                        <select id="language" name="language" class="form-input">
+                            <option value="English">English</option>
+                            <option value="Arabic">Arabic (العربية)</option>
+                            <option value="Spanish">Spanish (Español)</option>
+                            <option value="French">French (Français)</option>
+                            <option value="German">German (Deutsch)</option>
+                            <option value="Chinese">Chinese (中文)</option>
+                        </select>
+                        <div class="form-help">Select the language for the ad copy</div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div style="margin-top: var(--spacing-lg);">
+                        {% if user.is_authenticated %}
+                            {% if user.wallet_balance >= 7.00 %}
+                                <button type="submit" class="btn btn-primary btn-full" id="generateBtn">
+                                    📢 Generate Social Ads (7.00 AED)
+                                </button>
+                            {% else %}
+                                <div style="background: #fef2f2; color: #dc2626; padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); font-size: 14px; font-weight: 500; text-align: center;">
+                                    Insufficient balance! You need 7.00 AED.
+                                </div>
+                                <a href="{% url 'wallet:wallet' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
+                                    💰 Top Up Wallet
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'authentication:login' %}" class="btn btn-primary btn-full">
+                                🔐 Login to Continue
+                            </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- How It Works Widget - Positioned on the right -->
+        <div class="agent-widget widget-small" style="min-width: min(280px, 100%); max-width: min(280px, 100%); margin-left: auto;">
+            <div class="widget-header">
+                <h3 class="widget-title">
+                    <span class="widget-icon">ℹ️</span>
+                    How It Works
+                </h3>
+            </div>
+            <div class="widget-content">
+                <ol class="info-list">
+                    <li>Describe your product/service</li>
+                    <li>Select target platform</li>
+                    <li>Choose emoji preferences</li>
+                    <li>Get optimized ad copy</li>
+                </ol>
+                
+                <!-- Other Agents Button -->
+                <button class="quick-agent-toggle btn btn-secondary btn-full" onclick="toggleQuickAgents()" 
+                        title="Quick access to other agents"
+                        aria-label="Open quick access panel for other AI agents"
+                        aria-expanded="false"
+                        aria-controls="quickAgentsPanel"
+                        style="margin-top: var(--spacing-md);">
+                    <span class="toggle-icon" aria-hidden="true">🚀</span>
+                    <span class="toggle-text">Explore Other Agents</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="agent-grid">
+        <!-- Processing Status -->
+        {% include "components/processing_status.html" with status_title="Creating Social Ads..." status_text="Please wait while we generate your ad copy..." %}
+        
+        <!-- Results Widget -->
+        {% include "components/results_container.html" with results_title="Generated Social Ads" %}
+    </div>
+</div>
+
 <style>
-/* Social Ads Generator - Additional Styles */
-
-* {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    box-sizing: border-box;
-}
-
-:root {
-    --primary: #000000;
-    --surface: #ffffff;
-    --surface-variant: #f8fafc;
-    --background: #f3f4f6;
-    --outline: #e4e7eb;
-    --outline-variant: #e1e4e7;
-    --on-surface: #1a1a1a;
-    --on-surface-variant: #6b7280;
-    --success: #10b981;
-    --error: #ef4444;
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --spacing-xs: 4px;
-    --spacing-sm: 8px;
-    --spacing-md: 16px;
-    --spacing-lg: 24px;
-    --spacing-xl: 32px;
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
-}
-
-html {
-    /* Prevent page shake by maintaining consistent scrollbar space */
-    scrollbar-gutter: stable;
-}
-
-body {
-    background: var(--background);
-    color: var(--on-surface);
-    line-height: 1.5;
-    font-weight: 400;
-    margin: 0;
-    padding: 0;
-}
-
-/* Layout */
-.agent-container {
-    margin: 0 auto;
-    padding: var(--spacing-lg);
-    max-width: 1600px;
-}
-
-.agent-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-xl);
-}
-
-.header-controls {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-lg);
-}
-
-.agent-grid {
-    display: flex;
-    gap: var(--spacing-lg);
-    align-items: flex-start;
-    flex-wrap: wrap;
-}
-
-/* Typography */
-.agent-title {
-    font-size: 32px;
-    font-weight: 700;
-    color: var(--on-surface);
-    margin: 0;
-    letter-spacing: -0.5px;
-}
-
-.agent-subtitle {
-    font-size: 16px;
-    color: var(--on-surface-variant);
-    margin: 4px 0 0 0;
-}
-
-/* Widgets */
-.agent-widget {
-    background: var(--surface);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-xl);
-    border: 1px solid var(--outline-variant);
-    box-shadow: var(--shadow-sm);
-    transition: all 0.2s ease;
-    display: flex;
-    flex-direction: column;
-}
-
-.agent-widget:hover {
-    box-shadow: var(--shadow-md);
-}
-
-.widget-large {
-    min-width: 400px;
-    flex: 1;
-}
-
-.widget-small {
-    min-width: 280px;
-    flex: 0 0 280px;
-}
-
-.widget-header {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-lg);
-    padding-bottom: var(--spacing-md);
-    border-bottom: 1px solid var(--outline-variant);
-}
-
-.widget-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--on-surface);
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-}
-
-.widget-icon {
-    font-size: 20px;
-    padding: 6px;
-    border-radius: var(--radius-sm);
-    background: var(--surface-variant);
-}
-
-.widget-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-}
-
-/* Wallet Card */
-.wallet-card {
-    background: linear-gradient(135deg, #000000 0%, #333333 100%);
-    color: white;
-    border-radius: var(--radius-md);
-    padding: var(--spacing-md);
-    border: none;
-    box-shadow: var(--shadow-md);
-    position: relative;
-    overflow: hidden;
-    margin-bottom: 0;
-    min-height: auto;
-}
-
-.wallet-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 100px;
-    height: 100px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    transform: translate(30px, -30px);
-}
-
-.wallet-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-sm);
-}
-
-.wallet-title {
-    font-size: 14px;
-    font-weight: 600;
-    margin: 0;
-    opacity: 0.9;
-}
-
-.wallet-icon {
-    font-size: 20px;
-}
-
-.balance-display {
-    margin-bottom: 0;
-}
-
-.balance-amount {
-    font-size: 24px;
-    font-weight: 700;
-    line-height: 1;
-    margin-bottom: 0;
-    letter-spacing: -0.5px;
-}
-
-.balance-label {
-    font-size: 12px;
-    opacity: 0.8;
-    font-weight: 400;
-}
-
-/* Form Styles */
-.section-container {
-    margin-bottom: var(--spacing-xl);
-    padding: var(--spacing-lg);
-    background: var(--surface-variant);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--outline-variant);
-}
-
-.section-subtitle {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--on-surface);
-    margin: 0 0 var(--spacing-lg) 0;
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-}
-
-.section-subtitle::before {
-    content: '';
-    width: 3px;
-    height: 16px;
-    background: var(--primary);
-    border-radius: 2px;
-}
-
-.form-group {
-    margin-bottom: var(--spacing-lg);
-}
-
-.form-label {
-    display: block;
-    font-weight: 500;
-    color: var(--on-surface);
-    margin-bottom: var(--spacing-sm);
-    font-size: 14px;
-}
-
-.form-input, .form-textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid var(--outline-variant);
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    line-height: 1.5;
-    background: var(--surface);
-    color: var(--on-surface);
-    transition: all 0.2s ease;
-    font-family: inherit;
-}
-
-.form-control {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid var(--outline-variant);
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    line-height: 1.5;
-    background: var(--surface);
-    color: var(--on-surface);
-    transition: all 0.2s ease;
-    font-family: inherit;
-}
-
-.form-input:focus, .form-textarea:focus, .form-control:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
-}
-
-.form-input:hover, .form-textarea:hover, .form-control:hover {
-    border-color: var(--on-surface-variant);
-}
-
-.form-input.is-invalid, .form-textarea.is-invalid, .form-control.is-invalid {
-    border-color: var(--error);
-}
-
-.form-input.is-valid, .form-textarea.is-valid, .form-control.is-valid {
-    border-color: var(--success);
-}
-
+/* Social Ads Generator Specific Styles */
 .form-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--outline-variant);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    line-height: 1.5;
+    transition: all 0.2s ease;
+    background: var(--surface);
+    color: var(--on-surface);
+    font-family: inherit;
     resize: vertical;
     min-height: 120px;
 }
 
-.form-error {
-    color: var(--error);
-    font-size: 0.875rem;
-    margin-top: var(--spacing-xs);
-}
-
-.form-help {
-    color: var(--on-surface-variant);
-    font-size: 0.875rem;
-    margin-top: var(--spacing-xs);
-}
-
-.required::after {
-    content: " *";
-    color: var(--error);
-}
-
-/* Buttons */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 12px 24px;
-    border: 1px solid transparent;
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1.25;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    user-select: none;
-    white-space: nowrap;
-    min-height: 44px;
-}
-
-.btn:focus {
+.form-textarea:focus {
     outline: none;
+    border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
 }
 
-.btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+.form-textarea:hover {
+    border-color: var(--on-surface-variant);
 }
 
-.btn-primary {
-    background: var(--primary);
-    color: var(--surface);
+.form-textarea.error {
+    border-color: var(--error);
 }
 
-.btn-primary:hover:not(:disabled) {
-    background: #333;
+.form-input.error {
+    border-color: var(--error);
 }
 
-.btn-secondary {
-    background: var(--surface);
-    color: var(--on-surface);
-    border: 2px solid var(--outline);
-}
-
-.btn-secondary:hover:not(:disabled) {
-    background: var(--surface-variant);
-    border-color: var(--primary);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
-}
-
-.btn-outline {
-    background: transparent;
-    color: var(--primary);
-    border-color: var(--primary);
-}
-
-.btn-outline:hover:not(:disabled) {
-    background: var(--primary);
-    color: var(--surface);
-}
-
-.btn-sm {
-    padding: var(--spacing-xs) var(--spacing-sm);
-    font-size: 0.875rem;
-}
-
-.btn-full {
-    width: 100%;
-    justify-content: center;
-    padding: 12px 24px;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.btn-loading {
-    position: relative;
-    color: transparent;
-}
-
-.btn-loading::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 16px;
-    height: 16px;
-    margin: -8px 0 0 -8px;
-    border: 2px solid transparent;
-    border-top-color: currentColor;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Wallet Widget */
-.wallet-widget {
-    text-align: center;
-}
-
-.wallet-balance {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--primary);
-    margin: var(--spacing-md) 0;
-}
-
-
-.insufficient-balance {
-    background: rgba(239, 68, 68, 0.1);
+.form-error {
     color: var(--error);
-    padding: var(--spacing-sm);
-    border-radius: var(--radius-sm);
-    margin-bottom: var(--spacing-md);
-    font-size: 0.875rem;
+    font-size: 12px;
+    margin-top: var(--spacing-xs);
     font-weight: 500;
 }
 
-/* Processing Status */
-.processing-status {
-    background: var(--surface);
-    border: 1px solid var(--outline);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-xl);
-    text-align: center;
-    box-shadow: var(--shadow-sm);
-    display: none;
-}
-
-.status-icon {
-    font-size: 48px;
-    margin-bottom: var(--spacing-md);
-}
-
-/* Results */
-.results-card {
-    background: var(--surface);
-    border: 1px solid var(--outline);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-xl);
-    box-shadow: var(--shadow-sm);
-    display: none;
-}
-
-.results-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-lg);
-    padding-bottom: var(--spacing-md);
-    border-bottom: 1px solid var(--outline);
-}
-
+/* Enhanced Results Display for Social Ads */
 .results-content {
     background: var(--surface-variant);
     border-radius: var(--radius-md);
@@ -485,7 +623,7 @@ body {
     font-size: 15px;
 }
 
-/* Enhanced Results Typography - From Data Analyzer */
+/* Enhanced Results Typography */
 .results-content h1,
 .results-content h2,
 .results-content h3 {
@@ -557,1468 +695,75 @@ body {
     font-weight: bold;
 }
 
-/* Modern Info Boxes */
-.results-content .key-points,
-.results-content .insights,
-.results-content .summary {
-    background: var(--surface);
-    border: 1px solid var(--outline-variant);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-lg);
-    margin: var(--spacing-lg) 0;
-    box-shadow: var(--shadow-sm);
-}
-
-.results-content .key-points {
-    border-left: 4px solid #3b82f6;
-}
-
-.results-content .insights {
-    border-left: 4px solid #10b981;
-}
-
-.results-content .summary {
-    border-left: 4px solid #f59e0b;
-}
-
 /* Strong text styling */
 .results-content strong {
     color: var(--primary);
     font-weight: 600;
 }
 
-/* Code and technical terms */
-.results-content code {
-    background: #f1f5f9;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-    font-size: 14px;
-    color: #1e293b;
-}
-
-.action-buttons {
-    display: flex;
-    gap: var(--spacing-md);
-    flex-wrap: wrap;
-}
-
-/* Info List - From Data Analyzer */
-.info-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    counter-reset: step-counter;
-}
-
-.info-list li {
-    padding: var(--spacing-sm) 0;
-    color: var(--on-surface-variant);
-    font-size: 14px;
-    border-bottom: 1px solid var(--outline-variant);
-    position: relative;
-    padding-left: var(--spacing-lg);
-}
-
-.info-list li:last-child {
-    border-bottom: none;
-}
-
-.info-list li::before {
-    content: counter(step-counter);
-    counter-increment: step-counter;
-    position: absolute;
-    left: 0;
-    top: var(--spacing-sm);
-    width: 20px;
-    height: 20px;
-    background: var(--primary);
-    color: var(--surface);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-/* Other Agents Widget */
-.other-agents-widget {
-    text-align: center;
-}
-
-.other-agents-widget p {
-    margin: 0 0 var(--spacing-md) 0;
-    color: var(--on-surface-variant);
-}
-
-/* Quick Agent Panel */
-.quick-agent-panel {
+/* Toast Notifications */
+.toast {
     position: fixed;
-    top: 0;
-    right: -400px;
-    width: 400px;
-    height: 100vh;
+    top: 20px;
+    right: 20px;
     background: var(--surface);
-    border-left: 1px solid var(--outline);
-    box-shadow: var(--shadow-lg);
-    z-index: 1000;
-    transition: right 0.3s ease;
-    overflow-y: auto;
-}
-
-.quick-agent-panel.active {
-    right: 0;
-}
-
-.panel-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-}
-
-.panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-lg);
-    border-bottom: 1px solid var(--outline);
-}
-
-.panel-close {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: var(--on-surface-variant);
-}
-
-.panel-content {
-    padding: var(--spacing-lg);
-}
-
-.agent-grid-panel {
-    display: grid;
-    gap: var(--spacing-md);
-}
-
-.agent-card {
-    background: var(--surface-variant);
     border: 1px solid var(--outline);
     border-radius: var(--radius-md);
-    padding: var(--spacing-md);
-    text-align: center;
-    transition: all 0.2s ease;
-}
-
-.agent-card:hover {
-    box-shadow: var(--shadow-md);
-}
-
-.agent-emoji {
-    font-size: 2rem;
-    margin-bottom: var(--spacing-sm);
-}
-
-.agent-card h4 {
-    margin: 0 0 var(--spacing-sm) 0;
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--on-surface);
-}
-
-.agent-card p {
-    margin: 0 0 var(--spacing-md) 0;
-    font-size: 0.875rem;
-    color: var(--on-surface-variant);
-}
-
-/* Quick Agent Access Panel */
-.quick-agent-toggle {
-    position: relative;
-    overflow: hidden;
-    transition: all 0.2s ease;
-}
-
-.quick-agent-toggle:hover {
-    border-color: var(--primary);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
-}
-
-.quick-agent-toggle.active {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
-}
-
-.toggle-icon {
-    font-size: 16px;
-    transition: transform 0.2s ease;
-}
-
-.quick-agent-toggle.active .toggle-icon {
-    transform: rotate(180deg);
-}
-
-.quick-agents-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-}
-
-.quick-agents-overlay.active {
-    opacity: 1;
-    visibility: visible;
-}
-
-.quick-agents-panel {
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: min(400px, 90vw);
-    height: 100vh;
-    background: var(--surface);
-    border-left: 1px solid var(--outline);
+    padding: var(--spacing-md) var(--spacing-lg);
     box-shadow: var(--shadow-lg);
     z-index: 1000;
+    max-width: 400px;
+    font-size: 14px;
+    font-weight: 500;
     transform: translateX(100%);
     transition: transform 0.3s ease;
-    overflow-y: auto;
 }
 
-.quick-agents-panel.active {
+.toast.show {
     transform: translateX(0);
 }
 
-.quick-agents-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-lg);
-    border-bottom: 1px solid var(--outline-variant);
-    background: var(--surface-variant);
+.toast.success {
+    border-color: var(--success);
+    background: #f0fdf4;
+    color: #16a34a;
 }
 
-.quick-agents-header h3 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--on-surface);
+.toast.error {
+    border-color: var(--error);
+    background: #fef2f2;
+    color: #dc2626;
 }
 
-.close-panel {
-    background: none;
-    border: none;
-    font-size: 24px;
-    color: var(--on-surface-variant);
-    cursor: pointer;
-    padding: 4px;
-    border-radius: var(--radius-sm);
-    transition: all 0.2s ease;
-}
-
-.close-panel:hover {
-    background: var(--surface);
-    color: var(--on-surface);
-}
-
-.quick-agents-grid {
-    padding: var(--spacing-lg);
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-}
-
-.quick-agent-card {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-    padding: var(--spacing-md);
-    border: 1px solid var(--outline-variant);
-    border-radius: var(--radius-md);
-    text-decoration: none;
-    color: var(--on-surface);
-    transition: all 0.2s ease;
-    background: var(--surface);
-}
-
-.quick-agent-card:hover {
-    border-color: var(--primary);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
-}
-
-.agent-icon {
-    font-size: 24px;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--surface-variant);
-    border-radius: var(--radius-md);
-    flex-shrink: 0;
-}
-
-.agent-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.agent-info h4 {
-    margin: 0 0 4px 0;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--on-surface);
-}
-
-.agent-info p {
-    margin: 0;
-    font-size: 12px;
-    color: var(--on-surface-variant);
-    line-height: 1.4;
-}
-
-.agent-price {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--primary);
-    background: rgba(0, 0, 0, 0.05);
-    padding: 2px 8px;
-    border-radius: var(--radius-sm);
-    margin-top: 4px;
-    display: inline-block;
-}
-
-.quick-agents-footer {
-    padding: var(--spacing-md) var(--spacing-lg);
-    border-top: 1px solid var(--outline-variant);
-    background: var(--surface-variant);
-}
-
-.view-all-agents {
-    display: block;
-    text-align: center;
-    padding: var(--spacing-md);
-    background: var(--primary);
-    color: white;
-    text-decoration: none;
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.view-all-agents:hover {
-    background: #333333;
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
-}
-
-/* Responsive Design */
 @media (max-width: 768px) {
-    .agent-container {
+    .toast {
+        left: 20px;
+        right: 20px;
+        max-width: none;
+        transform: translateY(-100%);
+    }
+    
+    .toast.show {
+        transform: translateY(0);
+    }
+    
+    .results-content {
         padding: var(--spacing-md);
+        font-size: 14px;
     }
     
-    .agent-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--spacing-sm);
-    }
-    
-    .header-controls {
-        width: 100%;
-        justify-content: space-between;
-    }
-    
-    .agent-title {
-        font-size: 24px;
-    }
-    
-    .agent-grid {
-        flex-direction: column;
-        gap: var(--spacing-md);
-    }
-    
-    .widget-large,
-    .widget-small {
-        min-width: auto;
-        flex: none;
-    }
-    
-    .balance-amount {
+    .results-content h1 {
         font-size: 20px;
     }
     
-    .widget-large {
-        margin-right: 0 !important;
+    .results-content h2 {
+        font-size: 18px;
     }
     
-    .quick-agent-toggle {
-        flex: 1;
-        margin-right: var(--spacing-md);
-        justify-content: center;
+    .results-content h3 {
+        font-size: 16px;
+        padding: var(--spacing-sm) var(--spacing-md);
     }
-    
-    .quick-agents-panel {
-        width: 100%;
-        max-width: 100%;
-        right: 0;
-        left: 0;
-    }
-}
-
-@media (max-width: 480px) {
-    .agent-container {
-        padding: var(--spacing-sm);
-    }
-    
-    .agent-grid {
-        gap: var(--spacing-md);
-    }
-    
-    .agent-header h1 {
-        font-size: 1.5rem;
-    }
-    
-    .wallet-balance {
-        font-size: 1.5rem;
-    }
-}
-
-/* Accessibility */
-@media (prefers-reduced-motion: reduce) {
-    * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-    }
-}
-
-/* Focus styles for accessibility */
-.btn:focus-visible,
-.form-control:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-}
-
-/* Screen reader only */
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-}
-
-/* Form Sections */
-.form-section {
-    margin-bottom: var(--spacing-xl);
-    padding: var(--spacing-lg);
-    background: var(--surface-variant);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--outline);
-}
-
-.form-section h3 {
-    margin: 0 0 var(--spacing-md) 0;
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--on-surface);
-}
-
-/* Alert Messages */
-.alert {
-    padding: var(--spacing-md);
-    border-radius: var(--radius-sm);
-    margin-bottom: var(--spacing-md);
-    border: 1px solid transparent;
-}
-
-.alert-success {
-    background: rgba(16, 185, 129, 0.1);
-    color: var(--success);
-    border-color: var(--success);
-}
-
-.alert-error {
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--error);
-    border-color: var(--error);
 }
 </style>
-
-<script>
-// Social Ads Generator - Optimized JavaScript with Security
-const SocialAdsModule = (function() {
-    'use strict';
-    
-    // Private variables
-    let isInitialized = false;
-    let eventListeners = [];
-    let currentPollInterval = null;
-    let resultsDisplayed = false;
-    
-    // HTML Sanitization Function
-    function safeSetHTML(element, htmlString) {
-        const temp = document.createElement('div');
-        temp.innerHTML = htmlString;
-        
-        // Remove script tags
-        const scripts = temp.querySelectorAll('script');
-        scripts.forEach(script => script.remove());
-        
-        // Remove dangerous attributes
-        const allElements = temp.querySelectorAll('*');
-        allElements.forEach(el => {
-            const attrs = el.attributes;
-            for (let i = attrs.length - 1; i >= 0; i--) {
-                const attr = attrs[i];
-                if (attr.name.startsWith('on') || 
-                    attr.name === 'javascript:' || 
-                    (attr.value && attr.value.toLowerCase().includes('javascript:'))) {
-                    el.removeAttribute(attr.name);
-                }
-            }
-        });
-        
-        element.innerHTML = temp.innerHTML;
-    }
-    
-    // Debounce function
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
-    
-    // Public API
-    const SocialAdsUtils = {
-        // Update wallet balance display
-        updateWalletBalance(newBalance) {
-            if (newBalance !== undefined) {
-                // Update header balance
-                const headerBalance = document.querySelector('a[data-wallet-balance]');
-                if (headerBalance) {
-                    headerBalance.textContent = `💰 ${newBalance.toFixed(2)} AED`;
-                }
-                
-                // Update page balance
-                const pageBalance = document.getElementById('walletBalance');
-                if (pageBalance) {
-                    pageBalance.textContent = newBalance.toFixed(2);
-                }
-                
-                window.currentWalletBalance = newBalance;
-            }
-        },
-
-        // Show toast notification
-        showToast(message, type = 'info') {
-            const existingToast = document.querySelector('.toast-notification');
-            if (existingToast) {
-                existingToast.remove();
-            }
-
-            const toast = document.createElement('div');
-            toast.className = 'toast-notification';
-            toast.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 12px 16px;
-                border-radius: 8px;
-                color: white;
-                font-size: 14px;
-                font-weight: 500;
-                z-index: 1000;
-                max-width: 350px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                ${type === 'success' ? 'background: #10b981;' : 'background: #ef4444;'}
-            `;
-            
-            // Sanitize message
-            const sanitizedMessage = message.replace(/[<>"'&]/g, function(match) {
-                const entities = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '&': '&amp;' };
-                return entities[match];
-            });
-            
-            toast.textContent = sanitizedMessage;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.remove();
-                }
-            }, 3000);
-        },
-
-        // Generate text for export
-        generateTextForExport(contentElementId) {
-            const content = document.getElementById(contentElementId);
-            if (content) {
-                return content.innerText || content.textContent || '';
-            }
-            return 'No content available';
-        },
-
-        // Copy to clipboard
-        copyToClipboard(text, successMessage = 'Content copied to clipboard!') {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(() => {
-                    this.showToast(`📋 ${successMessage}`, 'success');
-                }).catch(() => {
-                    this.showToast('Failed to copy content', 'error');
-                });
-            } else {
-                // Fallback for older browsers
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                document.body.appendChild(textArea);
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                    this.showToast(`📋 ${successMessage}`, 'success');
-                } catch (err) {
-                    this.showToast('Failed to copy content', 'error');
-                }
-                document.body.removeChild(textArea);
-            }
-        },
-
-        // Download as file
-        downloadAsFile(text, filename, successMessage = 'File downloaded!') {
-            try {
-                const blob = new Blob([text], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename || `social-ads-${Date.now()}.txt`;
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                this.showToast(`💾 ${successMessage}`, 'success');
-            } catch (error) {
-                this.showToast('Failed to download file', 'error');
-            }
-        },
-
-        // Reset UI to initial state
-        resetUI(config) {
-            const elements = {
-                processingStatus: document.getElementById(config.processingStatusId || 'processingStatus'),
-                processButton: document.getElementById(config.processButtonId || 'processButton'),
-                results: document.getElementById(config.resultsId)
-            };
-
-            if (elements.processingStatus) {
-                elements.processingStatus.style.display = 'none';
-            }
-            
-            if (elements.processButton) {
-                elements.processButton.disabled = false;
-                elements.processButton.innerHTML = config.buttonText || 'Process';
-                elements.processButton.classList.remove('btn-loading');
-            }
-
-            if (elements.results) {
-                elements.results.style.display = 'none';
-            }
-        },
-        
-        // Validate wallet balance dynamically
-        validateWalletBalance() {
-            const walletBalanceElement = document.getElementById('walletBalance');
-            const currentBalance = walletBalanceElement ? 
-                parseFloat(walletBalanceElement.textContent) : 0;
-            
-            if (currentBalance < 7.00) {
-                this.showToast('Insufficient wallet balance. Please top up your wallet.', 'error');
-                return false;
-            }
-            return true;
-        }
-    };
-    
-    // Initialize module
-    function init() {
-        if (isInitialized) return;
-        
-        setupEventListeners();
-        setupAccessibility();
-        
-        isInitialized = true;
-    }
-    
-    function setupEventListeners() {
-        // Add event listeners with cleanup tracking
-        const form = document.getElementById('socialAdsForm');
-        if (form) {
-            const submitHandler = handleFormSubmit.bind(null);
-            form.addEventListener('submit', submitHandler);
-            eventListeners.push({ element: form, event: 'submit', handler: submitHandler });
-        }
-    }
-    
-    function setupAccessibility() {
-        // Add keyboard navigation support
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && document.querySelector('.quick-agent-panel.active')) {
-                hideQuickAgentAccess();
-            }
-        });
-    }
-    
-    function handleFormSubmit(e) {
-        // Form submission logic will be handled in the main script
-    }
-    
-    // Cleanup function
-    function cleanup() {
-        eventListeners.forEach(({ element, event, handler }) => {
-            if (element) {
-                element.removeEventListener(event, handler);
-            }
-        });
-        eventListeners = [];
-        
-        if (currentPollInterval) {
-            clearInterval(currentPollInterval);
-            currentPollInterval = null;
-        }
-        
-        isInitialized = false;
-    }
-    
-    // Public API
-    return {
-        init,
-        cleanup,
-        SocialAdsUtils,
-        
-        // Expose internal functions for use in template
-        setCurrentPollInterval(interval) {
-            currentPollInterval = interval;
-        },
-        
-        clearCurrentPollInterval() {
-            if (currentPollInterval) {
-                clearInterval(currentPollInterval);
-                currentPollInterval = null;
-            }
-        },
-        
-        setResultsDisplayed(value) {
-            resultsDisplayed = value;
-        },
-        
-        getResultsDisplayed() {
-            return resultsDisplayed;
-        }
-    };
-})();
-
-// For backward compatibility
-const AgentUtils = SocialAdsModule.SocialAdsUtils;
-
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', SocialAdsModule.init);
-} else {
-    SocialAdsModule.init();
-}
-
-</script>
-{% endblock %}
-
-{% block content %}
-<div class="agent-container">
-    <!-- Agent Header -->
-    {% include "components/agent_header.html" with agent_title="Social Ads Generator" agent_subtitle="Create compelling social media advertisements optimized for different platforms" %}
-
-    <!-- Quick Agent Access Panel -->
-    {% include "components/quick_agents_panel.html" %}
-
-    <!-- Messages -->
-    {% if messages %}
-        {% for message in messages %}
-            <div class="{% if message.tags == 'error' %}alert alert-error{% else %}alert{% endif %}">
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
-    
-    <!-- Agent Grid -->
-    <div class="agent-grid">
-        <!-- Social Ads Form Widget -->
-        <div class="agent-widget widget-large" style="flex: 1; margin-right: clamp(0px, var(--spacing-lg), 2vw);">
-            <div class="widget-header">
-                <h3 class="widget-title">
-                    <span class="widget-icon">📢</span>
-                    Social Ads Details
-                </h3>
-            </div>
-            <div class="widget-content">
-                
-                <form method="POST" id="socialAdsForm">
-                    {% csrf_token %}
-                    
-                    <!-- Content Information Section -->
-                    <div class="section-container content-info">
-                        <h4 class="section-subtitle">📝 Content Information</h4>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="description">📝 Describe what you'd like to generate *</label>
-                            <textarea name="description" id="description" class="form-textarea" placeholder="Describe the product, service, or campaign you want to create an ad for. Include key features, target audience, and any specific messaging you want to emphasize." required aria-describedby="description_help" rows="4"></textarea>
-                            <div id="description_help" class="form-help">Provide clear, specific information about your product or service for better ad copy</div>
-                            <div id="description-error" class="form-error" role="alert"></div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="language">🌐 Language</label>
-                            <select name="language" id="language" class="form-input" aria-describedby="language_help">
-                                <option value="English">English</option>
-                                <option value="Arabic">Arabic (العربية)</option>
-                                <option value="Spanish">Spanish (Español)</option>
-                                <option value="French">French (Français)</option>
-                                <option value="German">German (Deutsch)</option>
-                                <option value="Chinese">Chinese (中文)</option>
-                            </select>
-                            <div id="language_help" class="form-help">Select the primary language for the ad copy</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Platform & Formatting Section -->
-                    <div class="section-container platform-info">
-                        <h4 class="section-subtitle">📱 Platform & Formatting</h4>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="social_platform">📱 For Social Media Platform *</label>
-                            <select name="social_platform" id="social_platform" class="form-input" required aria-describedby="social_platform_help">
-                                <option value="">Select a platform...</option>
-                                <option value="facebook">Facebook</option>
-                                <option value="instagram">Instagram</option>
-                                <option value="linkedin">LinkedIn</option>
-                                <option value="twitter">X (Twitter)</option>
-                                <option value="tiktok">TikTok</option>
-                                <option value="youtube">YouTube</option>
-                            </select>
-                            <div id="social_platform_help" class="form-help">Choose the social media platform for optimization</div>
-                            <div id="social_platform-error" class="form-error" role="alert"></div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="include_emoji">😊 Include Emoji *</label>
-                            <select name="include_emoji" id="include_emoji" class="form-input" required aria-describedby="include_emoji_help">
-                                <option value="">Select an option...</option>
-                                <option value="yes">Yes</option>
-                                <option value="no">No</option>
-                            </select>
-                            <div id="include_emoji_help" class="form-help">Whether to include emojis in the ad copy</div>
-                            <div id="include_emoji-error" class="form-error" role="alert"></div>
-                        </div>
-                    </div>
-                    
-                    <!-- Action Button -->
-                    <div style="margin-top: var(--spacing-lg);">
-                        {% if user.is_authenticated %}
-                            {% if user.wallet_balance >= 7.00 %}
-                                <button type="submit" class="btn btn-primary btn-full" id="processButton">
-                                    📢 Generate Social Ads (7.00 AED)
-                                </button>
-                            {% else %}
-                                <div style="background: #fef2f2; color: #dc2626; padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); font-size: 14px; font-weight: 500; text-align: center;">
-                                    Insufficient balance! You need 7.00 AED.
-                                </div>
-                                <a href="{% url 'wallet:wallet' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
-                                    💰 Top Up Wallet
-                                </a>
-                            {% endif %}
-                        {% else %}
-                            <a href="{% url 'authentication:login' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
-                                🔑 Login to Continue
-                            </a>
-                        {% endif %}
-                    </div>
-                </form>
-                
-            </div>
-        </div>
-        
-        <!-- How It Works Widget - Positioned on the right -->
-        <div class="agent-widget widget-small" style="min-width: min(280px, 100%); max-width: min(280px, 100%); margin-left: auto;">
-            <div class="widget-header">
-                <h3 class="widget-title">
-                    <span class="widget-icon">ℹ️</span>
-                    How It Works
-                </h3>
-            </div>
-            <div class="widget-content">
-                <ol class="info-list">
-                    <li>Describe your product/service</li>
-                    <li>Select target platforms</li>
-                    <li>Choose language preferences</li>
-                    <li>Get platform-optimized ad copy</li>
-                </ol>
-                
-                <!-- Other Agents Button -->
-                <button class="quick-agent-toggle btn btn-secondary btn-full" onclick="toggleQuickAgents()" 
-                        title="Quick access to other agents"
-                        aria-label="Open quick access panel for other AI agents"
-                        aria-expanded="false"
-                        aria-controls="quickAgentsPanel"
-                        style="margin-top: var(--spacing-md);">
-                    <span class="toggle-icon" aria-hidden="true">🚀</span>
-                    <span class="toggle-text">Explore Other Agents</span>
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Processing Status -->
-    {% include "components/processing_status.html" with status_title="Creating Social Ads..." status_text="Generating engaging ad content..." %}
-    
-    <!-- Results -->
-    {% include "components/results_container.html" with results_title="Generated Social Ads" %}
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    // Form validation with visual feedback
-    function isFormValid() {
-        const description = document.getElementById('description').value.trim();
-        const socialPlatform = document.getElementById('social_platform').value;
-        const includeEmoji = document.getElementById('include_emoji').value;
-        
-        let isValid = true;
-        
-        // Clear previous errors
-        document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
-        document.querySelectorAll('.form-control').forEach(el => el.classList.remove('is-invalid'));
-        
-        // Validate description
-        if (!description) {
-            showFieldError('description', 'Please provide a description of your product or service');
-            isValid = false;
-        } else if (description.length < 10) {
-            showFieldError('description', 'Description must be at least 10 characters long');
-            isValid = false;
-        }
-        
-        // Validate social platform
-        if (!socialPlatform) {
-            showFieldError('social_platform', 'Please select a social media platform');
-            isValid = false;
-        }
-        
-        // Validate emoji preference
-        if (!includeEmoji) {
-            showFieldError('include_emoji', 'Please select whether to include emojis');
-            isValid = false;
-        }
-        
-        return isValid;
-    }
-    
-    // Show field-specific error
-    function showFieldError(fieldName, message) {
-        const field = document.getElementById(fieldName);
-        const errorElement = document.getElementById(`${fieldName}-error`);
-        
-        if (field) {
-            field.classList.add('is-invalid');
-        }
-        
-        if (errorElement) {
-            errorElement.textContent = message;
-        }
-    }
-    
-    // Copy social ads to clipboard
-    function copySocialAds() {
-        const adText = AgentUtils.generateTextForExport('adContent');
-        AgentUtils.copyToClipboard(adText, 'Social ads copied to clipboard!');
-    }
-    
-    // Download social ads as text file
-    function downloadSocialAds() {
-        const adText = AgentUtils.generateTextForExport('adContent');
-        AgentUtils.downloadAsFile(adText, 'social-ads-' + Date.now() + '.txt', 'Social ads downloaded!');
-    }
-
-    // Reset form for creating another ad
-    function resetForm() {
-        // Clear any active polling
-        SocialAdsModule.clearCurrentPollInterval();
-        SocialAdsModule.setResultsDisplayed(false);
-        
-        // Reset form and UI
-        document.getElementById('socialAdsForm').reset();
-        
-        // Clear validation errors
-        document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
-        document.querySelectorAll('.form-control').forEach(el => el.classList.remove('is-invalid'));
-        
-        AgentUtils.resetUI({
-            processingStatusId: 'processingStatus',
-            processButtonId: 'processButton',
-            resultsId: 'adResults',
-            buttonText: '📢 Generate Social Ads (7.00 AED)'
-        });
-        
-        AgentUtils.showToast('Form reset! Ready for another ad campaign.', 'success');
-    }
-
-    // HTML sanitization function
-    function safeSetHTML(element, htmlString) {
-        const temp = document.createElement('div');
-        temp.innerHTML = htmlString;
-        
-        // Remove script tags
-        const scripts = temp.querySelectorAll('script');
-        scripts.forEach(script => script.remove());
-        
-        // Remove dangerous attributes
-        const allElements = temp.querySelectorAll('*');
-        allElements.forEach(el => {
-            const attrs = el.attributes;
-            for (let i = attrs.length - 1; i >= 0; i--) {
-                const attr = attrs[i];
-                if (attr.name.startsWith('on') || 
-                    attr.name === 'javascript:' || 
-                    (attr.value && attr.value.toLowerCase().includes('javascript:'))) {
-                    el.removeAttribute(attr.name);
-                }
-            }
-        });
-        
-        element.innerHTML = temp.innerHTML;
-    }
-
-    // Display social ads results with engaging ad copy formatting
-    function displayResults(result) {
-        const resultsContainer = document.getElementById('adResults');
-        const contentElement = document.getElementById('adContent');
-        
-        if (!resultsContainer || !contentElement) {
-            console.error('Ad results elements not found');
-            return;
-        }
-        
-        // Update wallet balance if provided
-        if (result.wallet_balance !== undefined) {
-            AgentUtils.updateWalletBalance(result.wallet_balance);
-        }
-        
-        // Handle errors
-        if (result.error) {
-            AgentUtils.showToast(`❌ ${result.error}`, 'error');
-            return;
-        }
-        
-        // Handle failed status
-        if (result.status === 'failed') {
-            AgentUtils.showToast('❌ Failed to generate ads - no charge applied', 'error');
-            return;
-        }
-        
-        // Extract ad copy content with priority order
-        let content = '';
-        
-        if (result.ad_copy_content && typeof result.ad_copy_content === 'string') {
-            content = result.ad_copy_content;
-        } else if (result.content && typeof result.content === 'string') {
-            content = result.content;
-        } else if (result.ad_copy && typeof result.ad_copy === 'string') {
-            content = result.ad_copy;
-        } else if (result.raw_response && result.raw_response.output && typeof result.raw_response.output === 'string') {
-            content = result.raw_response.output;
-        } else if (result.formatted_ad && typeof result.formatted_ad === 'string') {
-            content = result.formatted_ad;
-        } else if (result.output_text && typeof result.output_text === 'string') {
-            content = result.output_text;
-        } else {
-            content = 'Social ads generated successfully!';
-        }
-        
-        // Format ad copy content with engaging styling
-        const formattedContent = formatSocialAdContent(content);
-        
-        // Update content safely
-        safeSetHTML(contentElement, formattedContent);
-        
-        // Show results
-        resultsContainer.style.display = 'block';
-        resultsContainer.scrollIntoView({ behavior: 'smooth' });
-        
-        // Show success message
-        const successMessage = result.success ? '✅ Social ads created and payment processed!' : '✅ Social ads generated!';
-        AgentUtils.showToast(successMessage, 'success');
-    }
-    
-    // Enhanced social ad formatter - From Data Analyzer 
-    function formatSocialAdContent(content) {
-        if (!content || typeof content !== 'string') {
-            return '<p>No ad content available.</p>';
-        }
-        
-        // Convert markdown-style headers to HTML
-        content = content.replace(/### (.+)/g, '<h3>$1</h3>');
-        content = content.replace(/## (.+)/g, '<h2>$1</h2>');
-        content = content.replace(/# (.+)/g, '<h1>$1</h1>');
-        
-        // First, handle numbered lists that are embedded in paragraphs
-        content = content.replace(/(\d+\.\s[^\.]+\.)\s*/g, '$1\n');
-        
-        // Convert line breaks to proper paragraphs
-        let paragraphs = content.split('\n\n');
-        let formattedContent = '';
-        
-        paragraphs.forEach(paragraph => {
-            paragraph = paragraph.trim();
-            if (paragraph) {
-                // Check if it's a header
-                if (paragraph.includes('<h1>') || paragraph.includes('<h2>') || paragraph.includes('<h3>')) {
-                    formattedContent += paragraph;
-                }
-                // Check if paragraph contains numbered list items
-                else if (/\d+\.\s/.test(paragraph)) {
-                    // Split the paragraph by numbered items
-                    let parts = paragraph.split(/(?=\d+\.\s)/);
-                    let beforeList = parts[0].trim();
-                    
-                    // Handle any content before the list
-                    if (beforeList && !beforeList.match(/^\d+\./)) {
-                        if (beforeList.toLowerCase().includes('ad copy') || beforeList.toLowerCase().includes('posts')) {
-                            formattedContent += `<div class="key-points"><p>${beforeList}</p>`;
-                        } else if (beforeList.toLowerCase().includes('captions') || beforeList.toLowerCase().includes('hashtags')) {
-                            formattedContent += `<div class="insights"><p>${beforeList}</p>`;
-                        } else if (beforeList.toLowerCase().includes('strategy') || beforeList.toLowerCase().includes('tips')) {
-                            formattedContent += `<div class="summary"><p>${beforeList}</p>`;
-                        } else {
-                            formattedContent += `<p>${beforeList}</p>`;
-                        }
-                    }
-                    
-                    // Process the numbered items
-                    let hasNumberedItems = false;
-                    let listItems = [];
-                    
-                    for (let i = 0; i < parts.length; i++) {
-                        let part = parts[i].trim();
-                        if (part && part.match(/^\d+\./)) {
-                            hasNumberedItems = true;
-                            let cleanItem = part.replace(/^\d+\.\s*/, '').trim();
-                            listItems.push(cleanItem);
-                        }
-                    }
-                    
-                    if (hasNumberedItems && listItems.length > 0) {
-                        formattedContent += '<ol>';
-                        listItems.forEach(item => {
-                            formattedContent += `<li>${item}</li>`;
-                        });
-                        formattedContent += '</ol>';
-                    }
-                    
-                    // Close the special div if we opened one
-                    if (beforeList && (beforeList.toLowerCase().includes('ad copy') || 
-                                     beforeList.toLowerCase().includes('captions') || 
-                                     beforeList.toLowerCase().includes('strategy'))) {
-                        formattedContent += '</div>';
-                    }
-                }
-                // Check for bullet lists
-                else if (paragraph.includes('- ') || paragraph.includes('• ')) {
-                    let listItems = paragraph.split('\n').filter(item => item.trim().startsWith('-') || item.trim().startsWith('•'));
-                    if (listItems.length > 0) {
-                        formattedContent += '<ul>';
-                        listItems.forEach(item => {
-                            let cleanItem = item.replace(/^[•-] /, '').trim();
-                            formattedContent += `<li>${cleanItem}</li>`;
-                        });
-                        formattedContent += '</ul>';
-                    }
-                }
-                // Regular paragraph
-                else {
-                    // Convert single line breaks to <br>
-                    paragraph = paragraph.replace(/\n/g, '<br>');
-                    
-                    // Add special styling for social ad sections
-                    if (paragraph.toLowerCase().includes('ad copy') || paragraph.toLowerCase().includes('posts')) {
-                        formattedContent += `<div class="key-points">${paragraph}</div>`;
-                    } else if (paragraph.toLowerCase().includes('captions') || paragraph.toLowerCase().includes('hashtags')) {
-                        formattedContent += `<div class="insights">${paragraph}</div>`;
-                    } else if (paragraph.toLowerCase().includes('strategy') || paragraph.toLowerCase().includes('tips')) {
-                        formattedContent += `<div class="summary">${paragraph}</div>`;
-                    } else {
-                        formattedContent += `<p>${paragraph}</p>`;
-                    }
-                }
-            }
-        });
-        
-        // Enhance strong text
-        formattedContent = formattedContent.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-        formattedContent = formattedContent.replace(/\*(.+?)\*/g, '<em>$1</em>');
-        
-        return formattedContent;
-    }
-
-    // Poll for results
-    function pollForResults(requestId) {
-        let pollCount = 0;
-        const maxPolls = 30; // 30 seconds maximum
-        SocialAdsModule.setResultsDisplayed(false);
-        
-        // Clear any existing polling
-        SocialAdsModule.clearCurrentPollInterval();
-        
-        const pollInterval = setInterval(() => {
-            pollCount++;
-            
-            fetch(`/agents/social-ads-generator/status/${requestId}/`, {
-                credentials: 'same-origin'
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(result => {
-                    if (result.status === 'completed' || result.status === 'failed') {
-                        // Stop polling immediately
-                        clearInterval(pollInterval);
-                        SocialAdsModule.setCurrentPollInterval(null);
-                        
-                        // Reset UI
-                        document.getElementById('processingStatus').style.display = 'none';
-                        const processButton = document.getElementById('processButton');
-                        processButton.disabled = false;
-                        processButton.classList.remove('btn-loading');
-                        processButton.innerHTML = '📢 Generate Social Ads (7.00 AED)';
-                        
-                        // Display results only once
-                        if (!SocialAdsModule.getResultsDisplayed()) {
-                            SocialAdsModule.setResultsDisplayed(true);
-                            displayResults(result);
-                        }
-                    } else if (pollCount >= maxPolls) {
-                        clearInterval(pollInterval);
-                        SocialAdsModule.setCurrentPollInterval(null);
-                        
-                        document.getElementById('processingStatus').style.display = 'none';
-                        const processButton = document.getElementById('processButton');
-                        processButton.disabled = false;
-                        processButton.classList.remove('btn-loading');
-                        processButton.innerHTML = '📢 Generate Social Ads (7.00 AED)';
-                        
-                        AgentUtils.showToast('❌ Processing timeout - please try again', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error polling results:', error);
-                    clearInterval(pollInterval);
-                    SocialAdsModule.setCurrentPollInterval(null);
-                    
-                    document.getElementById('processingStatus').style.display = 'none';
-                    const processButton = document.getElementById('processButton');
-                    processButton.disabled = false;
-                    processButton.classList.remove('btn-loading');
-                    processButton.innerHTML = '📢 Generate Social Ads (7.00 AED)';
-                    
-                    AgentUtils.showToast('❌ Network error during processing - please try again', 'error');
-                });
-        }, 1000);
-        
-        SocialAdsModule.setCurrentPollInterval(pollInterval);
-    }
-    
-    // Handle form submission
-    document.getElementById('socialAdsForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        if (!isFormValid()) {
-            AgentUtils.showToast('Please fill in all required fields', 'error');
-            return;
-        }
-        
-        // Check user authentication
-        {% if not user.is_authenticated %}
-        window.location.href = "{% url 'authentication:login' %}";
-        return;
-        {% endif %}
-        
-        // Check wallet balance dynamically
-        if (!AgentUtils.validateWalletBalance()) {
-            setTimeout(() => {
-                window.location.href = "{% url 'wallet:wallet' %}";
-            }, 2000);
-            return;
-        }
-
-        // Clear any existing polling and reset flags
-        SocialAdsModule.clearCurrentPollInterval();
-        SocialAdsModule.setResultsDisplayed(false);
-
-        // Show processing status with steps
-        document.getElementById('processingStatus').style.display = 'block';
-        const processButton = document.getElementById('processButton');
-        processButton.disabled = true;
-        processButton.classList.add('btn-loading');
-        processButton.innerHTML = '⏳ Processing...';
-        document.getElementById('adResults').style.display = 'none';
-        
-        const steps = [
-            'Analyzing product information...',
-            'Understanding target platforms...',
-            'Crafting engaging headlines...',
-            'Writing compelling copy...',
-            'Optimizing for each platform...'
-        ];
-        
-        let currentStep = 0;
-        const stepInterval = setInterval(() => {
-            if (currentStep < steps.length) {
-                document.getElementById('statusText').textContent = steps[currentStep];
-                currentStep++;
-            } else {
-                clearInterval(stepInterval);
-            }
-        }, 800);
-
-        // Submit form via AJAX with CSRF token
-        const formData = new FormData(this);
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        
-        fetch(window.location.href, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': csrfToken
-            },
-            credentials: 'same-origin'
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(result => {
-            clearInterval(stepInterval);
-            if (result.success && result.request_id) {
-                // Start polling for results
-                pollForResults(result.request_id);
-            } else {
-                // Handle immediate response
-                document.getElementById('processingStatus').style.display = 'none';
-                processButton.disabled = false;
-                processButton.classList.remove('btn-loading');
-                processButton.innerHTML = '📢 Generate Social Ads (7.00 AED)';
-                
-                if (result.error) {
-                    AgentUtils.showToast(`❌ ${result.error}`, 'error');
-                } else {
-                    displayResults(result);
-                }
-            }
-        })
-        .catch(error => {
-            clearInterval(stepInterval);
-            console.error('Error:', error);
-            document.getElementById('processingStatus').style.display = 'none';
-            processButton.disabled = false;
-            processButton.classList.remove('btn-loading');
-            processButton.innerHTML = '📢 Generate Social Ads (7.00 AED)';
-            AgentUtils.showToast('❌ Network error - please try again', 'error');
-        });
-    });
-    
-    // Quick Agent Access Toggle Functions
-    function toggleQuickAgents() {
-        const panel = document.getElementById('quickAgentsPanel');
-        const overlay = document.getElementById('quickAgentsOverlay');
-        const toggle = document.querySelector('.quick-agent-toggle');
-        
-        const isActive = panel.classList.contains('active');
-        
-        if (isActive) {
-            // Close panel
-            panel.classList.remove('active');
-            overlay.classList.remove('active');
-            toggle.classList.remove('active');
-            // Update ARIA attributes
-            toggle.setAttribute('aria-expanded', 'false');
-            panel.setAttribute('aria-hidden', 'true');
-            overlay.setAttribute('aria-hidden', 'true');
-            document.body.style.overflow = 'auto';
-        } else {
-            // Open panel
-            panel.classList.add('active');
-            overlay.classList.add('active');
-            toggle.classList.add('active');
-            // Update ARIA attributes
-            toggle.setAttribute('aria-expanded', 'true');
-            panel.setAttribute('aria-hidden', 'false');
-            overlay.setAttribute('aria-hidden', 'false');
-            document.body.style.overflow = 'hidden';
-        }
-    }
-
-    function closeQuickAgents() {
-        const panel = document.getElementById('quickAgentsPanel');
-        const overlay = document.getElementById('quickAgentsOverlay');
-        const toggle = document.querySelector('.quick-agent-toggle');
-        
-        if (panel && overlay && toggle) {
-            panel.classList.remove('active');
-            overlay.classList.remove('active');
-            toggle.classList.remove('active');
-            toggle.setAttribute('aria-expanded', 'false');
-            panel.setAttribute('aria-hidden', 'true');
-            overlay.setAttribute('aria-hidden', 'true');
-            document.body.style.overflow = 'auto';
-        }
-    }
-    
-    // Keyboard navigation
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            const panel = document.getElementById('quickAgentsPanel');
-            if (panel && panel.classList.contains('active')) {
-                closeQuickAgents();
-            }
-        }
-    });
-</script>
 {% endblock %}

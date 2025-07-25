@@ -44,6 +44,22 @@ class WeatherReporterProcessView(View):
             # Handle FormData from frontend
             data = request.POST.dict()
             
+            # Validate input data
+            location = data.get('location', '').strip()
+            report_type = data.get('report_type', 'current')
+            
+            # Location validation
+            if not location:
+                return JsonResponse({'error': 'Location is required'}, status=400)
+            
+            if len(location) > 100:
+                return JsonResponse({'error': 'Location name too long (max 100 characters)'}, status=400)
+            
+            # Report type validation
+            valid_reports = ['current', 'detailed', 'forecast']
+            if report_type not in valid_reports:
+                return JsonResponse({'error': f'Invalid report type. Must be one of: {", ".join(valid_reports)}'}, status=400)
+            
             # Get agent
             agent = BaseAgent.objects.get(slug='weather-reporter')
             
@@ -56,8 +72,8 @@ class WeatherReporterProcessView(View):
                 user=request.user,
                 agent=agent,
                 cost=agent.price,
-                location=data.get('location', ''),
-                report_type=data.get('report_type', 'current')
+                location=location,
+                report_type=report_type
             )
             
             # Process request immediately (API-based agent)
@@ -65,8 +81,8 @@ class WeatherReporterProcessView(View):
             result = processor.process_request(
                 request_obj=agent_request,
                 user_id=request.user.id,
-                location=data.get('location'),
-                report_type=data.get('report_type'),
+                location=location,
+                report_type=report_type,
             )
             
             # Refresh user from database to get updated wallet balance

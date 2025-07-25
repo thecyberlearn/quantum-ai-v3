@@ -90,10 +90,17 @@ const WeatherUtils = {
             // Hide processing status
             if (processingStatus) processingStatus.style.display = 'none';
             
-            // Show results using API response fields
+            // Show results using API response fields - USE TEXTCONTENT FOR SECURITY
             const weatherReport = result.formatted_report || result.content || 'Weather data received successfully.';
-            resultsContent.innerHTML = this.parseMarkdown(weatherReport);
-            resultsContainer.style.display = 'block';
+            if (resultsContent) {
+                // Use textContent instead of innerHTML to prevent XSS
+                resultsContent.textContent = this.formatWeatherText(weatherReport);
+            }
+            
+            // Show results container
+            if (resultsContainer) {
+                resultsContainer.style.display = 'block';
+            }
             
             // Update wallet balance if provided
             if (result.wallet_balance !== undefined) {
@@ -110,15 +117,19 @@ const WeatherUtils = {
         }
     },
     
-    // Simple text formatting
-    parseMarkdown(text) {
+    // Safe text formatting (no HTML generation for security)
+    formatWeatherText(text) {
         if (!text) return '';
         return text
             .replace(/\*\*/g, '') // Remove markdown bold syntax
             .replace(/\#{1,3}\s/g, '') // Remove header syntax
             .replace(/\n{3,}/g, '\n\n') // Reduce excessive line breaks
-            .replace(/\n/g, '<br>') // Convert line breaks to HTML
             .trim();
+    },
+    
+    // Legacy function for backward compatibility (deprecated - use formatWeatherText)
+    parseMarkdown(text) {
+        return this.formatWeatherText(text);
     },
     
     // Weather Reporter uses immediate API response - no polling needed
@@ -194,7 +205,9 @@ function resetForm() {
     const resultsContainer = document.getElementById('resultsContainer');
     const processingStatus = document.getElementById('processingStatus');
     
-    if (resultsContainer) resultsContainer.style.display = 'none';
+    if (resultsContainer) {
+        resultsContainer.style.display = 'none';
+    }
     if (processingStatus) processingStatus.style.display = 'none';
     
     // Reset radio selection
