@@ -53,6 +53,9 @@ python tests/test_five_whys_webhook.py
 
 # Test homepage functionality
 python tests/test_homepage.py
+
+# Test health check endpoint
+curl http://localhost:8000/health/
 ```
 
 ### Custom Management Commands
@@ -129,6 +132,8 @@ Each agent is a separate Django app following this structure:
 ```
 /                           # Homepage (core app)
 /pricing/                   # Pricing page (core app)
+/health/                    # Health check endpoint for monitoring (core app)
+/contact/                   # Contact form submission (core app)
 /marketplace/               # Agent marketplace (agent_base app)
 /agents/<slug>/             # Agent detail redirect (agent_base app)
 /auth/                      # Authentication (login, register, profile)
@@ -299,12 +304,51 @@ This ensures Claude will:
 ✅ Follow established patterns from working agents
 ✅ Maintain consistency across the platform
 
-### Deployment
+### Deployment & Production
 
-- **Railway.app** integration via `railway.json`
-- Production settings in `netcop_hub/production_settings.py`
+**Railway.app (Recommended)**
+- **Configuration**: `railway.json` with optimized Gunicorn settings
+- **Deployment Guide**: See `RAILWAY_DEPLOYMENT_GUIDE.md` for step-by-step instructions
+- **Environment Variables**: Use `RAILWAY_ENV_TEMPLATE.md` for production configuration
+- **Health Check**: `/health/` endpoint for monitoring and load balancers
+- **Verification**: Follow `POST_DEPLOYMENT_CHECKLIST.md` after deployment
+
+**Production Features:**
+- PostgreSQL database with connection pooling
+- Redis caching for sessions and performance  
+- SSL certificates and HTTPS enforcement
 - Static files served via WhiteNoise
 - Database migrations run automatically on deployment
+- Rate limiting and security headers
+- Custom 404/500 error pages
+
+**Health Monitoring:**
+```bash
+# Check application health
+curl https://your-domain.railway.app/health/
+
+# Expected response:
+{
+  "status": "healthy",
+  "checks": {
+    "database": {"status": "healthy", "response_time_ms": 2.5},
+    "agents": {"status": "healthy", "active_count": 7}
+  }
+}
+```
+
+**Production Commands:**
+```bash
+# Test deployment readiness
+DEBUG=False python manage.py check --deploy
+
+# Collect static files for production
+python manage.py collectstatic --noinput
+
+# Test health check locally
+python manage.py runserver
+curl http://localhost:8000/health/
+```
 
 ### File Upload Handling
 
