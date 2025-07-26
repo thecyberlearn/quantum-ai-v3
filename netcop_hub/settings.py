@@ -360,7 +360,7 @@ SESSION_SAVE_EVERY_REQUEST = True
 
 # Authentication URLs
 LOGIN_URL = '/auth/login/'
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/admin/'  # Redirect to admin after admin login
 LOGOUT_REDIRECT_URL = '/'
 
 # Logging Configuration
