@@ -296,11 +296,24 @@ EMAIL_TIMEOUT = 30
 # Security settings
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in config('CSRF_TRUSTED_ORIGINS', default='').split(',') if origin.strip()]
 
+# Always include common development origins
+CSRF_TRUSTED_ORIGINS.extend([
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'https://localhost:8000',
+    'https://127.0.0.1:8000'
+])
+
 # Add Railway domain if running on Railway
 if config('RAILWAY_ENVIRONMENT', default=''):
+    # Add known Railway domain
+    CSRF_TRUSTED_ORIGINS.append('https://quantum-ai.up.railway.app')
+    
+    # Try to get Railway public domain from environment
     railway_url = config('RAILWAY_PUBLIC_DOMAIN', default='')
-    if railway_url:
+    if railway_url and f'https://{railway_url}' not in CSRF_TRUSTED_ORIGINS:
         CSRF_TRUSTED_ORIGINS.append(f'https://{railway_url}')
+    
     # Also add production domain
     CSRF_TRUSTED_ORIGINS.append('https://quantumtaskai.com')
     
