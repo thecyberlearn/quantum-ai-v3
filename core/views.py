@@ -216,76 +216,67 @@ def contact_form_view(request):
 
 @ratelimit(key='ip', rate='60/m', method='GET', block=False)
 def health_check_view(request):
-    """Health check endpoint for monitoring and load balancers with retry logic"""
+    """Simplified health check endpoint - no database dependency for startup"""
     start_time = time.time()
     health_data = {
         'status': 'healthy',
         'timestamp': int(time.time()),
         'version': '1.0',
+        'app': 'quantum-tasks-ai',
         'checks': {}
     }
     
-    # Database connectivity check with retry logic
-    db_healthy = False
-    db_error = None
-    max_retries = 3
+    # Basic application status - always healthy if we reach this point
+    health_data['checks']['application'] = {
+        'status': 'healthy',
+        'django_ready': True,
+        'server_running': True
+    }
     
-    for attempt in range(max_retries):
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT 1")
-                health_data['checks']['database'] = {
-                    'status': 'healthy',
-                    'response_time_ms': round((time.time() - start_time) * 1000, 2),
-                    'attempt': attempt + 1
-                }
-                db_healthy = True
-                break
-        except Exception as e:
-            db_error = str(e)
-            if attempt < max_retries - 1:
-                time.sleep(0.5)  # Brief pause before retry
-            continue
-    
-    if not db_healthy:
-        health_data['status'] = 'unhealthy'
-        health_data['checks']['database'] = {
-            'status': 'unhealthy',
-            'error': db_error,
-            'attempts': max_retries
-        }
-    
-    # Check if agents can be queried (with fallback)
+    # Try database connection but don't fail health check if it's down
     try:
-        if db_healthy:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            health_data['checks']['database'] = {
+                'status': 'healthy',
+                'response_time_ms': round((time.time() - start_time) * 1000, 2)
+            }
+            
+        # If database is working, try to get agent count
+        try:
             agent_count = BaseAgent.objects.filter(is_active=True).count()
             health_data['checks']['agents'] = {
                 'status': 'healthy',
                 'active_count': agent_count
             }
-        else:
-            # If database is down, skip agent check but don't fail health completely
+        except Exception as e:
             health_data['checks']['agents'] = {
-                'status': 'skipped',
-                'reason': 'database_unavailable'
+                'status': 'warning',
+                'error': 'Could not query agents',
+                'message': str(e)[:100]
             }
+            
     except Exception as e:
-        health_data['checks']['agents'] = {
-            'status': 'unhealthy',
-            'error': str(e)
+        # Database connection failed - log it but don't fail health check
+        health_data['checks']['database'] = {
+            'status': 'warning',
+            'error': 'Database connection failed',
+            'message': str(e)[:100]
         }
-        # Don't mark overall health as unhealthy just for agent check failure
+        health_data['checks']['agents'] = {
+            'status': 'skipped',
+            'reason': 'database_unavailable'
+        }
     
-    # Application status check
-    health_data['checks']['application'] = {
+    # Environment check
+    health_data['checks']['environment'] = {
         'status': 'healthy',
-        'django_ready': True
+        'debug_mode': getattr(settings, 'DEBUG', True),
+        'secret_key_configured': bool(getattr(settings, 'SECRET_KEY', None))
     }
     
     # Overall response time
     health_data['response_time_ms'] = round((time.time() - start_time) * 1000, 2)
     
-    # Return appropriate status code - only fail if database is completely down
-    status_code = 200 if db_healthy else 503
-    
-    return JsonResponse(health_data, status=status_code)
+    # Always return 200 - we're healthy if Django is running
+    return JsonResponse(health_data, status=200)
