@@ -8,8 +8,10 @@ from django_ratelimit.decorators import ratelimit
 from django_ratelimit import UNSAFE
 from agent_base.models import BaseAgent
 from .models import ContactSubmission
+from django.db import connection
 import logging
 import re
+import time
 
 logger = logging.getLogger(__name__)
 @ratelimit(key='ip', rate='60/m', method='GET', block=False)
@@ -210,3 +212,52 @@ def contact_form_view(request):
             'success': False,
             'error': 'Unable to process your message at this time. Please try again later.'
         }, status=500)
+
+
+@ratelimit(key='ip', rate='60/m', method='GET', block=False)
+def health_check_view(request):
+    """Health check endpoint for monitoring and load balancers"""
+    start_time = time.time()
+    health_data = {
+        'status': 'healthy',
+        'timestamp': int(time.time()),
+        'version': '1.0',
+        'checks': {}
+    }
+    
+    try:
+        # Database connectivity check
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            health_data['checks']['database'] = {
+                'status': 'healthy',
+                'response_time_ms': round((time.time() - start_time) * 1000, 2)
+            }
+    except Exception as e:
+        health_data['status'] = 'unhealthy'
+        health_data['checks']['database'] = {
+            'status': 'unhealthy',
+            'error': str(e)
+        }
+    
+    # Check if agents can be queried
+    try:
+        agent_count = BaseAgent.objects.filter(is_active=True).count()
+        health_data['checks']['agents'] = {
+            'status': 'healthy',
+            'active_count': agent_count
+        }
+    except Exception as e:
+        health_data['status'] = 'unhealthy'
+        health_data['checks']['agents'] = {
+            'status': 'unhealthy',
+            'error': str(e)
+        }
+    
+    # Overall response time
+    health_data['response_time_ms'] = round((time.time() - start_time) * 1000, 2)
+    
+    # Return appropriate status code
+    status_code = 200 if health_data['status'] == 'healthy' else 503
+    
+    return JsonResponse(health_data, status=status_code)

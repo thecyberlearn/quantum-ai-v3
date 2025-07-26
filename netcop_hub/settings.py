@@ -29,12 +29,24 @@ SECRET_KEY = config('SECRET_KEY')
 
 # Validate required environment variables
 required_env_vars = ['SECRET_KEY']
+
+# Add production-specific required variables when DEBUG=False
+debug_mode = config('DEBUG', default=True, cast=bool)
+if not debug_mode:
+    required_env_vars.extend([
+        'ALLOWED_HOSTS',
+        'EMAIL_HOST_USER',
+        'EMAIL_HOST_PASSWORD',
+        'STRIPE_SECRET_KEY',
+    ])
+
 missing_vars = [var for var in required_env_vars if not config(var, default='')]
 if missing_vars:
     import sys
     print(f"❌ Missing required environment variables: {', '.join(missing_vars)}")
     print("💡 Please create a .env file based on .env.example")
     print("💡 For local development, copy .env.example to .env and fill in the values")
+    print("💡 For production, ensure all required environment variables are set")
     sys.exit(1)
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -264,7 +276,12 @@ N8N_WEBHOOK_SOCIAL_ADS = config('N8N_WEBHOOK_SOCIAL_ADS', default='')
 OPENWEATHER_API_KEY = config('OPENWEATHER_API_KEY', default='')
 
 # Email Configuration
-EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+# Use SMTP backend in production, console in development
+if DEBUG:
+    EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+else:
+    EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
@@ -272,6 +289,9 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_FILE_PATH = config('EMAIL_FILE_PATH', default='/tmp/app-messages')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='Quantum Tasks AI <noreply@quantumtaskai.com>')
+
+# Email timeout settings for production stability
+EMAIL_TIMEOUT = 30
 
 # Security settings
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in config('CSRF_TRUSTED_ORIGINS', default='').split(',') if origin.strip()]
@@ -283,6 +303,18 @@ if config('RAILWAY_ENVIRONMENT', default=''):
         CSRF_TRUSTED_ORIGINS.append(f'https://{railway_url}')
     # Also add production domain
     CSRF_TRUSTED_ORIGINS.append('https://quantumtaskai.com')
+    
+    # Railway-specific optimizations
+    USE_X_FORWARDED_HOST = True
+    USE_X_FORWARDED_PORT = True
+    
+    # Database connection optimization for Railway PostgreSQL
+    if 'default' in DATABASES:
+        DATABASES['default']['CONN_MAX_AGE'] = 600  # 10 minutes connection pooling
+        if 'OPTIONS' not in DATABASES['default']:
+            DATABASES['default']['OPTIONS'] = {}
+        DATABASES['default']['OPTIONS']['MAX_CONNS'] = 20
+
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Default primary key field type

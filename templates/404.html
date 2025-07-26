@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Page Not Found - Quantum Tasks AI{% endblock %}
+
+{% block extra_css %}
+<style>
+.error-container {
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+}
+
+.error-icon {
+    font-size: 6rem;
+    color: var(--primary-blue);
+    margin-bottom: 1rem;
+}
+
+.error-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.error-message {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    max-width: 600px;
+}
+
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.error-button {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.error-button.primary {
+    background: var(--primary-blue);
+    color: white;
+}
+
+.error-button.primary:hover {
+    background: var(--primary-blue-dark);
+    transform: translateY(-1px);
+}
+
+.error-button.secondary {
+    background: transparent;
+    color: var(--primary-blue);
+    border: 2px solid var(--primary-blue);
+}
+
+.error-button.secondary:hover {
+    background: var(--primary-blue);
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-icon">🔍</div>
+    <h1 class="error-title">Page Not Found</h1>
+    <p class="error-message">
+        The page you're looking for doesn't exist or has been moved. 
+        Don't worry, let's get you back on track to explore our AI assistants.
+    </p>
+    <div class="error-actions">
+        <a href="{% url 'core:homepage' %}" class="error-button primary">
+            🏠 Go Home
+        </a>
+        <a href="{% url 'agent_base:marketplace' %}" class="error-button secondary">
+            🤖 Browse AI Assistants
+        </a>
+    </div>
+</div>
+{% endblock %}
