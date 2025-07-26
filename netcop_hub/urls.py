@@ -47,3 +47,9 @@ if settings.DEBUG:
         ] + urlpatterns
     except ImportError:
         pass
+
+# Custom error handlers (work in production when DEBUG=False)
+handler404 = 'core.error_views.custom_404_view'
+handler500 = 'core.error_views.custom_500_view'
+handler403 = 'core.error_views.custom_403_view'
+handler400 = 'core.error_views.custom_400_view'

@@ -4,90 +4,231 @@
 {% block title %}Page Not Found - Quantum Tasks AI{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/agent-base.css' %}?v={{ timestamp }}">
+{% endblock %}
+
+{% block content %}
+<!-- Agent Header Component -->
+{% include "components/agent_header.html" with agent_title="Page Not Found" agent_subtitle="The page you're looking for doesn't exist" %}
+
+<!-- Quick Agents Panel Component -->
+{% include "components/quick_agents_panel.html" %}
+
+<!-- Error Content -->
+<div class="agent-container">
+    <div class="agent-grid">
+        <!-- Main Error Widget -->
+        <div class="agent-widget widget-large">
+            <div class="agent-widget-header">
+                <h2 class="agent-widget-title">
+                    <span class="agent-icon">🔍</span>
+                    404 - Page Not Found
+                </h2>
+                <p class="agent-widget-subtitle">Let's get you back on track</p>
+            </div>
+            
+            <div class="agent-widget-content">
+                <div class="error-content">
+                    <div class="error-illustration">
+                        <div class="error-icon-large">🕵️‍♂️</div>
+                        <p class="error-message">
+                            The page you're looking for doesn't exist or has been moved. 
+                            Our AI agents are ready to help you find what you need!
+                        </p>
+                    </div>
+                    
+                    <div class="error-actions">
+                        <div class="button-group">
+                            <a href="{% url 'core:homepage' %}" class="btn btn-primary">
+                                <span class="btn-icon">🏠</span>
+                                Go Home
+                            </a>
+                            <a href="{% url 'agent_base:marketplace' %}" class="btn btn-secondary">
+                                <span class="btn-icon">🤖</span>
+                                Browse AI Agents
+                            </a>
+                        </div>
+                        
+                        <div class="quick-links">
+                            <p class="quick-links-title">Popular AI Agents:</p>
+                            <div class="quick-links-grid">
+                                <a href="/agents/data-analyzer/" class="quick-link">
+                                    <span class="quick-link-icon">📊</span>
+                                    Data Analyzer
+                                </a>
+                                <a href="/agents/weather-reporter/" class="quick-link">
+                                    <span class="quick-link-icon">🌤️</span>
+                                    Weather Reporter
+                                </a>
+                                <a href="/agents/job-posting-generator/" class="quick-link">
+                                    <span class="quick-link-icon">💼</span>
+                                    Job Generator
+                                </a>
+                                <a href="/agents/social-ads-generator/" class="quick-link">
+                                    <span class="quick-link-icon">📱</span>
+                                    Social Ads
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Help Widget -->
+        <div class="agent-widget widget-small">
+            <div class="agent-widget-header">
+                <h3 class="agent-widget-title">
+                    <span class="agent-icon">💡</span>
+                    Need Help?
+                </h3>
+            </div>
+            <div class="agent-widget-content">
+                <div class="help-content">
+                    <p class="help-text">Can't find what you're looking for?</p>
+                    <div class="help-actions">
+                        <a href="{% url 'agent_base:marketplace' %}" class="help-link">
+                            🔍 Browse All Agents
+                        </a>
+                        <a href="{% url 'core:pricing' %}" class="help-link">
+                            💰 View Pricing
+                        </a>
+                        <a href="mailto:support@quantumtaskai.com" class="help-link">
+                            📧 Contact Support
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
-.error-container {
-    min-height: 60vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
+/* Error-specific styling that follows agent theme */
+.error-content {
     text-align: center;
+    padding: var(--spacing-lg);
 }
 
-.error-icon {
-    font-size: 6rem;
-    color: var(--primary-blue);
-    margin-bottom: 1rem;
+.error-illustration {
+    margin-bottom: var(--spacing-xl);
 }
 
-.error-title {
-    font-size: 2.5rem;
-    font-weight: bold;
-    color: var(--text-primary);
-    margin-bottom: 1rem;
+.error-icon-large {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-md);
+    line-height: 1;
 }
 
 .error-message {
-    font-size: 1.1rem;
-    color: var(--text-secondary);
-    margin-bottom: 2rem;
-    max-width: 600px;
+    font-size: var(--text-lg);
+    color: var(--on-surface-variant);
+    line-height: 1.6;
+    max-width: 500px;
+    margin: 0 auto var(--spacing-xl);
 }
 
 .error-actions {
     display: flex;
-    gap: 1rem;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+    align-items: center;
+}
+
+.button-group {
+    display: flex;
+    gap: var(--spacing-md);
     flex-wrap: wrap;
     justify-content: center;
 }
 
-.error-button {
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
+.quick-links {
+    width: 100%;
+    max-width: 600px;
+}
+
+.quick-links-title {
+    font-size: var(--text-sm);
+    color: var(--on-surface-variant);
+    margin-bottom: var(--spacing-md);
+    text-align: center;
+}
+
+.quick-links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--spacing-sm);
+}
+
+.quick-link {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--surface-variant);
+    border-radius: var(--radius-sm);
     text-decoration: none;
-    font-weight: 600;
-    transition: all 0.2s;
+    color: var(--on-surface);
+    font-size: var(--text-sm);
+    transition: all 0.2s ease;
+    border: 1px solid var(--outline-variant);
 }
 
-.error-button.primary {
-    background: var(--primary-blue);
-    color: white;
-}
-
-.error-button.primary:hover {
-    background: var(--primary-blue-dark);
+.quick-link:hover {
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
     transform: translateY(-1px);
 }
 
-.error-button.secondary {
-    background: transparent;
-    color: var(--primary-blue);
-    border: 2px solid var(--primary-blue);
+.quick-link-icon {
+    font-size: var(--text-base);
 }
 
-.error-button.secondary:hover {
-    background: var(--primary-blue);
-    color: white;
+.help-content {
+    text-align: center;
+}
+
+.help-text {
+    color: var(--on-surface-variant);
+    margin-bottom: var(--spacing-md);
+    font-size: var(--text-sm);
+}
+
+.help-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.help-link {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    background: var(--surface-variant);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--on-surface);
+    font-size: var(--text-sm);
+    transition: all 0.2s ease;
+    border: 1px solid var(--outline-variant);
+}
+
+.help-link:hover {
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .button-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .quick-links-grid {
+        grid-template-columns: 1fr 1fr;
+    }
 }
 </style>
-{% endblock %}
-
-{% block content %}
-<div class="error-container">
-    <div class="error-icon">🔍</div>
-    <h1 class="error-title">Page Not Found</h1>
-    <p class="error-message">
-        The page you're looking for doesn't exist or has been moved. 
-        Don't worry, let's get you back on track to explore our AI assistants.
-    </p>
-    <div class="error-actions">
-        <a href="{% url 'core:homepage' %}" class="error-button primary">
-            🏠 Go Home
-        </a>
-        <a href="{% url 'agent_base:marketplace' %}" class="error-button secondary">
-            🤖 Browse AI Assistants
-        </a>
-    </div>
-</div>
 {% endblock %}
