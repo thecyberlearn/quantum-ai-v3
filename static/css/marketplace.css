@@ -68,11 +68,27 @@ body {
     box-sizing: border-box;
 }
 
-.search-icon {
+.search-button {
     position: absolute;
-    right: clamp(16px, 4vw, 24px);
+    right: clamp(8px, 2vw, 12px);
     top: 50%;
     transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: clamp(8px, 2vw, 12px);
+    border-radius: clamp(8px, 2vw, 12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.search-button:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.search-icon {
     width: clamp(20px, 5vw, 24px);
     height: clamp(20px, 5vw, 24px);
     color: #9ca3af;
