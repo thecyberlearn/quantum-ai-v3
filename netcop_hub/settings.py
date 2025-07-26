@@ -56,7 +56,8 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver,
 
 # Site URL configuration for emails
 if config('RAILWAY_ENVIRONMENT', default=''):
-    SITE_URL = 'https://quantumtaskai.com'
+    # Use actual Railway domain for email verification links
+    SITE_URL = 'https://quantum-ai.up.railway.app'
 else:
     SITE_URL = config('SITE_URL', default='http://localhost:8000')
 
