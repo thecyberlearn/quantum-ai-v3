@@ -164,9 +164,9 @@ import dj_database_url
 database_url = config('DATABASE_URL', default='')
 
 if database_url:
-    # Parse the provided DATABASE_URL
+    # Parse the provided DATABASE_URL (Railway PostgreSQL)
     DATABASES = {
-        'default': dj_database_url.parse(database_url)
+        'default': dj_database_url.parse(database_url, conn_max_age=600)
     }
 elif config('RAILWAY_ENVIRONMENT', default=''):
     # Railway environment without DATABASE_URL (shouldn't happen, but fallback)
