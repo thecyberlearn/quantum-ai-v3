@@ -311,9 +311,6 @@ if config('RAILWAY_ENVIRONMENT', default=''):
     # Database connection optimization for Railway PostgreSQL
     if 'default' in DATABASES:
         DATABASES['default']['CONN_MAX_AGE'] = 600  # 10 minutes connection pooling
-        if 'OPTIONS' not in DATABASES['default']:
-            DATABASES['default']['OPTIONS'] = {}
-        DATABASES['default']['OPTIONS']['MAX_CONNS'] = 20
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
