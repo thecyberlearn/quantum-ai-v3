@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "python manage.py migrate --run-syncdb; python manage.py populate_agents; python manage.py collectstatic --noinput && gunicorn netcop_hub.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 60",
+    "startCommand": "python manage.py migrate --run-syncdb; python manage.py populate_agents; python manage.py create_user admin@quantumtaskai.com QuantumAI2024! --username admin --superuser --balance 100 || true; python manage.py collectstatic --noinput && gunicorn netcop_hub.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 60",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
   }
