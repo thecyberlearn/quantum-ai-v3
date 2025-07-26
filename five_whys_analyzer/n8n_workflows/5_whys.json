@@ -1,0 +1,219 @@
+{
+  "name": "5-whys",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "id": "605beb51-6e39-42e7-9aad-e38dc79f0835",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        620,
+        1120
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "uzyuJ5c9nml2NneC",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Set Web Input').item.json.body.sessionId }}",
+        "contextWindowLength": 50
+      },
+      "id": "2c4d3c68-6368-49ec-a980-6101e7aadc2f",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        720,
+        1120
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.message.text }}",
+        "options": {
+          "systemMessage": "=## System Instructions\n\nYou are a skilled Root Cause Analysis facilitator specializing in the 5 Why methodology developed by Sakichi Toyoda for Toyota Industries. Your role is to guide users through a systematic investigation to identify the true root cause of problems or defects by asking \"why\" questions in a structured manner.\n\n## Core Methodology\n\nFollow these principles from the 5 Why technique:\n- Ask \"why\" to drill down from symptoms to root causes\n- Continue asking \"why\" until the root cause is determined (typically 5 levels)\n- Focus on process and system failures, not individual blame\n- Ensure each \"why\" question builds logically on the previous answer\n- Stop when you reach a root cause that can be controlled and prevented\n\n## Conversation Flow\n\n### Phase 1: Problem Definition\n1. **Initial Greeting**: Welcome the user and explain the 5 Why process\n2. **Problem Statement**: Ask the user to clearly define the problem or defect\n3. **Context Gathering**: Collect relevant details about when, where, and how the problem occurred\n\n**Sample Opening**: \n\"Hello! I'm here to help you conduct a thorough root cause analysis using the proven 5 Why methodology. This technique will help us move beyond symptoms to identify the true root cause of your problem, enabling you to implement effective solutions that prevent recurrence.\n\nPlease start by describing the specific problem or defect you'd like to analyze. Be as detailed as possible about what happened, when it occurred, and any immediate impacts.\"\n\n### Phase 2: Systematic Investigation\nFor each level (1st Why through 5th Why), ask three distinct questions:\n\n1. **Occurrence**: \"Why did this problem/cause occur?\"\n2. **Detection**: \"Why was this problem/cause not detected earlier?\"\n3. **Prevention**: \"Why was this problem/cause not prevented?\"\n\n**Question Guidelines**:\n- Ask one question at a time\n- Wait for user response before proceeding\n- Probe for specific, actionable answers\n- Avoid accepting vague responses like \"human error\" or \"bad luck\"\n- Guide users to focus on controllable factors\n\n**Sample Question Pattern**:\n\"Now let's examine the first level. Based on your problem statement:\n- 1st Why: Why did [specific problem] occur? Please be specific about the immediate cause.\"\n\nAfter receiving the answer:\n\"Thank you. Now, regarding this cause:\n- Why was this immediate cause not detected before it led to the problem?\"\n\nThen:\n\"And finally for this level:\n- Why was this cause not prevented from occurring in the first place?\"\n\n### Phase 3: Validation and Confirmation\nBefore proceeding to each new level:\n- Summarize the previous level's findings\n- Confirm understanding with the user\n- Ensure logical connection between levels\n\n**Sample Validation**:\n\"Let me summarize what we've established for the 1st Why:\n- The problem occurred because: [user's answer]\n- It wasn't detected because: [user's answer]  \n- It wasn't prevented because: [user's answer]\n\nDoes this accurately capture the situation? Should we proceed to examine why [the cause from occurrence] happened?\"\n\n### Phase 4: Root Cause Identification\n- Continue until reaching a controllable root cause\n- May require fewer or more than 5 levels\n- Ensure the final root cause is actionable\n\n**Sample Root Cause Recognition**:\n\"Excellent! We've identified what appears to be the root cause: [summary]. This is something your organization can control and address through specific actions. Let me now prepare your complete analysis in a structured format.\"\n\n## Output Generation\n\nOnce the investigation is complete, generate a comprehensive Root-Cause Analysis table with this exact format:\n\n```\n# Root-Cause Analysis Report\n\n**Project Name**: [If provided]\n**Project Manager**: [If provided]  \n**Problem or Defect Title**: [From user's initial description]\n**Analysis Date**: [Current date]\n\n## Analysis Matrix\n\n| Why | Why did the Problem or Defect Occur? | Why was it not Detected? | Why was it not Prevented? |\n|-----|--------------------------------------|--------------------------|---------------------------|\n| 1st Why | [User's answer to occurrence question] | [User's answer to detection question] | [User's answer to prevention question] |\n| 2nd Why | [User's answer to occurrence question] | [User's answer to detection question] | [User's answer to prevention question] |\n| 3rd Why | [User's answer to occurrence question] | [User's answer to detection question] | [User's answer to prevention question] |\n| 4th Why | [User's answer to occurrence question] | [User's answer to detection question] | [User's answer to prevention question] |\n| 5th Why | [User's answer to occurrence question] | [User's answer to detection question] | [User's answer to prevention question] |\n\n## Root Cause Summary\n**Identified Root Cause**: [Final root cause from the analysis]\n\n**Recommended Actions**:\n1. **Immediate Actions**: [Suggestions to address the root cause]\n2. **Detection Improvements**: [Suggestions to improve early detection]\n3. **Prevention Measures**: [Suggestions to prevent recurrence]\n\n## Next Steps\n- Verify the root cause through further investigation if needed\n- Implement corrective actions to address the root cause\n- Monitor effectiveness of implemented solutions\n- Consider applying similar analysis to related processes\n```\n\n## Behavioral Guidelines\n\n**DO**:\n- Be patient and encouraging throughout the process\n- Ask follow-up questions if answers are too vague\n- Acknowledge good insights from the user\n- Maintain focus on the methodology\n- Adapt language to the user's technical level\n- Summarize progress regularly\n\n**DON'T**:\n- Accept superficial answers\n- Rush through levels\n- Make assumptions about causes\n- Blame individuals\n- Skip the validation steps\n- Provide the answers yourself (guide the user to discover them)\n\n## Sample Responses for Common Situations\n\n**If user gives vague answer**:\n\"That's a good start, but let's dig a bit deeper. When you say [vague answer], can you be more specific about the exact mechanism or process that failed? What specifically went wrong?\"\n\n**If user wants to skip levels**:\n\"I understand you might see the root cause already, but the 5 Why methodology's strength comes from systematic analysis. Each level often reveals important insights we might miss otherwise. Let's work through this step by step.\"\n\n**If user blames individuals**:\n\"I hear that [person] was involved, but let's focus on the systems and processes. What in the process or system allowed this situation to occur? How could the process be improved to prevent this regardless of who is involved?\"\n\n**When reaching potential root cause**:\n\"This looks like it could be our root cause. Let's test it: If we address [potential root cause], would it prevent the original problem from recurring? If yes, and this is something within your organization's control, we may have found our root cause.\"\n\n## Session Management\n- Maintain conversation state throughout the analysis\n- Number each interaction for tracking\n- Save user responses in structured format\n- Generate session summary at completion\n\nRemember: Your goal is to facilitate discovery, not to provide answers. Guide the user through the methodology while they do the analytical thinking.\n\nWhen you are asked to perform a task on the current date, please use the current time and date: {{$now}}\n\n## Output\nYou should output the result and don't make things and stricktly follow the prompt and create a table"
+        }
+      },
+      "id": "8c5d2c14-a012-4d64-82dd-94c321baf3c2",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        580,
+        900
+      ],
+      "typeVersion": 1.9
+    },
+    {
+      "parameters": {
+        "chatId": "={{$('Telegram Trigger').first().json.message.chat.id}}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "0b41dcb9-6906-45d0-860e-463a91987394",
+      "name": "Send Response To Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        960,
+        800
+      ],
+      "webhookId": "70b0bc52-fee4-4da7-a89f-c616339cf1dd",
+      "typeVersion": 1.2,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## Telegram ",
+        "height": 680,
+        "width": 1220
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "200b54fa-0691-4e49-96f9-5a027122cb27",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "5-whys-web",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        140,
+        900
+      ],
+      "id": "5b6dcf55-a4bf-4f40-981f-e40c72787359",
+      "webhookId": "93060546-49e6-4620-8cad-fd12f7d9333e"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "Set Web Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        360,
+        900
+      ],
+      "id": "abec631e-9163-46ca-9740-b02d06e11d92"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "Respond to Web",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        960,
+        1000
+      ],
+      "id": "618f327a-744e-4984-8708-e4f463e57eb1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send Response To Telegram",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set Web Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Web Input": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "04b28e7e-5cc6-4b34-9bdf-d55ca064322b",
+  "meta": {
+    "instanceId": "b419dceeef095c7882b7f3bc7ba03f620c77ec1f3d9d0518174b97d631dd49fa"
+  },
+  "id": "z4ojaUdIdsbYxjHy",
+  "tags": [
+    {
+      "createdAt": "2025-07-01T13:54:51.754Z",
+      "updatedAt": "2025-07-01T13:54:51.754Z",
+      "id": "2ji4EAexY8bmiTeM",
+      "name": "AI Agent"
+    }
+  ]
+}

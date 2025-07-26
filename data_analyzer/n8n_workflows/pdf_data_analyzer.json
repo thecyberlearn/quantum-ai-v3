@@ -1,0 +1,316 @@
+{
+  "name": "pdf_data_analyzer",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Error Handling\n\nIf processing fails, the workflow will return an error response with details about what went wrong.",
+        "height": 120,
+        "width": 280
+      },
+      "id": "03452a38-11bc-40e4-abfd-66a3b2d28d10",
+      "name": "Error Info",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        560,
+        2840
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle any errors that occur during processing\nconst error = $input.item(0).json.error || 'Unknown error occurred';\n\nreturn {\n  json: {\n    status: 'error',\n    error_message: error,\n    timestamp: new Date().toISOString(),\n    help: 'Make sure you are uploading a valid PDF file using the \"file\" form field'\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1000,
+        2360
+      ],
+      "id": "9888231c-5de1-4160-a53c-a951ca30417d",
+      "name": "Error Handler"
+    },
+    {
+      "parameters": {
+        "content": "## Simple PDF Processor\n\n**Purpose:** Upload PDF → Extract Text → AI Analysis → JSON Response\n\n**Usage:**\n```bash\ncurl -X POST https://your-n8n.com/webhook/simple-pdf-processor \\\n  -F \"file=@document.pdf\"\n```\n\n**Response:** AI analysis of PDF content in JSON format",
+        "height": 280,
+        "width": 350
+      },
+      "id": "cb3831b1-8b8f-4726-991f-0de535bbdc9c",
+      "name": "Workflow Overview1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -740,
+        2500
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$('Error Handler').item.json}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -780,
+        2360
+      ],
+      "id": "6603a971-fb15-41a3-b5b9-001bb13305ad",
+      "name": "Return Error Response1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simple PDF file preparation\nconst items = $input.all();\n\nif (!items || items.length === 0) {\n  throw new Error('No input data received');\n}\n\nconst item = items[0];\nconsole.log('Processing PDF upload...');\n\n// Check if we have binary data\nif (!item.binary || !item.binary.file) {\n  throw new Error('No PDF file found in upload. Make sure to use \"file\" as the form field name.');\n}\n\nconst fileData = item.binary.file;\nconst fileName = fileData.fileName || 'uploaded.pdf';\nconst fileSize = fileData.fileSize || 0;\n\nconsole.log(`File: ${fileName}, Size: ${fileSize} bytes`);\n\n// Prepare data for PDF extraction\nreturn {\n  json: {\n    filename: fileName,\n    fileSize: fileSize,\n    uploadedAt: new Date().toISOString(),\n    status: 'ready_for_processing'\n  },\n  binary: {\n    // Use the key expected by extractFromFile node\n    'pdf_file': fileData\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        100,
+        2040
+      ],
+      "id": "93f3dc69-190e-4c32-8175-e9d098873e8e",
+      "name": "Prepare PDF Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Ultra-simple n8n formatting code\nconst items = $input.all();\nconst text = items[0].json.text;\n\n// Split by headings and format\nconst sections = text.split('### ').filter(part => part.trim());\n\nconst formatted = sections.map(section => {\n  const lines = section.trim().split('\\n');\n  const heading = lines[0];\n  const content = lines.slice(1).join('\\n');\n  \n  return {\n    heading: heading,\n    content: content\n  };\n});\n\nreturn [{\n  json: {\n    sections: formatted,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        916,
+        2040
+      ],
+      "id": "5b160fd8-0a8b-4494-9935-7d9bf7db880f",
+      "name": "Format Response"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$('Format Response').item.json}}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        2040
+      ],
+      "id": "1bc45e3e-b86b-4a7d-9970-e8464d09f9a1",
+      "name": "Return JSON Response"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "simple-pdf-processor",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -120,
+        2040
+      ],
+      "id": "c380ce52-58c5-4c38-946b-7e86a2c645c3",
+      "name": "PDF Upload Webhook1",
+      "webhookId": "simple-pdf-processor"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "pdf_file",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        320,
+        2040
+      ],
+      "id": "bcd3c33b-5376-43b6-9312-3570fb2799ca",
+      "name": "Extract PDF Text1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "AIMessagePromptTemplate",
+              "message": "You are a helpful document analysis assistant. Analyze the provided PDF text content and provide useful insights."
+            },
+            {
+              "message": "Please analyze this PDF document and provide:\n\n1. **Summary**: A brief overview of the document content\n2. **Key Points**: Main topics or important information found\n3. **Document Type**: What type of document this appears to be\n4. **Insights**: Any notable findings or analysis\n\nDocument text to analyze:\n{{ $json.text }}\n\nPlease provide your analysis in a clear, structured format."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        540,
+        2040
+      ],
+      "id": "76ac82c9-1843-4ebe-98f7-bdd9b45d3610",
+      "name": "AI Document Analyzer1"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {
+          "maxTokensToSample": 2000,
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        628,
+        2260
+      ],
+      "id": "d3fce174-1ef1-4b0f-84f3-477c49a80840",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "9HviwDANITBPqb1I",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "FIle Upload",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "file",
+              "fieldType": "file",
+              "multipleFiles": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -120,
+        2400
+      ],
+      "id": "de020e99-cde6-4575-afb0-c568fe0e5d63",
+      "name": "On form submission",
+      "webhookId": "98b18862-a0e7-4760-9c5e-8fcaef9e2904"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Return Error Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare PDF Data": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF Text1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Return JSON Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDF Upload Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Prepare PDF Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PDF Text1": {
+      "main": [
+        [
+          {
+            "node": "AI Document Analyzer1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Document Analyzer1": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Document Analyzer1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "bbc54db8-5559-4e50-ac33-01638aa0eec0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b419dceeef095c7882b7f3bc7ba03f620c77ec1f3d9d0518174b97d631dd49fa"
+  },
+  "id": "52D41BRLEfcyh22J",
+  "tags": [
+    {
+      "createdAt": "2025-07-01T13:54:51.754Z",
+      "updatedAt": "2025-07-01T13:54:51.754Z",
+      "id": "2ji4EAexY8bmiTeM",
+      "name": "AI Agent"
+    }
+  ]
+}

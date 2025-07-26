@@ -32,14 +32,23 @@ STRIPE_SECRET_KEY=sk_live_your_stripe_secret_key_here
 STRIPE_WEBHOOK_SECRET=whsec_your_webhook_endpoint_secret
 ```
 
-### 🤖 N8N AI Agent Webhooks
+### 🤖 N8N AI Agent Webhooks (External Server URLs)
+
+⚠️ **IMPORTANT**: These URLs point to your SEPARATE N8N instance, NOT hosted on Railway with Django.
+
 ```bash
-# N8N Webhook URLs - Replace with your N8N instance
-N8N_WEBHOOK_DATA_ANALYZER=https://your-n8n-instance.com/webhook/data-analyzer
-N8N_WEBHOOK_FIVE_WHYS=https://your-n8n-instance.com/webhook/five-whys
-N8N_WEBHOOK_JOB_POSTING=https://your-n8n-instance.com/webhook/job-posting
-N8N_WEBHOOK_SOCIAL_ADS=https://your-n8n-instance.com/webhook/social-ads
-N8N_WEBHOOK_FAQ_GENERATOR=https://your-n8n-instance.com/webhook/faq-generator
+# N8N Webhook URLs - Replace with your actual N8N instance URLs
+# Option A: N8N Cloud
+N8N_WEBHOOK_DATA_ANALYZER=https://yourworkspace.app.n8n.cloud/webhook/data-analyzer
+N8N_WEBHOOK_FIVE_WHYS=https://yourworkspace.app.n8n.cloud/webhook/five-whys
+N8N_WEBHOOK_JOB_POSTING=https://yourworkspace.app.n8n.cloud/webhook/job-posting
+N8N_WEBHOOK_SOCIAL_ADS=https://yourworkspace.app.n8n.cloud/webhook/social-ads
+
+# Option B: Self-hosted or separate Railway N8N project  
+# N8N_WEBHOOK_DATA_ANALYZER=https://your-n8n-server.com/webhook/data-analyzer
+# N8N_WEBHOOK_FIVE_WHYS=https://your-n8n-server.com/webhook/five-whys
+# N8N_WEBHOOK_JOB_POSTING=https://your-n8n-server.com/webhook/job-posting
+# N8N_WEBHOOK_SOCIAL_ADS=https://your-n8n-server.com/webhook/social-ads
 ```
 
 ### 🌤️ External API Keys
@@ -79,10 +88,27 @@ print(get_random_secret_key())
 5. Create webhook endpoint: `https://your-domain.railway.app/wallet/stripe/webhook/`
 6. Copy the webhook signing secret (starts with `whsec_`)
 
-### Step 4: N8N Webhook URLs
-1. Deploy your N8N instance (can use Railway, Heroku, or self-hosted)
-2. Create workflows for each AI agent
-3. Copy the webhook URLs from each workflow
+### Step 4: N8N Webhook URLs (Separate Server)
+
+⚠️ **N8N RUNS SEPARATELY** from your Django app. Choose one hosting option:
+
+**Option A: N8N Cloud (Easiest)**
+1. Sign up at [n8n.cloud](https://n8n.cloud)
+2. Import your workflow JSON files from agent directories
+3. Configure OpenAI API credentials in N8N
+4. Copy webhook URLs from each workflow
+5. Add URLs to Railway environment variables
+
+**Option B: Separate Railway Project for N8N**
+1. Create a NEW Railway project (different from your Django app)
+2. Deploy N8N using Railway's template or Docker
+3. Import workflows and configure credentials
+4. Copy webhook URLs and add to Django app environment
+
+**Option C: Self-Hosted N8N**
+1. Deploy N8N on DigitalOcean, AWS, VPS, or local server
+2. Ensure server is publicly accessible for webhook calls
+3. Import workflows and get webhook URLs
 4. Ensure N8N workflows are active and accessible
 
 ### Step 5: OpenWeather API

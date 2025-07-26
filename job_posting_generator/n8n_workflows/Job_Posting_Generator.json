@@ -1,0 +1,300 @@
+{
+  "name": "Job Posting Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "id": "8bc1629f-d935-4fa8-bbb9-b55403207400",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        968,
+        1020
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "uzyuJ5c9nml2NneC",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Set Web Input').item.json.body.sessionId }}",
+        "contextWindowLength": 50
+      },
+      "id": "93a19f8c-f3e3-4094-bbe7-019bcb5bdd0e",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        1088,
+        1020
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.message.text }}",
+        "options": {
+          "systemMessage": "=You are an expert recruitment copywriter. Your task is to craft engaging and compelling job postings that attract top talent. For each job posting, use the provided input details (such as job title, responsibilities, qualifications, company information, and benefits) to:\n\nWrite a clear and enticing job title.\n\nSummarize the company and its culture in a way that excites candidates.\n\nClearly describe the role’s responsibilities and day-to-day tasks.\n\nList the Job title, About us, Job Overview, Responsibilities, required qualifications and preferred skills, Location and How to Apply in an appealing, concise manner.\n\nHighlight unique benefits and growth opportunities.\n\nUse inclusive, positive, and motivating language throughout.\n\nEnsure the posting is well-structured, easy to read, and free of jargon.\n\nYour goal is to make each job posting stand out and appeal to high-quality candidates, while accurately reflecting the role and company."
+        }
+      },
+      "id": "1838d72d-12da-4351-beea-8625f60ff88d",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        940,
+        800
+      ],
+      "typeVersion": 1.9
+    },
+    {
+      "parameters": {
+        "chatId": "={{$('Telegram Trigger').first().json.message.chat.id}}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "ce2d4d37-c3cb-4dd0-9b70-9e1db9830e74",
+      "name": "Send Response To Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        500,
+        440
+      ],
+      "webhookId": "702bcdca-5297-4faf-9759-4f570d127052",
+      "typeVersion": 1.2,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "43f84411-eaaa-488c-9b1f-856e90d0aaf6",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        500,
+        800
+      ],
+      "id": "a02855f5-0b5c-47de-b098-19cd10932d88",
+      "webhookId": "43f84411-eaaa-488c-9b1f-856e90d0aaf6"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "Set Web Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        720,
+        800
+      ],
+      "id": "8c87b34b-9119-4f29-baea-9a6b74efc937"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "Respond to Web",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1316,
+        800
+      ],
+      "id": "e8ae02fc-93c3-476e-b01c-e60656ccfaac"
+    },
+    {
+      "parameters": {
+        "formTitle": "Job Posting",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Job title"
+            },
+            {
+              "fieldLabel": "Company Name"
+            },
+            {
+              "fieldLabel": "Describe what you'd like to generate",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "Seniority",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Junior"
+                  },
+                  {
+                    "option": "Mid-level"
+                  },
+                  {
+                    "option": "Senior"
+                  },
+                  {
+                    "option": "Lead"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Contract Type",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Full-Time"
+                  },
+                  {
+                    "option": "Part-Time"
+                  },
+                  {
+                    "option": "Freelance"
+                  },
+                  {
+                    "option": "Internship"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Location",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Remote"
+                  },
+                  {
+                    "option": "On-Site"
+                  },
+                  {
+                    "option": "Hybrid"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Language"
+            },
+            {
+              "fieldLabel": "Company Website"
+            },
+            {
+              "fieldLabel": "How to Apply"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        500,
+        180
+      ],
+      "id": "0ad79a28-0909-4b88-bba0-e013cf4eae6d",
+      "name": "On form submission",
+      "webhookId": "75ac3236-9040-478a-88b4-e0bcce17fdf1",
+      "disabled": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set Web Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Web Input": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b0e25b31-2e02-4d60-9ee3-4b512dc25fad",
+  "meta": {
+    "instanceId": "b419dceeef095c7882b7f3bc7ba03f620c77ec1f3d9d0518174b97d631dd49fa"
+  },
+  "id": "nHrugmW7FvbKSlen",
+  "tags": [
+    {
+      "createdAt": "2025-07-01T13:54:51.754Z",
+      "updatedAt": "2025-07-01T13:54:51.754Z",
+      "id": "2ji4EAexY8bmiTeM",
+      "name": "AI Agent"
+    }
+  ]
+}

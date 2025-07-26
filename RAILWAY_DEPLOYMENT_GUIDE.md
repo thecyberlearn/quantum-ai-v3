@@ -3,6 +3,24 @@
 ## Overview
 This guide will help you deploy your Quantum Tasks AI Django application to Railway.app. Your application is already optimized for Railway deployment with the existing `railway.json` configuration.
 
+### 🏗️ Architecture Overview (Important!)
+
+**What Deploys to Railway:**
+- ✅ Django Application (Quantum Tasks AI)
+- ✅ PostgreSQL Database (automatic)
+- ✅ Redis Cache (optional but recommended)
+
+**What DOES NOT Deploy to Railway:**
+- ❌ N8N Instance (runs on separate server)
+- ❌ N8N Workflows (hosted elsewhere)
+
+**How They Connect:**
+```
+Railway Django App → HTTP POST Requests → N8N Instance (Separate Hosting) → AI Processing → Response → Railway Django App
+```
+
+Your Django app only needs the N8N webhook URLs as environment variables to connect to your separately-hosted N8N instance.
+
 ## 📋 Pre-Deployment Checklist
 
 ### Required Accounts & Services
@@ -60,8 +78,9 @@ N8N_WEBHOOK_DATA_ANALYZER=https://your-n8n.com/webhook/data-analyzer
 N8N_WEBHOOK_FIVE_WHYS=https://your-n8n.com/webhook/five-whys
 N8N_WEBHOOK_JOB_POSTING=https://your-n8n.com/webhook/job-posting
 N8N_WEBHOOK_SOCIAL_ADS=https://your-n8n.com/webhook/social-ads
-N8N_WEBHOOK_FAQ_GENERATOR=https://your-n8n.com/webhook/faq-generator
 ```
+
+**Note**: Only webhook-based agents need N8N workflows. API-based agents (weather_reporter, email_writer) work independently.
 
 #### 🗄️ Database Configuration
 Railway automatically provides `DATABASE_URL` - no manual configuration needed!
@@ -80,7 +99,57 @@ REDIS_URL=redis://your-redis-url:6379
 1. Click "New" → "Database" → "Add Redis"
 2. Railway automatically sets the `REDIS_URL` environment variable
 
-### Step 5: Custom Domain (Optional)
+### Step 5: Set Up N8N Instance (Separate Hosting)
+
+⚠️ **IMPORTANT**: N8N is NOT deployed to Railway with your Django app. N8N runs on a separate server and your Django app connects to it via webhooks.
+
+#### Architecture Overview:
+```
+User → Django App (Railway) → HTTP POST → N8N Webhooks (Separate Server) → AI Processing → Response → Django → User
+```
+
+#### N8N Hosting Options (Choose One):
+
+**Option A: N8N Cloud (Recommended - Easiest)**
+1. Sign up at [n8n.cloud](https://n8n.cloud)
+2. Create a new workflow instance
+3. Import your workflow JSON files
+4. Copy webhook URLs for environment variables
+
+**Option B: Deploy N8N on Railway (Separate Project)**
+1. Create a NEW Railway project (separate from your Django app)
+2. Deploy N8N using Railway's N8N template
+3. Configure OpenAI API credentials in N8N
+4. Import workflows and get webhook URLs
+
+**Option C: Self-Hosted N8N**
+1. Deploy N8N on DigitalOcean, AWS, or VPS
+2. Use Docker: `docker run -it --rm --name n8n -p 5678:5678 n8nio/n8n`
+3. Configure and import workflows
+4. Ensure server is publicly accessible for webhooks
+
+#### Deploy Workflows to Your N8N Instance:
+```bash
+# Set connection details for YOUR N8N instance
+export N8N_BASE_URL=https://your-n8n-instance.com  # Your N8N URL
+export N8N_API_KEY=your-api-key                    # Your N8N API key
+
+# Deploy all workflows to your N8N instance
+./deploy_n8n_workflows.sh
+```
+
+#### Configure Django App to Connect to N8N:
+1. Copy webhook URLs from your N8N instance
+2. Add these URLs to your Railway Django project environment variables:
+   ```
+   N8N_WEBHOOK_DATA_ANALYZER=https://your-n8n.com/webhook/data-analyzer
+   N8N_WEBHOOK_SOCIAL_ADS=https://your-n8n.com/webhook/social-ads
+   N8N_WEBHOOK_JOB_POSTING=https://your-n8n.com/webhook/job-posting
+   N8N_WEBHOOK_FIVE_WHYS=https://your-n8n.com/webhook/five-whys
+   ```
+3. Verify workflows are active in your N8N instance
+
+### Step 6: Custom Domain (Optional)
 1. Go to project Settings → Domains
 2. Add your custom domain (e.g., `quantumtaskai.com`)
 3. Update DNS records as instructed by Railway

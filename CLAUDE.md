@@ -76,6 +76,27 @@ python manage.py test_webhook
 python manage.py cleanup_uploads
 ```
 
+### N8N Workflow Management
+```bash
+# List all workflows (local and N8N instance)
+python manage_n8n_workflows.py list
+
+# Import specific agent workflow to N8N
+python manage_n8n_workflows.py import data_analyzer
+
+# Export workflow from N8N to local files
+python manage_n8n_workflows.py export social_ads_generator
+
+# Sync all workflows between local and N8N
+python manage_n8n_workflows.py sync
+
+# Backup all workflows with timestamp
+python manage_n8n_workflows.py backup
+
+# Deploy all workflows (recommended for production)
+./deploy_n8n_workflows.sh
+```
+
 ## Architecture Overview
 
 ### Agent System Architecture (`agent_base/`)
@@ -89,8 +110,14 @@ python manage.py cleanup_uploads
 - `templates/agent_base/` - Marketplace and agent catalog templates
 
 **Agent Types:**
-1. **Webhook Agents** - Process requests via external webhook APIs (e.g., weather_reporter)
+1. **Webhook Agents** - Process requests via external N8N webhook APIs (require N8N workflows)
+   - `data_analyzer` - File analysis and insights
+   - `social_ads_generator` - Social media ad creation
+   - `job_posting_generator` - Professional job postings
+   - `five_whys_analyzer` - Root cause analysis
 2. **API Agents** - Direct API integration for immediate responses
+   - `weather_reporter` - OpenWeather API integration
+   - `email_writer` - Custom email composition logic
 
 **Individual Agent Apps:**
 Each agent is a separate Django app following this structure:
@@ -99,6 +126,41 @@ Each agent is a separate Django app following this structure:
 - `views.py` - Agent detail page and request handling
 - `templates/[agent_name]/detail.html` - Agent interface
 - `urls.py` - Agent-specific URL routing
+- `n8n_workflows/` - N8N workflow configurations (webhook agents only)
+  - `workflow.json` - Production workflow
+  - `README.md` - Setup and configuration documentation
+
+### N8N Workflow Architecture
+
+⚠️ **IMPORTANT**: N8N runs on a SEPARATE server from your Django application. They communicate via HTTP webhooks.
+
+**System Architecture:**
+```
+User Request → Django App (Railway) → HTTP POST → N8N Instance (Separate Hosting) → AI Processing → JSON Response → Django → User Display
+```
+
+**Hosting Separation:**
+- **Django App**: Deployed on Railway (your main application)
+- **N8N Instance**: Deployed separately (N8N Cloud, separate Railway project, or self-hosted)
+- **Communication**: HTTP POST requests between the two systems
+
+**Webhook Agent Integration:**
+- Django application sends POST requests to N8N webhook URLs (external server)
+- N8N workflows process requests using AI services (OpenAI GPT-4) 
+- N8N workflows return structured JSON responses back to Django
+- Environment variables configure webhook URLs pointing to your N8N instance
+
+**Workflow Management:**
+- `manage_n8n_workflows.py` - Import, export, sync, and backup workflows
+- `deploy_n8n_workflows.sh` - Automated deployment script
+- Individual agent README files document setup and configuration
+- Version control tracks workflow changes alongside agent code
+
+**Environment Configuration:**
+- `N8N_WEBHOOK_DATA_ANALYZER` - Data analysis workflow URL
+- `N8N_WEBHOOK_SOCIAL_ADS` - Social ads generation workflow URL
+- `N8N_WEBHOOK_JOB_POSTING` - Job posting generation workflow URL
+- `N8N_WEBHOOK_FIVE_WHYS` - Five whys analysis workflow URL
 
 ### Core System Architecture
 
