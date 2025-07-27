@@ -2,6 +2,19 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 📚 Documentation
+
+**Complete documentation is now organized in the `/docs/` directory:**
+- **📖 Main Index:** [docs/README.md](./docs/README.md)
+- **🚀 Deployment:** [docs/deployment/](./docs/deployment/) - Railway deployment, domain changes, environment setup
+- **🛠️ Development:** [docs/development/](./docs/development/) - Local setup, agent creation, testing
+- **⚙️ Operations:** [docs/operations/](./docs/operations/) - Database management, troubleshooting, maintenance
+
+**Quick Links:**
+- [Domain Change Guide](./docs/deployment/domain-change-guide.md) - Complete domain change instructions
+- [Railway Deployment](./docs/deployment/railway-deployment.md) - Production deployment guide
+- [Environment Variables](./docs/deployment/environment-variables.md) - Complete environment reference
+
 ## Project Overview
 
 Quantum Tasks AI is a Django-based AI agent marketplace platform where users can purchase and interact with specialized AI agents. The system supports both webhook-based and API-based agents with integrated payment processing via Stripe.
