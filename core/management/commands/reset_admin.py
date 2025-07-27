@@ -10,7 +10,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         email = 'admin@quantumtaskai.com'
         username = 'admin'
-        password = 'QuantumAI2024!'
+        password = 'P9cKE9G$R%ni#p'
         
         self.stdout.write("🔄 Resetting admin user...")
         

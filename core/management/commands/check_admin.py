@@ -11,7 +11,7 @@ class Command(BaseCommand):
         # Check both possible admin emails (preferred email first)
         possible_emails = ['admin@quantumtaskai.com', 'admin@netcop.ai']
         username = 'admin'
-        password = 'QuantumAI2024!'
+        password = 'P9cKE9G$R%ni#p'
         
         user = None
         found_email = None

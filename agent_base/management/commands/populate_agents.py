@@ -30,11 +30,11 @@ class Command(BaseCommand):
                 User.objects.create_superuser(
                     username='admin',
                     email=admin_email,
-                    password='admin123',
+                    password='P9cKE9G$R%ni#p',
                     first_name='Admin',
                     last_name='User'
                 )
-                self.stdout.write("Created superuser: admin@quantumtaskai.com / admin123")
+                self.stdout.write("Created superuser: admin@quantumtaskai.com / P9cKE9G$R%ni#p")
         else:
             superuser_count = User.objects.filter(is_superuser=True).count()
             self.stdout.write(f"Superuser(s) already exist ({superuser_count} found) - skipping admin creation")
