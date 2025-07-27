@@ -1,23 +1,30 @@
 === Documentation Auto-Update Summary ===
-Update Date: 2025-07-27 16:59:10
+Update Date: 2025-07-27 17:47:37
 
 Recent Commits:
+  - 87397ac 🤖 Add specialized subagents and auto-documentation system
   - fa38fbd 🎨 Toast standardization and dynamic pricing - safe approach
   - 10e3bb8 quick agent price remove
-  - 0b854d5 🔧 Fix Django admin edit functionality for agent prices
 
 Agents Changes:
-  - docs/development/agent-creation.md
+  - .claude/agents/agent-architect.md
+  - .claude/agents/django-debugger.md
+  - .claude/agents/django-expert.md
+  - .claude/agents/security-auditor.md
+  - .claude/agents/template-optimizer.md
 
 Documentation Changes:
+  - AUTO_DOCS_SETUP_COMPLETE.md
   - CLAUDE.md
+  - docs/README.md
+  - docs/development/auto-documentation-system.md
 
-Frontend Changes:
-  - data_analyzer/templates/data_analyzer/detail.html
-  - email_writer/templates/email_writer/detail.html
-  - five_whys_analyzer/templates/five_whys_analyzer/detail.html
-  - job_posting_generator/templates/job_posting_generator/detail.html
-  - social_ads_generator/templates/social_ads_generator/detail.html
+Backend Changes:
+  - DOCUMENTATION_UPDATE_SUMMARY.txt
+  - docs_update_summary.txt
+  - scripts/auto_update_docs.py
+  - scripts/setup_git_hooks.sh
+  - scripts/update_docs_manual.sh
 
 Updated Documentation Files:
   - /home/amit/Desktop/quantum_ai/CLAUDE.md

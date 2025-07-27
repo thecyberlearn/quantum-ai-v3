@@ -9,11 +9,11 @@
     "restartPolicyMaxRetries": 3
   },
   "environments": {
-    "production": {
+    "staging": {
       "variables": {
-        "DEBUG": "False",
-        "DEPLOYMENT_ENVIRONMENT": "production",
-        "BRANCH_NAME": "main"
+        "DEBUG": "True",
+        "DEPLOYMENT_ENVIRONMENT": "staging",
+        "BRANCH_NAME": "staging"
       }
     }
   }

@@ -28,10 +28,12 @@ MAKE ALL FIXES AND CODE CHANGES AS SIMPLE AS HUMANLY POSSIBLE. THEY SHOULD ONLY 
 - **⚙️ Operations:** [docs/operations/](./docs/operations/) - Database management, troubleshooting, maintenance
 
 **Quick Links:**
-- [Domain Change Guide](./docs/deployment/domain-change-guide.md) - Complete domain change instructions
+- [Development Workflow](./DEVELOPMENT_WORKFLOW.md) - **🚀 START HERE** - Daily development workflow
+- [Deployment Control Guide](./docs/deployment/deployment-control-guide.md) - Branch strategy and Railway control
+- [Subagents Guide](./docs/development/subagents-guide.md) - AI development assistants
+- [Auto-Documentation System](./docs/development/auto-documentation-system.md) - Automated documentation updates
 - [Railway Deployment](./docs/deployment/railway-deployment.md) - Production deployment guide
 - [Environment Variables](./docs/deployment/environment-variables.md) - Complete environment reference
-- [Auto-Documentation System](./docs/development/auto-documentation-system.md) - Automated documentation updates
 
 ## Project Overview
 
@@ -483,4 +485,4 @@ curl http://localhost:8000/health/
 Always run `python manage.py check_db` before making database-related changes to ensure proper configuration.
 
 ---
-Last updated: 2025-07-27 17:00:00
+Last updated: Last updated: 2025-07-27 17:47:37
