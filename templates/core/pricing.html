@@ -10,181 +10,96 @@
 
 {% block content %}
 <div class="pricing-page theme-professional">
-    <div class="pricing-container-wrapper">
-        <!-- Main Content -->
-        <main class="pricing-main" role="main">
-            <!-- Hero Section -->
-            <section class="pricing-hero" aria-labelledby="pricing-heading">
-                <h1 id="pricing-heading">💳 Transparent Pricing</h1>
-                <p>Add funds to your wallet and use AI agents with clear, upfront pricing</p>
-            </section>
-            
-            <!-- Pricing Section -->
-            <section class="pricing-section" aria-labelledby="plans-heading">
-                <h2 id="plans-heading" class="section-title">Choose Your Plan</h2>
-                <p class="section-subtitle">Start with any amount and top up as needed</p>
-                
-                <div class="pricing-grid" role="group" aria-label="Pricing plans">
-                    <div class="pricing-card" role="article" aria-label="Basic plan - 10 AED">
-                        <div class="card-price">
-                            <span>10</span>
-                            <span class="currency">AED</span>
-                        </div>
-                        <div class="card-description">Perfect for trying out agents</div>
-                        <ul class="card-features">
-                            <li><span class="feature-icon">✓</span> Try multiple AI agents</li>
-                            <li><span class="feature-icon">✓</span> Basic task processing</li>
-                            <li><span class="feature-icon">✓</span> Instant wallet credit</li>
-                        </ul>
-                        <a href="{% url 'authentication:register' %}" 
-                           class="card-button"
-                           aria-label="Get started with basic plan">
-                            Get Started
-                        </a>
-                    </div>
-                    
-                    <div class="pricing-card popular" role="article" aria-label="Popular plan - 50 AED">
-                        <div class="popular-badge">Most Popular</div>
-                        <div class="card-price">
-                            <span>50</span>
-                            <span class="currency">AED</span>
-                        </div>
-                        <div class="card-description">Great for regular usage</div>
-                        <ul class="card-features">
-                            <li><span class="feature-icon">✓</span> All AI agents available</li>
-                            <li><span class="feature-icon">✓</span> Priority processing</li>
-                            <li><span class="feature-icon">✓</span> Extended usage time</li>
-                            <li><span class="feature-icon">✓</span> Best value option</li>
-                        </ul>
-                        <a href="{% url 'authentication:register' %}" 
-                           class="card-button"
-                           aria-label="Get started with popular plan">
-                            Get Started
-                        </a>
-                    </div>
-                    
-                    <div class="pricing-card" role="article" aria-label="Professional plan - 100 AED">
-                        <div class="card-price">
-                            <span>100</span>
-                            <span class="currency">AED</span>
-                        </div>
-                        <div class="card-description">Ideal for power users</div>
-                        <ul class="card-features">
-                            <li><span class="feature-icon">✓</span> Unlimited agent access</li>
-                            <li><span class="feature-icon">✓</span> Fastest processing</li>
-                            <li><span class="feature-icon">✓</span> Bulk operations</li>
-                            <li><span class="feature-icon">✓</span> Maximum efficiency</li>
-                        </ul>
-                        <a href="{% url 'authentication:register' %}" 
-                           class="card-button"
-                           aria-label="Get started with professional plan">
-                            Get Started
-                        </a>
-                    </div>
-                </div>
-            </section>
-            
-            <!-- CTA Section -->
-            <section class="cta-section" aria-labelledby="cta-heading">
-                <h3 id="cta-heading">Ready to get started?</h3>
-                <p>Create your account and start using AI agents today with transparent, pay-as-you-go pricing.</p>
-                <div class="cta-buttons">
-                    <a href="{% url 'authentication:register' %}" 
-                       class="cta-btn"
-                       aria-label="Create account to get started">
-                        🚀 Create Account
-                    </a>
-                    <a href="{% url 'agent_base:marketplace' %}" 
-                       class="cta-btn secondary"
-                       aria-label="Browse available AI agents">
-                        🤖 View Marketplace
-                    </a>
-                </div>
-            </section>
-        </main>
+    <div class="pricing-container">
+        <!-- Hero Section -->
+        <section class="pricing-hero" aria-labelledby="pricing-heading">
+            <h1 id="pricing-heading">💳 Transparent Pricing</h1>
+            <p>Add funds to your wallet and use AI agents with clear, upfront pricing</p>
+        </section>
         
-        <!-- Sidebar -->
-        <aside class="pricing-sidebar">
-            <!-- Pricing Info -->
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">💰 Pricing Details</h3>
-                </div>
-                <div class="card-content">
-                    <div class="info-list">
-                        <div class="info-item">
-                            <span class="info-icon">⚡</span>
-                            <span class="info-text">Pay only for successful results</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-icon">🔄</span>
-                            <span class="info-text">Top up anytime, any amount</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-icon">📊</span>
-                            <span class="info-text">Transparent transaction history</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-icon">🔒</span>
-                            <span class="info-text">Secure payment processing</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <!-- Pricing Section -->
+        <section class="pricing-section" aria-labelledby="plans-heading">
+            <h2 id="plans-heading" class="section-title">Choose Your Plan</h2>
+            <p class="section-subtitle">Start with any amount and top up as needed</p>
             
-            <!-- Quick Actions -->
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">⚡ Quick Actions</h3>
-                </div>
-                <div class="card-content">
-                    <div class="quick-actions">
-                        <a href="{% url 'agent_base:marketplace' %}" class="action-btn">
-                            🤖 Browse AI Agents
-                        </a>
-                        {% if user.is_authenticated %}
-                            <a href="{% url 'wallet:wallet' %}" class="action-btn">
-                                💳 View Wallet
-                            </a>
-                        {% endif %}
-                        <a href="{% url 'core:homepage' %}" class="action-btn">
-                            🏠 Back to Home
-                        </a>
+            <div class="pricing-grid" role="group" aria-label="Pricing plans">
+                <div class="pricing-card" role="article" aria-label="Basic plan - 10 AED">
+                    <div class="card-price">
+                        <span>10</span>
+                        <span class="currency">AED</span>
                     </div>
+                    <div class="card-description">Perfect for trying out agents</div>
+                    <ul class="card-features">
+                        <li><span class="feature-icon">✓</span> Try multiple AI agents</li>
+                        <li><span class="feature-icon">✓</span> Basic task processing</li>
+                        <li><span class="feature-icon">✓</span> Instant wallet credit</li>
+                        <li><span class="feature-icon">✓</span> Pay only for results</li>
+                    </ul>
+                    <a href="{% url 'authentication:register' %}" 
+                       class="card-button"
+                       aria-label="Get started with basic plan">
+                        Get Started
+                    </a>
+                </div>
+                
+                <div class="pricing-card popular" role="article" aria-label="Popular plan - 50 AED">
+                    <div class="popular-badge">Most Popular</div>
+                    <div class="card-price">
+                        <span>50</span>
+                        <span class="currency">AED</span>
+                    </div>
+                    <div class="card-description">Great for regular usage</div>
+                    <ul class="card-features">
+                        <li><span class="feature-icon">✓</span> All AI agents available</li>
+                        <li><span class="feature-icon">✓</span> Priority processing</li>
+                        <li><span class="feature-icon">✓</span> Extended usage time</li>
+                        <li><span class="feature-icon">✓</span> Best value option</li>
+                    </ul>
+                    <a href="{% url 'authentication:register' %}" 
+                       class="card-button"
+                       aria-label="Get started with popular plan">
+                        Get Started
+                    </a>
+                </div>
+                
+                <div class="pricing-card" role="article" aria-label="Professional plan - 100 AED">
+                    <div class="card-price">
+                        <span>100</span>
+                        <span class="currency">AED</span>
+                    </div>
+                    <div class="card-description">Ideal for power users</div>
+                    <ul class="card-features">
+                        <li><span class="feature-icon">✓</span> Unlimited agent access</li>
+                        <li><span class="feature-icon">✓</span> Fastest processing</li>
+                        <li><span class="feature-icon">✓</span> Bulk operations</li>
+                        <li><span class="feature-icon">✓</span> Maximum efficiency</li>
+                    </ul>
+                    <a href="{% url 'authentication:register' %}" 
+                       class="card-button"
+                       aria-label="Get started with professional plan">
+                        Get Started
+                    </a>
                 </div>
             </div>
-            
-            <!-- Features Comparison -->
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">⭐ What's Included</h3>
-                </div>
-                <div class="card-content">
-                    <div class="info-list">
-                        <div class="info-item">
-                            <span class="info-icon">🤖</span>
-                            <span class="info-text">5 specialized AI agents</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-icon">📄</span>
-                            <span class="info-text">Document processing</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-icon">📊</span>
-                            <span class="info-text">Data analysis tools</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-icon">🌐</span>
-                            <span class="info-text">Web-based platform</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-icon">🔧</span>
-                            <span class="info-text">24/7 system availability</span>
-                        </div>
-                    </div>
-                </div>
+        </section>
+        
+        <!-- CTA Section -->
+        <section class="cta-section" aria-labelledby="cta-heading">
+            <h3 id="cta-heading">Ready to get started?</h3>
+            <p>Create your account and start using AI agents today with transparent, pay-as-you-go pricing.</p>
+            <div class="cta-buttons">
+                <a href="{% url 'authentication:register' %}" 
+                   class="cta-btn"
+                   aria-label="Create account to get started">
+                    🚀 Create Account
+                </a>
+                <a href="{% url 'agent_base:marketplace' %}" 
+                   class="cta-btn secondary"
+                   aria-label="Browse available AI agents">
+                    🤖 View Marketplace
+                </a>
             </div>
-        </aside>
+        </section>
     </div>
 </div>
 {% endblock %}
