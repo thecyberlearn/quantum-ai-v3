@@ -1,33 +1,29 @@
 === Documentation Auto-Update Summary ===
-Update Date: 2025-07-27 17:47:37
+Update Date: 2025-07-27 17:53:31
 
 Recent Commits:
+  - ffb4292 🔒 Implement comprehensive deployment control system
   - 87397ac 🤖 Add specialized subagents and auto-documentation system
   - fa38fbd 🎨 Toast standardization and dynamic pricing - safe approach
-  - 10e3bb8 quick agent price remove
 
-Agents Changes:
-  - .claude/agents/agent-architect.md
-  - .claude/agents/django-debugger.md
-  - .claude/agents/django-expert.md
-  - .claude/agents/security-auditor.md
-  - .claude/agents/template-optimizer.md
+Deployment Changes:
+  - .railway.env.example
+  - railway.json
+  - railway.staging.json
 
 Documentation Changes:
-  - AUTO_DOCS_SETUP_COMPLETE.md
+  - .github/PULL_REQUEST_TEMPLATE.md
   - CLAUDE.md
-  - docs/README.md
-  - docs/development/auto-documentation-system.md
+  - DEVELOPMENT_WORKFLOW.md
+  - docs/deployment/deployment-checklist.md
+  - docs/deployment/deployment-control-guide.md
 
 Backend Changes:
-  - DOCUMENTATION_UPDATE_SUMMARY.txt
   - docs_update_summary.txt
-  - scripts/auto_update_docs.py
-  - scripts/setup_git_hooks.sh
-  - scripts/update_docs_manual.sh
+  - scripts/setup_branch_protection.sh
 
 Updated Documentation Files:
   - /home/amit/Desktop/quantum_ai/CLAUDE.md
-  - /home/amit/Desktop/quantum_ai/docs/development/agent-creation.md
+  - /home/amit/Desktop/quantum_ai/docs/deployment/railway-deployment.md
 
 === End Summary ===
