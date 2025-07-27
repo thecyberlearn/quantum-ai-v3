@@ -4,7 +4,7 @@ from .models import BaseAgent
 
 @admin.register(BaseAgent)
 class BaseAgentAdmin(admin.ModelAdmin):
-    list_display = ['name', 'slug', 'is_active', 'cost_per_request', 'created_at']
+    list_display = ['name', 'slug', 'is_active', 'price', 'created_at']
     list_filter = ['is_active', 'agent_type', 'created_at']
     search_fields = ['name', 'slug', 'description']
     readonly_fields = ['slug', 'created_at', 'updated_at']
@@ -15,7 +15,7 @@ class BaseAgentAdmin(admin.ModelAdmin):
             'fields': ('name', 'slug', 'description', 'agent_type')
         }),
         ('Configuration', {
-            'fields': ('is_active', 'cost_per_request', 'icon_name')
+            'fields': ('is_active', 'price', 'icon')
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),

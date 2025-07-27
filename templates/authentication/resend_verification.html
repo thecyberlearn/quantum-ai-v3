@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Sign In{% endblock %}
+{% block title %}Resend Email Verification{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/agent-base.css' %}">
@@ -125,8 +125,8 @@
 <div class="login-page theme-professional">
     <div class="login-container">
         <div class="login-header">
-            <h1 class="login-title">Welcome Back</h1>
-            <p class="login-subtitle">Sign in to your account</p>
+            <h1 class="login-title">Resend Verification</h1>
+            <p class="login-subtitle">Enter your email to resend verification link</p>
         </div>
         
         {% if messages %}
@@ -139,9 +139,6 @@
         
         <form method="post" class="login-form">
             {% csrf_token %}
-            {% if request.GET.next %}
-                <input type="hidden" name="next" value="{{ request.GET.next }}">
-            {% endif %}
             
             <div class="form-group">
                 <label for="email" class="form-label">Email Address</label>
@@ -150,33 +147,19 @@
                     id="email" 
                     name="email" 
                     class="form-input"
-                    placeholder="Enter your email"
+                    placeholder="Enter your email address"
                     required
                     autocomplete="email"
                 >
             </div>
             
-            <div class="form-group">
-                <label for="password" class="form-label">Password</label>
-                <input 
-                    type="password" 
-                    id="password" 
-                    name="password" 
-                    class="form-input"
-                    placeholder="Enter your password"
-                    required
-                    autocomplete="current-password"
-                >
-            </div>
-            
             <button type="submit" class="btn btn-primary login-btn">
-                Sign In
+                Send Verification Email
             </button>
         </form>
         
         <div class="login-auth-links">
-            <p><a href="{% url 'authentication:forgot_password' %}">Forgot your password?</a></p>
-            <p><a href="{% url 'authentication:resend_verification' %}">Resend email verification</a></p>
+            <p><a href="{% url 'authentication:login' %}">Back to Sign In</a></p>
             <p>Don't have an account? <a href="{% url 'authentication:register' %}">Create account</a></p>
         </div>
     </div>
@@ -187,8 +170,8 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const emailField = document.getElementById('email');
-        const loginForm = document.querySelector('.login-form');
-        const loginBtn = document.querySelector('.login-btn');
+        const form = document.querySelector('.login-form');
+        const submitBtn = document.querySelector('.login-btn');
         
         // Focus on email field
         if (emailField) {
@@ -196,10 +179,10 @@
         }
         
         // Form submission
-        if (loginForm && loginBtn) {
-            loginForm.addEventListener('submit', function() {
-                loginBtn.innerHTML = 'Signing in...';
-                loginBtn.disabled = true;
+        if (form && submitBtn) {
+            form.addEventListener('submit', function() {
+                submitBtn.innerHTML = 'Sending...';
+                submitBtn.disabled = true;
             });
         }
     });
