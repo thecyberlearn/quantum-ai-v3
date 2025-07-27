@@ -31,8 +31,8 @@ class StripePaymentHandler:
             cancel_url = request.build_absolute_uri('/wallet/top-up/cancel/')
         else:
             # Fallback URLs
-            success_url = 'https://quantumtaskai.com/wallet/top-up/success/?session_id={CHECKOUT_SESSION_ID}'
-            cancel_url = 'https://quantumtaskai.com/wallet/top-up/cancel/'
+            success_url = 'https://www.quantumtaskai.com/wallet/top-up/success/?session_id={CHECKOUT_SESSION_ID}'
+            cancel_url = 'https://www.quantumtaskai.com/wallet/top-up/cancel/'
         
         try:
             logger.info(f"Creating checkout session for user {user.id}, amount: {amount} AED")

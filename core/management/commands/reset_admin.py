@@ -65,7 +65,7 @@ class Command(BaseCommand):
         self.stdout.write(f"💰 Balance: {user.wallet_balance} AED")
         
         self.stdout.write("\n🎯 Login Instructions:")
-        self.stdout.write("URL: https://quantum-ai.up.railway.app/admin/")
+        self.stdout.write("URL: https://www.quantumtaskai.com/admin/")
         self.stdout.write(f"Email: {email}")
         self.stdout.write(f"Username: {username}")
         self.stdout.write(f"Password: {password}")

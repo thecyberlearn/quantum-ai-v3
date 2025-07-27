@@ -8,8 +8,8 @@ class Command(BaseCommand):
     help = 'Check and fix admin user status'
     
     def handle(self, *args, **options):
-        # Check both possible admin emails
-        possible_emails = ['admin@netcop.ai', 'admin@quantumtaskai.com']
+        # Check both possible admin emails (preferred email first)
+        possible_emails = ['admin@quantumtaskai.com', 'admin@netcop.ai']
         username = 'admin'
         password = 'QuantumAI2024!'
         
@@ -49,7 +49,7 @@ class Command(BaseCommand):
             
             # Show login instructions
             self.stdout.write("\n📝 Login Instructions:")
-            self.stdout.write(f"URL: https://quantum-ai.up.railway.app/admin/")
+            self.stdout.write(f"URL: https://www.quantumtaskai.com/admin/")
             self.stdout.write(f"Email: {found_email}")
             self.stdout.write(f"Username: {username}")
             self.stdout.write(f"Password: {password}")

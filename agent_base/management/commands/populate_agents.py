@@ -23,7 +23,7 @@ class Command(BaseCommand):
         
         if should_create_admin:
             # Check if admin email already exists
-            admin_email = 'admin@netcop.ai'
+            admin_email = 'admin@quantumtaskai.com'
             if User.objects.filter(email=admin_email).exists():
                 self.stdout.write(f"Admin user with email {admin_email} already exists - skipping creation")
             else:
@@ -34,7 +34,7 @@ class Command(BaseCommand):
                     first_name='Admin',
                     last_name='User'
                 )
-                self.stdout.write("Created superuser: admin@netcop.ai / admin123")
+                self.stdout.write("Created superuser: admin@quantumtaskai.com / admin123")
         else:
             superuser_count = User.objects.filter(is_superuser=True).count()
             self.stdout.write(f"Superuser(s) already exist ({superuser_count} found) - skipping admin creation")
@@ -86,6 +86,15 @@ class Command(BaseCommand):
                 'price': 8.0,
                 'icon': '🔍',
                 'agent_type': 'webhook',
+            },
+            {
+                'name': 'Email Writer',
+                'slug': 'email-writer',
+                'description': 'Generate professional emails for any purpose. Perfect for business communications, customer outreach, and personal correspondence.',
+                'category': 'content',
+                'price': 3.0,
+                'icon': '✉️',
+                'agent_type': 'api',
             },
         ]
         

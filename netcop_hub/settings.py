@@ -52,12 +52,12 @@ if missing_vars:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver,quantumtaskai.com').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver,quantumtaskai.com,www.quantumtaskai.com').split(',')
 
 # Site URL configuration for emails
 if config('RAILWAY_ENVIRONMENT', default=''):
-    # Use actual Railway domain for email verification links
-    SITE_URL = 'https://quantum-ai.up.railway.app'
+    # Use production domain for email verification links
+    SITE_URL = 'https://www.quantumtaskai.com'
 else:
     SITE_URL = config('SITE_URL', default='http://localhost:8000')
 
@@ -315,8 +315,8 @@ if config('RAILWAY_ENVIRONMENT', default=''):
     if railway_url and f'https://{railway_url}' not in CSRF_TRUSTED_ORIGINS:
         CSRF_TRUSTED_ORIGINS.append(f'https://{railway_url}')
     
-    # Also add production domain
-    CSRF_TRUSTED_ORIGINS.append('https://quantumtaskai.com')
+    # Also add production domains (both www and non-www)
+    CSRF_TRUSTED_ORIGINS.extend(['https://quantumtaskai.com', 'https://www.quantumtaskai.com'])
     
     # Railway-specific optimizations
     USE_X_FORWARDED_HOST = True
