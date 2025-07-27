@@ -13,7 +13,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Set data for JavaScript access
     document.body.setAttribute('data-user-authenticated', '{{ user.is_authenticated|yesno:"true,false" }}');
-    document.body.setAttribute('data-agent-price', '4.00');
+    document.body.setAttribute('data-agent-price', '{{ agent.price }}');
     
     // Initialize form submission
     const form = document.getElementById('agentForm');
@@ -109,7 +109,7 @@ const SocialAdsUtils = {
         const submitBtn = document.getElementById('generateBtn');
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.textContent = '📢 Generate Social Ads (4.00 AED)';
+            submitBtn.textContent = '📢 Generate Social Ads ({{ agent.price }} AED)';
         }
     },
     
@@ -152,7 +152,7 @@ const SocialAdsUtils = {
             }
             
             // Show success notification only for final result
-            this.showToast('✅ Social ads created successfully!', 'success');
+            this.showToast('✅ Social ads completed successfully!', 'success');
         } else if (result.error) {
             this.hideProcessing();
             this.showToast(`❌ Error: ${result.error}`, 'error');
@@ -353,7 +353,7 @@ function copyResults() {
         navigator.clipboard.writeText(text).then(() => {
             SocialAdsUtils.showToast('📋 Copied to clipboard!', 'success');
         }).catch(() => {
-            SocialAdsUtils.showToast('❌ Copy failed', 'error');
+            SocialAdsUtils.showToast('❌ Failed to copy to clipboard', 'error');
         });
     }
 }
@@ -464,7 +464,7 @@ function handleFormSubmission(e) {
     }
     
     const walletBalance = parseFloat(document.getElementById('walletBalance')?.textContent) || 0;
-    if (walletBalance < 4.00) {
+    if (walletBalance < {{ agent.price }}) {
         SocialAdsUtils.showToast('Insufficient wallet balance', 'error');
         setTimeout(() => {
             window.location.href = "{% url 'wallet:wallet' %}";
@@ -629,13 +629,13 @@ document.addEventListener('keydown', function(e) {
                     <!-- Submit Button -->
                     <div style="margin-top: var(--spacing-lg);">
                         {% if user.is_authenticated %}
-                            {% if user.wallet_balance >= 4.00 %}
+                            {% if user.wallet_balance >= agent.price %}
                                 <button type="submit" class="btn btn-primary btn-full" id="generateBtn">
-                                    📢 Generate Social Ads (4.00 AED)
+                                    📢 Generate Social Ads ({{ agent.price }} AED)
                                 </button>
                             {% else %}
                                 <div style="background: #fef2f2; color: #dc2626; padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); font-size: 14px; font-weight: 500; text-align: center;">
-                                    Insufficient balance! You need 4.00 AED.
+                                    Insufficient balance! You need {{ agent.price }} AED.
                                 </div>
                                 <a href="{% url 'wallet:wallet' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
                                     💰 Top Up Wallet

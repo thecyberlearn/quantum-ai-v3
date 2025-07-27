@@ -777,7 +777,7 @@ const EmailWriterModule = (function() {
             const currentBalance = walletBalanceElement ? 
                 parseFloat(walletBalanceElement.textContent) : 0;
             
-            if (currentBalance < 3.00) {
+            if (currentBalance < {{ agent.price }}) {
                 this.showToast('Insufficient wallet balance. Please top up your wallet.', 'error');
                 return false;
             }
@@ -907,13 +907,13 @@ const AgentUtils = EmailWriterModule.EmailWriterUtils;
                     <!-- Action Button -->
                     <div style="margin-top: var(--spacing-lg);">
                         {% if user.is_authenticated %}
-                            {% if user.wallet_balance >= 3.00 %}
+                            {% if user.wallet_balance >= agent.price %}
                                 <button type="submit" class="btn btn-primary btn-full" id="processButton">
-                                    📧 Generate Email (3.00 AED)
+                                    📧 Generate Email ({{ agent.price }} AED)
                                 </button>
                             {% else %}
                                 <div style="background: #fef2f2; color: #dc2626; padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); font-size: 14px; font-weight: 500; text-align: center;">
-                                    Insufficient balance! You need 3.00 AED.
+                                    Insufficient balance! You need {{ agent.price }} AED.
                                 </div>
                                 <a href="{% url 'wallet:wallet' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
                                     💰 Top Up Wallet
@@ -1026,14 +1026,25 @@ const AgentUtils = EmailWriterModule.EmailWriterUtils;
     function copyResults() {
         const emailContent = document.getElementById('resultsContent');
         const text = emailContent ? (emailContent.innerText || emailContent.textContent || '') : '';
-        AgentUtils.copyToClipboard(text, 'Email copied to clipboard!');
+        navigator.clipboard.writeText(text).then(() => {
+            AgentUtils.showToast('📋 Copied to clipboard!', 'success');
+        }).catch(() => {
+            AgentUtils.showToast('❌ Failed to copy to clipboard', 'error');
+        });
     }
     
     // Download email as text file
     function downloadResults() {
         const emailContent = document.getElementById('resultsContent');
         const text = emailContent ? (emailContent.innerText || emailContent.textContent || '') : '';
-        AgentUtils.downloadAsFile(text, `email-${Date.now()}.txt`, 'Email downloaded!');
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `email-${Date.now()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        // No toast for download - file download is confirmation enough
     }
 
     // Reset form
@@ -1054,9 +1065,9 @@ const AgentUtils = EmailWriterModule.EmailWriterUtils;
         const processButton = document.getElementById('processButton');
         processButton.disabled = false;
         processButton.classList.remove('btn-loading');
-        processButton.innerHTML = '📧 Generate Email (3.00 AED)';
+        processButton.innerHTML = '📧 Generate Email ({{ agent.price }} AED)';
         
-        AgentUtils.showToast('Form reset! Ready for another email.', 'success');
+        // No toast for reset - visual feedback is enough
     }
 
     // Display email results
@@ -1104,8 +1115,7 @@ const AgentUtils = EmailWriterModule.EmailWriterUtils;
         resultsContainer.scrollIntoView({ behavior: 'smooth' });
         
         // Show success message
-        const successMessage = result.success ? '✅ Email created and payment processed!' : '✅ Email generated!';
-        AgentUtils.showToast(successMessage, 'success');
+        AgentUtils.showToast('✅ Email completed successfully!', 'success');
     }
     
     // Poll for results
@@ -1138,7 +1148,7 @@ const AgentUtils = EmailWriterModule.EmailWriterUtils;
                         const processButton = document.getElementById('processButton');
                         processButton.disabled = false;
                         processButton.classList.remove('btn-loading');
-                        processButton.innerHTML = '📧 Generate Email (3.00 AED)';
+                        processButton.innerHTML = '📧 Generate Email ({{ agent.price }} AED)';
                         
                         // Display results only once
                         if (!EmailWriterModule.getResultsDisplayed()) {
@@ -1153,7 +1163,7 @@ const AgentUtils = EmailWriterModule.EmailWriterUtils;
                         const processButton = document.getElementById('processButton');
                         processButton.disabled = false;
                         processButton.classList.remove('btn-loading');
-                        processButton.innerHTML = '📧 Generate Email (3.00 AED)';
+                        processButton.innerHTML = '📧 Generate Email ({{ agent.price }} AED)';
                         
                         AgentUtils.showToast('❌ Processing timeout - please try again', 'error');
                     }
@@ -1167,7 +1177,7 @@ const AgentUtils = EmailWriterModule.EmailWriterUtils;
                     const processButton = document.getElementById('processButton');
                     processButton.disabled = false;
                     processButton.classList.remove('btn-loading');
-                    processButton.innerHTML = '📧 Generate Email (3.00 AED)';
+                    processButton.innerHTML = '📧 Generate Email ({{ agent.price }} AED)';
                     
                     AgentUtils.showToast('❌ Network error during processing - please try again', 'error');
                 });
@@ -1258,7 +1268,7 @@ const AgentUtils = EmailWriterModule.EmailWriterUtils;
                 document.getElementById('processingStatus').style.display = 'none';
                 processButton.disabled = false;
                 processButton.classList.remove('btn-loading');
-                processButton.innerHTML = '📧 Generate Email (3.00 AED)';
+                processButton.innerHTML = '📧 Generate Email ({{ agent.price }} AED)';
                 
                 if (result.error) {
                     AgentUtils.showToast(`❌ ${result.error}`, 'error');
@@ -1273,7 +1283,7 @@ const AgentUtils = EmailWriterModule.EmailWriterUtils;
             document.getElementById('processingStatus').style.display = 'none';
             processButton.disabled = false;
             processButton.classList.remove('btn-loading');
-            processButton.innerHTML = '📧 Generate Email (3.00 AED)';
+            processButton.innerHTML = '📧 Generate Email ({{ agent.price }} AED)';
             AgentUtils.showToast('❌ Network error - please try again', 'error');
         });
     });

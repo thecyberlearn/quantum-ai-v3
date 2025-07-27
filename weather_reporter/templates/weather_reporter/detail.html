@@ -13,7 +13,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Set data for JavaScript access
     document.body.setAttribute('data-user-authenticated', '{{ user.is_authenticated|yesno:"true,false" }}');
-    document.body.setAttribute('data-agent-price', '2.00');
+    document.body.setAttribute('data-agent-price', '{{ agent.price }}');
     
     // Initialize form submission
     const form = document.getElementById('weatherForm');
@@ -107,7 +107,7 @@ const WeatherUtils = {
                 this.updateWalletBalance(result.wallet_balance);
             }
             
-            this.showToast('✅ Weather report generated successfully!', 'success');
+            this.showToast('✅ Weather report completed successfully!', 'success');
         } else if (result.error) {
             if (processingStatus) processingStatus.style.display = 'none';
             this.showToast(`❌ Error: ${result.error}`, 'error');
@@ -172,7 +172,7 @@ function copyResults() {
     if (content) {
         const text = content.innerText || content.textContent || '';
         navigator.clipboard.writeText(text).then(() => {
-            WeatherUtils.showToast('📋 Weather report copied to clipboard!', 'success');
+            WeatherUtils.showToast('📋 Copied to clipboard!', 'success');
         }).catch(() => {
             WeatherUtils.showToast('❌ Failed to copy to clipboard', 'error');
         });
@@ -191,7 +191,7 @@ function downloadResults() {
         a.download = 'weather-report.txt';
         a.click();
         URL.revokeObjectURL(url);
-        WeatherUtils.showToast('💾 Weather report downloaded!', 'success');
+        // No toast for download - file download is confirmation enough
     }
 }
 
@@ -221,7 +221,7 @@ function resetForm() {
         if (input) input.checked = true;
     }
     
-    WeatherUtils.showToast('🔄 Form reset - ready for new request', 'success');
+    // No toast for reset - visual feedback is enough
 }
 
 // Quick Agent Access Functions
@@ -288,7 +288,7 @@ function handleFormSubmission(e) {
     }
     
     const walletBalance = parseFloat(document.getElementById('walletBalance')?.textContent) || 0;
-    if (walletBalance < 2.00) {
+    if (walletBalance < {{ agent.price }}) {
         WeatherUtils.showToast('Insufficient wallet balance', 'error');
         setTimeout(() => {
             window.location.href = "{% url 'wallet:wallet' %}";
@@ -388,13 +388,13 @@ function handleFormSubmission(e) {
                     <!-- Submit Button -->
                     <div style="margin-top: var(--spacing-lg);">
                         {% if user.is_authenticated %}
-                            {% if user.wallet_balance >= 2.00 %}
+                            {% if user.wallet_balance >= agent.price %}
                                 <button type="submit" class="btn btn-primary btn-full" id="processButton">
-                                    🌤️ Get Weather Report (2.00 AED)
+                                    🌤️ Get Weather Report ({{ agent.price }} AED)
                                 </button>
                             {% else %}
                                 <div style="background: #fef2f2; color: #dc2626; padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); font-size: 14px; font-weight: 500; text-align: center;">
-                                    Insufficient balance! You need 2.00 AED.
+                                    Insufficient balance! You need {{ agent.price }} AED.
                                 </div>
                                 <a href="{% url 'wallet:wallet' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
                                     💰 Top Up Wallet

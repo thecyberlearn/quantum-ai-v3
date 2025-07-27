@@ -98,9 +98,9 @@
         // Copy to Clipboard Utility
         function copyToClipboard(text, successMessage = 'Copied to clipboard!') {
             navigator.clipboard.writeText(text).then(() => {
-                showToast(`📋 ${successMessage}`, 'success');
+                showToast('📋 Copied to clipboard!', 'success');
             }).catch(() => {
-                showToast('Failed to copy to clipboard', 'error');
+                showToast('❌ Failed to copy to clipboard', 'error');
             });
         }
 
@@ -113,7 +113,7 @@
             a.download = filename || `content-${Date.now()}.txt`;
             a.click();
             URL.revokeObjectURL(url);
-            showToast(`💾 ${successMessage}`, 'success');
+            // No toast for download - file download is confirmation enough
         }
 
         // Close panel on Escape key
@@ -129,7 +129,7 @@
                 const content = document.getElementById('reportContent');
                 if (content) {
                     const text = content.textContent || content.innerText || '';
-                    copyToClipboard(text, '5 Whys report copied to clipboard!');
+                    copyToClipboard(text);
                 }
             },
 
@@ -137,7 +137,7 @@
                 const content = document.getElementById('reportContent');
                 if (content) {
                     const text = content.textContent || content.innerText || '';
-                    downloadAsFile(text, `5-whys-report-${Date.now()}.txt`, '5 Whys report downloaded!');
+                    downloadAsFile(text, `5-whys-report-${Date.now()}.txt`);
                 }
             }
         };
@@ -697,7 +697,7 @@
                     updateWalletBalance(data.wallet_balance);
                 }
                 
-                showToast('✅ Report generated and payment processed!', 'success');
+                showToast('✅ 5 Whys analysis completed successfully!', 'success');
             } else {
                 showToast(data.error || 'Failed to generate report', 'error');
             }
@@ -756,12 +756,23 @@
     
     function copyReport() {
         const reportText = generateTextForExport('reportContent');
-        copyToClipboard(reportText, '📋 Report copied to clipboard!');
+        navigator.clipboard.writeText(reportText).then(() => {
+            showToast('📋 Copied to clipboard!', 'success');
+        }).catch(() => {
+            showToast('❌ Failed to copy to clipboard', 'error');
+        });
     }
     
     function downloadReport() {
         const reportText = generateTextForExport('reportContent');
-        downloadAsFile(reportText, `five-whys-analysis-${Date.now()}.txt`, '💾 Report downloaded!');
+        const blob = new Blob([reportText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `five-whys-analysis-${Date.now()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        // No toast for download - file download is confirmation enough
     }
     
     function generateTextForExport(elementId) {

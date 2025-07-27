@@ -574,7 +574,7 @@
         }
         
         const currentBalance = parseFloat(document.getElementById('walletBalance').textContent) || 0;
-        const requiredBalance = window.AGENT_PRICE || 3.00;
+        const requiredBalance = window.AGENT_PRICE || {{ agent.price }};
         if (currentBalance < requiredBalance) {
             showToast(`Insufficient balance! You need ${requiredBalance} AED.`, 'error');
             setTimeout(() => window.location.href = document.body.getAttribute('data-wallet-url'), 2000);
