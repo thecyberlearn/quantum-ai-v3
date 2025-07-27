@@ -8,6 +8,7 @@ Welcome to the comprehensive documentation for Quantum Tasks AI - a Django-based
 - **Deploying to production?** See [Railway Deployment Guide](./deployment/railway-deployment.md)
 - **Changing domains?** Follow [Domain Change Guide](./deployment/domain-change-guide.md)
 - **Building agents?** Check [Agent Creation Guide](./development/agent-creation.md)
+- **Automating documentation?** See [Auto-Documentation System](./development/auto-documentation-system.md)
 
 ---
 
@@ -21,6 +22,7 @@ Documentation for local development and agent creation.
 | [Setup Guide](./development/setup-guide.md) | Local development environment setup |
 | [Agent Creation](./development/agent-creation.md) | Building new AI agents for the platform |
 | [Testing Guide](./development/testing.md) | Testing procedures and best practices |
+| [Auto-Documentation System](./development/auto-documentation-system.md) | Automated documentation update system |
 
 ### 🚀 Deployment
 Production deployment and configuration guides.

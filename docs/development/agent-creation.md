@@ -346,6 +346,207 @@ function displayResults(result) {
 }
 ```
 
+## Toast Messaging Standards
+
+### Standardized Toast Messages
+
+All agents must follow these standardized toast message patterns for consistency:
+
+#### Success Messages
+```javascript
+// Agent completion - use specific agent action
+AgentUtils.showToast('✅ Data analysis completed successfully!', 'success');
+AgentUtils.showToast('✅ Weather report completed successfully!', 'success');
+AgentUtils.showToast('✅ Email completed successfully!', 'success');
+```
+
+#### Clipboard Operations
+```javascript
+// Always use this exact message for clipboard operations
+navigator.clipboard.writeText(text).then(() => {
+    AgentUtils.showToast('📋 Copied to clipboard!', 'success');
+}).catch(() => {
+    AgentUtils.showToast('❌ Failed to copy to clipboard', 'error');
+});
+```
+
+#### Error Messages
+```javascript
+// Use ❌ emoji prefix for all error messages
+AgentUtils.showToast('❌ Network error occurred', 'error');
+AgentUtils.showToast('❌ Insufficient wallet balance', 'error');
+AgentUtils.showToast('❌ Processing failed', 'error');
+```
+
+#### No Toast Scenarios
+Do NOT show toast messages for:
+- **Download operations** - File download is confirmation enough
+- **Reset operations** - Visual feedback is sufficient
+- **Form validation** - Use inline error messages instead
+
+### Toast Function Naming
+
+Each agent should maintain its own utils object with a `showToast` method:
+
+```javascript
+// Data Analyzer
+const DataAnalyzerUtils = {
+    showToast(message, type = 'info') { /* standard implementation */ }
+};
+
+// Social Ads Generator  
+const SocialAdsUtils = {
+    showToast(message, type = 'info') { /* standard implementation */ }
+};
+
+// Weather Reporter
+const WeatherUtils = {
+    showToast(message, type = 'info') { /* standard implementation */ }
+};
+```
+
+## Dynamic Pricing Implementation
+
+### Template Variables
+
+All pricing must use dynamic template variables instead of hardcoded values:
+
+#### Button Text
+```html
+<!-- CORRECT -->
+<button type="submit" class="btn btn-primary btn-full">
+    🚀 Analyze Data ({{ agent.price }} AED)
+</button>
+
+<!-- INCORRECT -->  
+<button type="submit" class="btn btn-primary btn-full">
+    🚀 Analyze Data (5.00 AED)
+</button>
+```
+
+#### Balance Validation  
+```html
+<!-- CORRECT -->
+{% if user.wallet_balance >= agent.price %}
+    <button>Process Request</button>
+{% else %}
+    <div class="alert alert-error">
+        Insufficient balance! You need {{ agent.price }} AED.
+    </div>
+{% endif %}
+
+<!-- INCORRECT -->
+{% if user.wallet_balance >= 5.00 %}
+```
+
+#### JavaScript Price Checks
+```javascript
+// CORRECT - Use template variable
+document.body.setAttribute('data-agent-price', '{{ agent.price }}');
+const agentPrice = parseFloat(document.body.getAttribute('data-agent-price'));
+
+if (walletBalance < agentPrice) {
+    showToast('Insufficient wallet balance', 'error');
+}
+
+// INCORRECT - Hardcoded value
+if (walletBalance < 5.00) {
+```
+
+### Agent Context Required
+
+Ensure your view passes the agent context:
+
+```python
+# views.py
+from agent_base.models import BaseAgent
+
+def your_agent_detail(request):
+    try:
+        agent = BaseAgent.objects.get(slug='your-agent-slug')
+    except BaseAgent.DoesNotExist:
+        # Handle missing agent
+        pass
+        
+    context = {
+        'agent': agent,  # Required for {{ agent.price }}
+        # other context...
+    }
+    return render(request, 'your_agent/detail.html', context)
+```
+
+## Best Practices for Agent Modifications
+
+### Preserving Existing Functionality
+
+When updating agents, follow these critical guidelines:
+
+#### DO NOT Break Result Display Logic
+```javascript
+// CORRECT - Preserve agent-specific utils and function names
+const DataAnalyzerUtils = {
+    displayResults(result) { /* existing logic */ }
+};
+
+// INCORRECT - Don't change to generic names
+const AgentUtils = {
+    displayResults(result) { /* breaks existing calls */ }
+};
+```
+
+#### Each Agent Has Unique Display Patterns
+Different agents handle results differently:
+- **Data Analyzer**: Formatted HTML output with sections
+- **Weather Reporter**: Text-based reports with immediate API response
+- **Social Ads**: Multiple ad variants with copy/download options
+- **Email Writer**: Rich text formatting with email structure
+
+**Never standardize result display logic across agents.**
+
+#### Safe Modification Approach
+1. **Test Before Changes**: Always verify current functionality works
+2. **Isolated Updates**: Change only what's explicitly requested
+3. **Preserve Names**: Keep existing function and object names
+4. **Incremental Testing**: Test after each small change
+
+### Common Pitfalls to Avoid
+
+#### Over-Standardization
+```javascript
+// WRONG - Don't rename existing functions
+// Before: DataAnalyzerUtils.displayResults()
+// After: AgentUtils.displayResults() // BREAKS FUNCTIONALITY
+
+// CORRECT - Keep existing structure, update content only
+// Before: showToast('Data copied!', 'success');
+// After: showToast('📋 Copied to clipboard!', 'success');
+```
+
+#### Breaking Function Calls
+```javascript
+// WRONG - Changing function names breaks templates
+SocialAdsUtils.displayResults() → AgentUtils.displayResults()
+
+// CORRECT - Preserve all function names and calling patterns
+SocialAdsUtils.displayResults() → SocialAdsUtils.displayResults()
+```
+
+#### Git Recovery When Things Break
+If agent functionality breaks:
+```bash
+# Check what changed
+git status
+git diff
+
+# Reset to last working commit
+git log --oneline -10
+git reset --hard <commit-hash>
+
+# Verify functionality restored
+python manage.py runserver
+# Test affected agents manually
+```
+
 ## URL Configuration
 
 ### App URLs (`your_agent/urls.py`)
@@ -458,6 +659,52 @@ Visit `/marketplace/` to verify your agent appears in the catalog.
 5. **Follow security practices** - use CSRF tokens, validate inputs, check permissions
 6. **Maintain consistent pricing** - use decimal values with 2 places
 7. **Handle errors gracefully** - provide meaningful error messages via toast notifications
+8. **Preserve existing functionality** - Never break result display logic when making updates
+9. **Test after each change** - Verify functionality works before proceeding to next modification
+10. **Use git for safety** - Commit working states and reset if changes break functionality
+
+## Testing Procedures for Agent Modifications
+
+### Pre-Modification Testing
+```bash
+# 1. Test current functionality
+python manage.py runserver
+# Visit agent page and test full workflow
+
+# 2. Create git checkpoint
+git add .
+git commit -m "Working state before modifications"
+```
+
+### During Modification Testing
+```bash
+# Test after each significant change
+python manage.py runserver
+# Test the specific functionality you modified
+
+# If something breaks:
+git status
+git diff
+# Identify the breaking change and fix or revert
+```
+
+### Post-Modification Testing
+```bash
+# 1. Full agent workflow test
+# - Form submission
+# - Processing status display
+# - Results display
+# - Copy/download functionality
+
+# 2. Cross-agent functionality test
+# - Quick agents panel
+# - Navigation between agents
+# - Wallet balance updates
+
+# 3. Browser console check
+# - No JavaScript errors
+# - No broken network requests
+```
 
 ## Troubleshooting
 
@@ -485,3 +732,26 @@ python manage.py shell
 ```
 
 This guide ensures consistent, maintainable agent creation using the proven template prototype system.
+
+## Recent Improvements (July 2025)
+
+### ✅ Toast Messaging Standardization
+All agents now use consistent toast messages:
+- **Success**: `✅ [Action] completed successfully!`
+- **Clipboard**: `📋 Copied to clipboard!`
+- **Errors**: `❌ [Error description]`
+- **Removed**: Download and reset toast notifications (visual feedback sufficient)
+
+### ✅ Dynamic Pricing Implementation
+All agents now use `{{ agent.price }}` template variables instead of hardcoded prices:
+- Button text: `Process Request ({{ agent.price }} AED)`
+- Balance validation: `{% if user.wallet_balance >= agent.price %}`
+- JavaScript checks: `data-agent-price="{{ agent.price }}"`
+
+### ✅ Enhanced Agent Template Architecture
+- Improved component-based template structure
+- Standardized CSS and JavaScript utilities
+- Better security with XSS prevention
+- Consistent wallet balance integration
+
+These improvements ensure all agents maintain consistent user experience while syncing with Railway database pricing changes.

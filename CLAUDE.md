@@ -1,6 +1,23 @@
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+First think through the problem, read the codebase for relevant files, and write a plan to tasks/todo.md.
+
+The plan should have a list of todo items that you can check off as you complete them.
+
+Before you begin working, check in with me and I will verify the plan.
+
+Then, begin working on the todo items, marking them as complete as you go.
+
+Please every step of the way just give me a high level explanation of what changes you made.
+
+Make every task and code change you do as simple as possible. We want to avoid making any massive or complex changes. Every change should impact as little code as possible. Everything is about simplicity.
+
+Finally, add a review section to the todo.md file with a summary of the changes you made and any other relevant information.
+
+DO NOT BE LAZY. NEVER BE LAZY. IF THERE IS A BUG FIND THE ROOT CAUSE AND FIX IT. NO TEMPORARY FIXES. YOU ARE A SENIOR DEVELOPER. NEVER BE LAZY
+
+MAKE ALL FIXES AND CODE CHANGES AS SIMPLE AS HUMANLY POSSIBLE. THEY SHOULD ONLY IMPACT NECESSARY CODE RELEVANT TO THE TASK AND NOTHING ELSE. IT SHOULD IMPACT AS LITTLE CODE AS POSSIBLE. YOUR GOAL IS TO NOT INTRODUCE ANY BUGS. IT’S ALL ABOUT SIMPLICITY
 
 ## 📚 Documentation
 
@@ -14,6 +31,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - [Domain Change Guide](./docs/deployment/domain-change-guide.md) - Complete domain change instructions
 - [Railway Deployment](./docs/deployment/railway-deployment.md) - Production deployment guide
 - [Environment Variables](./docs/deployment/environment-variables.md) - Complete environment reference
+- [Auto-Documentation System](./docs/development/auto-documentation-system.md) - Automated documentation updates
 
 ## Project Overview
 
@@ -87,6 +105,18 @@ python manage.py test_webhook
 
 # Cleanup uploaded files
 python manage.py cleanup_uploads
+```
+
+### Documentation Management
+```bash
+# Auto-update documentation (manual trigger)
+./scripts/update_docs_manual.sh
+
+# Setup git hooks for automatic documentation updates
+./scripts/setup_git_hooks.sh
+
+# Run documentation update script directly
+python3 scripts/auto_update_docs.py
 ```
 
 ### N8N Workflow Management
@@ -451,3 +481,6 @@ curl http://localhost:8000/health/
 - Marketplace functionality is in `agent_base` app, not `core`
 
 Always run `python manage.py check_db` before making database-related changes to ensure proper configuration.
+
+---
+Last updated: 2025-07-27 17:00:00
