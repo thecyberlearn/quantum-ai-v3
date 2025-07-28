@@ -13,15 +13,6 @@ AGENT_CONFIGS = {
         'webhook_url': 'http://localhost:5678/webhook/2dc234d8-7217-454a-83e9-81afe5b4fe2d',
     },
     
-    'data-analyzer': {
-        'name': 'Data Analyzer',
-        'description': 'Upload and analyze data files with AI-powered insights and visualizations',
-        'category': 'analytics',
-        'price': 3.0,
-        'icon': '📊',
-        'webhook_url': 'http://localhost:5678/webhook/data-analyzer-webhook-id',
-    },
-    
     'job-posting-generator': {
         'name': 'Job Posting Generator',
         'description': 'Create professional job postings that attract top talent',
@@ -47,6 +38,14 @@ AGENT_CONFIGS = {
         'price': 1.0,
         'icon': '🌤️',
         'webhook_url': 'http://localhost:5678/webhook/weather-webhook-id',
+    },
+    'template-demo': {
+        'name': 'Template Demo',
+        'description': 'Demo of the fixed agent template starter with all enhancements',
+        'category': 'demo',
+        'price': 0.5,
+        'icon': '🎯',
+        'webhook_url': 'http://localhost:5678/webhook/template-demo',
     }
 }
 

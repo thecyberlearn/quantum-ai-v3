@@ -12,7 +12,7 @@ REPLACE THE FOLLOWING:
 5. Agent-specific JavaScript (optional)
 
 KEEP THE FOLLOWING:
-- All {% include %} statements for shared components
+- All include statements for shared components
 - Basic template structure and CSS links
 - Processing and results components
 #}
@@ -21,21 +21,322 @@ KEEP THE FOLLOWING:
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/agent-base.css' %}?v={{ timestamp }}">
-{# Add agent-specific CSS here if needed #}
 <style>
-/* Agent-specific styles go here if needed */
+/* Enhanced Agent Template Styles - Complete Framework */
+.form-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--outline-variant);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    line-height: 1.5;
+    transition: all 0.2s ease;
+    background: var(--surface);
+    color: var(--on-surface);
+    font-family: inherit;
+    resize: vertical;
+    min-height: 120px;
+}
+
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.form-textarea:hover {
+    border-color: var(--on-surface-variant);
+}
+
+/* Enhanced Form Sections */
+.section-container {
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background: var(--surface-variant);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--outline-variant);
+}
+
+.section-subtitle {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--on-surface);
+    margin: 0 0 var(--spacing-lg) 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.section-subtitle::before {
+    content: '';
+    width: 3px;
+    height: 16px;
+    background: var(--primary);
+    border-radius: 2px;
+}
+
+/* Error styling */
+.form-textarea.error,
+.form-input.error {
+    border-color: var(--error);
+}
+
+.form-error {
+    color: var(--error);
+    font-size: 12px;
+    margin-top: var(--spacing-xs);
+    font-weight: 500;
+}
+
+/* Enhanced Results Display */
+.results-content {
+    background: var(--surface-variant);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.7;
+    color: var(--on-surface);
+    font-size: 15px;
+}
+
+/* Results Typography */
+.results-content h1,
+.results-content h2,
+.results-content h3 {
+    color: var(--primary);
+    font-weight: 700;
+    margin: var(--spacing-xl) 0 var(--spacing-md) 0;
+    line-height: 1.3;
+}
+
+.results-content h1 {
+    font-size: 24px;
+    border-bottom: 3px solid var(--primary);
+    padding-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+.results-content h2 {
+    font-size: 20px;
+    margin-top: var(--spacing-xl);
+    position: relative;
+    padding-left: var(--spacing-md);
+}
+
+.results-content h2::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--primary);
+    border-radius: 2px;
+}
+
+.results-content h3 {
+    font-size: 18px;
+    color: var(--on-surface);
+    font-weight: 600;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--radius-sm);
+    border-left: 4px solid var(--primary);
+    margin: var(--spacing-lg) 0 var(--spacing-md) 0;
+}
+
+.results-content strong {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Toast Notifications */
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--surface);
+    border: 1px solid var(--outline);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    max-width: 400px;
+    font-size: 14px;
+    font-weight: 500;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+}
+
+.toast.show {
+    transform: translateX(0);
+}
+
+.toast.success {
+    border-color: var(--success);
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
+.toast.error {
+    border-color: var(--error);
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.toast.info {
+    border-color: var(--primary);
+    background: #f0f9ff;
+    color: #0369a1;
+}
+
+/* File Upload Styling */
+.file-upload-container {
+    margin-bottom: var(--spacing-md);
+}
+
+.file-upload-area {
+    border: 2px dashed var(--outline-variant);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-xl);
+    text-align: center;
+    background: var(--surface);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.file-upload-area:hover,
+.file-upload-area.dragover {
+    border-color: var(--primary);
+    background: var(--surface-variant);
+}
+
+.file-upload-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.file-upload-icon {
+    font-size: 32px;
+    margin-bottom: var(--spacing-sm);
+}
+
+.file-upload-text {
+    font-size: 16px;
+    color: var(--on-surface);
+}
+
+.file-upload-hint {
+    font-size: 14px;
+    color: var(--on-surface-variant);
+}
+
+.file-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.file-info {
+    background: var(--surface-variant);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    border: 1px solid var(--outline-variant);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.file-name {
+    font-weight: 500;
+    color: var(--on-surface);
+}
+
+.file-size {
+    font-size: 12px;
+    color: var(--on-surface-variant);
+}
+
+.file-remove {
+    background: var(--error);
+    color: white;
+    border: none;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.file-remove:hover {
+    background: #dc2626;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .toast {
+        left: 20px;
+        right: 20px;
+        max-width: none;
+        transform: translateY(-100%);
+    }
+    
+    .toast.show {
+        transform: translateY(0);
+    }
+    
+    .results-content {
+        padding: var(--spacing-md);
+        font-size: 14px;
+    }
+    
+    .results-content h1 {
+        font-size: 20px;
+    }
+    
+    .results-content h2 {
+        font-size: 18px;
+    }
+    
+    .results-content h3 {
+        font-size: 16px;
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+    
+    .section-container {
+        padding: var(--spacing-md);
+    }
+    
+    .file-upload-area {
+        padding: var(--spacing-lg);
+    }
+}
+{# Add agent-specific CSS here if needed #}
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Agent Header Component - KEEP THIS -->
-{% include "workflows/components/agent_header.html" with agent_title=agent_config.name agent_subtitle=agent_config.description %}
+<script>
+// Set data attributes for JavaScript access
+document.body.setAttribute('data-user-authenticated', '{{ user.is_authenticated|yesno:"true,false" }}');
+document.body.setAttribute('data-agent-price', '{{ agent_config.price }}');
+</script>
 
-<!-- Quick Agent Access Panel Component - KEEP THIS -->
-{% include "workflows/components/quick_agents_panel.html" %}
+<div class="agent-container">
+    <!-- Agent Header Component - KEEP THIS -->
+    {% include "workflows/components/agent_header.html" with agent_title=agent_config.name agent_subtitle=agent_config.description %}
 
-<!-- Main Agent Grid -->
-<div class="agent-grid">
+    <!-- Quick Agent Access Panel Component - KEEP THIS -->
+    {% include "workflows/components/quick_agents_panel.html" %}
+
+    <!-- Main Agent Grid -->
+    <div class="agent-grid">
     <!-- CUSTOMIZE THIS SECTION: Agent-Specific Form Widget -->
     <div class="agent-widget widget-large" style="flex: 1; margin-right: clamp(0px, var(--spacing-lg), 2vw);">
         <div class="widget-header">
@@ -90,6 +391,40 @@ KEEP THE FOLLOWING:
                         <div id="example_select-error" class="form-error" style="display: none;"></div>
                     </div>
                 </div>
+                
+                <!-- OPTIONAL: File Upload Section - Remove this section if not needed -->
+                <div class="section-container"> <!-- File upload section enabled -->
+                    <h4 class="section-subtitle">📁 File Upload (Optional)</h4>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="example_file">Upload File (Optional)</label>
+                        <div class="file-upload-container" data-field-name="example_file">
+                            <div class="file-upload-area" id="example_file_upload_area">
+                                <div class="file-upload-content">
+                                    <div class="file-upload-icon">📁</div>
+                                    <div class="file-upload-text">
+                                        <strong>Click to upload</strong> or drag and drop
+                                    </div>
+                                    <div class="file-upload-hint">
+                                        Supported formats: PDF, DOC, TXT, etc.
+                                    </div>
+                                </div>
+                                <input type="file" 
+                                       id="example_file" 
+                                       name="example_file" 
+                                       class="file-input"
+                                       accept=".pdf,.doc,.docx,.txt">
+                            </div>
+                            <div class="file-info" id="example_file_file_info" style="display: none;">
+                                <div class="file-name"></div>
+                                <div class="file-size"></div>
+                                <button type="button" class="file-remove" onclick="removeFile('example_file')">Remove</button>
+                            </div>
+                        </div>
+                        <div class="form-help">Upload a file if needed for processing</div>
+                        <div id="example_file-error" class="form-error" style="display: none;"></div>
+                    </div>
+                </div>
                 {# END CUSTOMIZE SECTION #}
 
                 <!-- Submit Button with Balance Check - KEEP THIS STRUCTURE -->
@@ -121,15 +456,16 @@ KEEP THE FOLLOWING:
     <!-- How It Works Widget - KEEP THIS, CUSTOMIZE steps parameter -->
     {# CUSTOMIZE: Change "generic" to your agent-specific steps or keep as is #}
     {% include "workflows/components/how_it_works_widget.html" with steps="generic" %}
+    </div>
+
+    <!-- Processing Status Component - KEEP THIS -->
+    {# CUSTOMIZE: Change status messages to match your agent's processing #}
+    {% include "workflows/components/processing_status.html" with status_title="Processing your request..." status_text="Please wait while we generate your content." %}
+    
+    <!-- Results Component - KEEP THIS -->
+    {# CUSTOMIZE: Change results_title to match your agent's output #}
+    {% include "workflows/components/results_container.html" with results_title="Generated Results" %}
 </div>
-
-<!-- Processing Status Component - KEEP THIS -->
-{# CUSTOMIZE: Change status messages to match your agent's processing #}
-{% include "workflows/components/processing_status.html" with status_title="Processing your request..." status_text="Please wait while we generate your content." %}
-
-<!-- Results Component - KEEP THIS -->
-{# CUSTOMIZE: Change results_title to match your agent's output #}
-{% include "workflows/components/results_container.html" with results_title="Generated Results" %}
 {% endblock %}
 
 {% block extra_js %}
@@ -139,38 +475,129 @@ KEEP THE FOLLOWING:
 
 {# CUSTOMIZE: Add agent-specific JavaScript inline if needed #}
 <script>
-// Agent-specific JavaScript goes here if needed
+// Agent-specific JavaScript - Enhanced Template with Validation
 // You have access to all WorkflowsCore functions:
 // - WorkflowsCore.showToast(message, type)
 // - WorkflowsCore.showProcessing(title)
 // - WorkflowsCore.showResults(content, title)
 // - WorkflowsCore.copyToClipboard(text, message)
 // - WorkflowsCore.downloadAsFile(content, filename, message)
+// - WorkflowsCore.showFieldError(fieldName, message)
+// - WorkflowsCore.clearFieldError(fieldName)
 // - And many more...
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize your agent-specific functionality here
-    console.log('YOUR_AGENT_SLUG template loaded');
+    console.log('Agent template loaded');
     
-    // Example: Handle form submission
+    // Handle form submission with validation
     const form = document.getElementById('agentForm');
     if (form) {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             
+            // Validate required fields
+            const exampleInput = document.getElementById('example_input');
+            const exampleTextarea = document.getElementById('example_textarea');
+            const exampleSelect = document.getElementById('example_select');
+            
+            // Clear previous errors
+            WorkflowsCore.clearFieldError('example_input');
+            WorkflowsCore.clearFieldError('example_textarea');
+            WorkflowsCore.clearFieldError('example_select');
+            
+            let hasErrors = false;
+            
+            // Validate input field
+            if (!exampleInput.value.trim()) {
+                WorkflowsCore.showFieldError('example_input', 'This field is required');
+                hasErrors = true;
+            }
+            
+            // Validate textarea
+            if (!exampleTextarea.value.trim()) {
+                WorkflowsCore.showFieldError('example_textarea', 'This field is required');
+                hasErrors = true;
+            }
+            
+            // Validate select
+            if (!exampleSelect.value) {
+                WorkflowsCore.showFieldError('example_select', 'Please select an option');
+                hasErrors = true;
+            }
+            
+            // Check authentication and balance
+            if (!WorkflowsCore.checkAuthentication()) {
+                return;
+            }
+            
+            const agentPrice = parseFloat(document.body.getAttribute('data-agent-price'));
+            if (!WorkflowsCore.checkBalance(agentPrice)) {
+                return;
+            }
+            
+            if (hasErrors) {
+                WorkflowsCore.showToast('Please fix the errors above', 'error');
+                return;
+            }
+            
             // Show processing
             WorkflowsCore.showProcessing('Processing your request...');
             
-            // Add your form processing logic here
-            // For example: validate fields, make API calls, etc.
+            // Submit form data
+            const formData = new FormData(form);
             
-            // Example: Show results after processing
-            setTimeout(() => {
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                // Handle the response - customize this for your agent
                 WorkflowsCore.showResults(
-                    '<h3>Sample Results</h3><p>Your processing results would appear here.</p>',
+                    '<h3>Processing Complete</h3><p>Your request has been processed successfully. Results would appear here in a real implementation.</p>',
                     'Generated Results'
                 );
-            }, 3000);
+                WorkflowsCore.showToast('✅ Processing completed!', 'success');
+            })
+            .catch(error => {
+                console.error('Processing error:', error);
+                WorkflowsCore.hideProcessing();
+                WorkflowsCore.showToast('❌ Processing failed. Please try again.', 'error');
+            });
+        });
+    }
+    
+    // Real-time validation on input
+    const inputs = document.querySelectorAll('#agentForm input, #agentForm textarea, #agentForm select');
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            if (this.value.trim()) {
+                WorkflowsCore.clearFieldError(this.name);
+            }
+        });
+    });
+    
+    // File validation if file input exists
+    const fileInput = document.getElementById('example_file');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                // Check file size (limit to 10MB)
+                if (file.size > 10 * 1024 * 1024) {
+                    WorkflowsCore.showFieldError('example_file', 'File size must be less than 10MB');
+                    this.value = '';
+                    return;
+                }
+                
+                // Clear any previous errors
+                WorkflowsCore.clearFieldError('example_file');
+                WorkflowsCore.showToast(`📁 File selected: ${file.name}`, 'success');
+            }
         });
     }
 });

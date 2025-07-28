@@ -38,10 +38,10 @@ def workflow_handler(request, agent_slug):
     # Determine template path - use individual templates
     template_mapping = {
         'social-ads-generator': 'workflows/social-ads-generator.html',
-        'data-analyzer': 'workflows/data-analyzer.html', 
         'job-posting-generator': 'workflows/job-posting-generator.html',
         'five-whys-analyzer': 'workflows/five-whys-analyzer.html',
         'weather-reporter': 'workflows/weather-reporter.html',
+        'template-demo': 'workflows/agent-template-starter.html',
     }
     
     template_name = template_mapping.get(agent_slug)
@@ -63,10 +63,10 @@ def process_workflow_request(request, agent_slug, agent_config, agent):
     # Template mapping for error returns
     template_mapping = {
         'social-ads-generator': 'workflows/social-ads-generator.html',
-        'data-analyzer': 'workflows/data-analyzer.html', 
         'job-posting-generator': 'workflows/job-posting-generator.html',
         'five-whys-analyzer': 'workflows/five-whys-analyzer.html',
         'weather-reporter': 'workflows/weather-reporter.html',
+        'template-demo': 'workflows/agent-template-starter.html',
     }
     
     try:

@@ -1,29 +1,45 @@
 === Documentation Auto-Update Summary ===
-Update Date: 2025-07-27 17:53:31
+Update Date: 2025-07-28 20:06:47
 
 Recent Commits:
+  - 9e6ec90 🚀 Implement simplified workflows system with shared components
+  - 43efa46 📚 Auto-update documentation and finalize deployment control
   - ffb4292 🔒 Implement comprehensive deployment control system
-  - 87397ac 🤖 Add specialized subagents and auto-documentation system
-  - fa38fbd 🎨 Toast standardization and dynamic pricing - safe approach
 
-Deployment Changes:
-  - .railway.env.example
-  - railway.json
-  - railway.staging.json
+Agents Changes:
+  - workflows/config/agents.py
+  - workflows/models.py
+  - workflows/templates/workflows/agent-template-starter.html
+  - workflows/templates/workflows/components/agent_header.html
+  - workflows/templates/workflows/components/quick_agents_panel.html
+
+Core Changes:
+  - netcop_hub/settings.py
+  - netcop_hub/urls.py
+  - wallet/urls.py
+  - wallet/views.py
+  - workflows/urls.py
 
 Documentation Changes:
-  - .github/PULL_REQUEST_TEMPLATE.md
   - CLAUDE.md
-  - DEVELOPMENT_WORKFLOW.md
-  - docs/deployment/deployment-checklist.md
-  - docs/deployment/deployment-control-guide.md
+  - social_ads_generator/n8n_workflows/README_Optimized.md
+
+Frontend Changes:
+  - social_ads.html
+  - social_ads_generator/n8n_workflows/Social_Ads_Optimized.json
+  - social_ads_generator/templates/social_ads_generator/detail.html
+  - static/js/social-ads.js
+  - static/js/workflows-core.js
 
 Backend Changes:
-  - docs_update_summary.txt
-  - scripts/setup_branch_protection.sh
+  - workflows/__init__.py
+  - workflows/admin.py
+  - workflows/apps.py
+  - workflows/config/__init__.py
+  - workflows/migrations/0001_initial.py
 
 Updated Documentation Files:
-  - /home/amit/Desktop/quantum_ai/CLAUDE.md
-  - /home/amit/Desktop/quantum_ai/docs/deployment/railway-deployment.md
+  - /home/amit/projects/quantum_ai_v2/CLAUDE.md
+  - /home/amit/projects/quantum_ai_v2/docs/development/agent-creation.md
 
 === End Summary ===
