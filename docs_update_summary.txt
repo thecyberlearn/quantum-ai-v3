@@ -1,42 +1,23 @@
 === Documentation Auto-Update Summary ===
-Update Date: 2025-07-28 20:06:47
+Update Date: 2025-07-28 21:14:01
 
 Recent Commits:
+  - e2bd3b3 🔧 Fix agent-template-starter with comprehensive enhancements
   - 9e6ec90 🚀 Implement simplified workflows system with shared components
   - 43efa46 📚 Auto-update documentation and finalize deployment control
-  - ffb4292 🔒 Implement comprehensive deployment control system
 
 Agents Changes:
   - workflows/config/agents.py
-  - workflows/models.py
   - workflows/templates/workflows/agent-template-starter.html
-  - workflows/templates/workflows/components/agent_header.html
-  - workflows/templates/workflows/components/quick_agents_panel.html
 
 Core Changes:
-  - netcop_hub/settings.py
-  - netcop_hub/urls.py
-  - wallet/urls.py
-  - wallet/views.py
-  - workflows/urls.py
+  - workflows/views.py
 
 Documentation Changes:
   - CLAUDE.md
-  - social_ads_generator/n8n_workflows/README_Optimized.md
-
-Frontend Changes:
-  - social_ads.html
-  - social_ads_generator/n8n_workflows/Social_Ads_Optimized.json
-  - social_ads_generator/templates/social_ads_generator/detail.html
-  - static/js/social-ads.js
-  - static/js/workflows-core.js
 
 Backend Changes:
-  - workflows/__init__.py
-  - workflows/admin.py
-  - workflows/apps.py
-  - workflows/config/__init__.py
-  - workflows/migrations/0001_initial.py
+  - docs_update_summary.txt
 
 Updated Documentation Files:
   - /home/amit/projects/quantum_ai_v2/CLAUDE.md
