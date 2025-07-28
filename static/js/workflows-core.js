@@ -350,6 +350,74 @@ class WorkflowsCore {
     }
     
     /**
+     * Copy agent results to clipboard (common agent function)
+     */
+    static copyResults() {
+        const content = document.getElementById('resultsContent') || document.querySelector('.results-content');
+        if (content) {
+            const text = content.textContent || content.innerText || '';
+            this.copyToClipboard(text, 'Results copied to clipboard!');
+        } else {
+            this.showToast('❌ No results to copy', 'error');
+        }
+    }
+    
+    /**
+     * Download agent results as file (common agent function)
+     */
+    static downloadResults(filename = 'analysis-results.txt') {
+        const content = document.getElementById('resultsContent') || document.querySelector('.results-content');
+        if (content) {
+            const text = content.textContent || content.innerText || '';
+            this.downloadAsFile(text, filename, 'Results downloaded!');
+        } else {
+            this.showToast('❌ No results to download', 'error');
+        }
+    }
+    
+    /**
+     * Reset agent form and hide results (common agent function)
+     */
+    static resetForm() {
+        const form = document.getElementById('agentForm');
+        if (form) {
+            form.reset();
+        }
+        
+        const resultsContainer = document.getElementById('resultsContainer');
+        const processingStatus = document.getElementById('processingStatus');
+        
+        if (resultsContainer) resultsContainer.style.display = 'none';
+        if (processingStatus) processingStatus.style.display = 'none';
+        
+        // Reset file upload areas
+        const uploadAreas = document.querySelectorAll('.file-upload-area');
+        uploadAreas.forEach(area => {
+            area.classList.remove('file-selected');
+            const uploadText = area.querySelector('.upload-text');
+            if (uploadText) {
+                uploadText.innerHTML = `
+                    <div class="upload-icon">📁</div>
+                    <div><strong>Click to upload</strong> or drag and drop</div>
+                    <div>PDF files only</div>
+                `;
+            }
+        });
+        
+        // Reset radio selections to first option
+        const radioCards = document.querySelectorAll('.radio-card');
+        radioCards.forEach(card => card.classList.remove('selected'));
+        const firstCard = document.querySelector('.radio-card');
+        if (firstCard) {
+            firstCard.classList.add('selected');
+            const input = firstCard.querySelector('input[type="radio"]');
+            if (input) input.checked = true;
+        }
+        
+        this.showToast('🔄 Form reset', 'info');
+    }
+    
+    /**
      * Setup drag and drop for file inputs (enhanced from prototype)
      */
     static setupDragAndDrop(container, fileInput) {
@@ -459,6 +527,19 @@ function copyToClipboard(text, successMessage) {
 
 function downloadAsFile(content, filename, successMessage) {
     WorkflowsCore.downloadAsFile(content, filename, successMessage);
+}
+
+// Global convenience functions for common agent actions
+function copyResults() {
+    WorkflowsCore.copyResults();
+}
+
+function downloadResults(filename) {
+    WorkflowsCore.downloadResults(filename);
+}
+
+function resetForm() {
+    WorkflowsCore.resetForm();
 }
 
 // Initialize on DOM load
