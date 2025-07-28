@@ -1,10 +1,10 @@
 === Documentation Auto-Update Summary ===
-Update Date: 2025-07-28 22:33:04
+Update Date: 2025-07-28 22:35:24
 
 Recent Commits:
+  - 511c78b 🔧 Complete data analyzer webhook integration and file upload
   - 0495cf2 ✨ Implement shared utility functions across all agents
   - 08094a9 📚 Auto-update documentation after agent template fixes
-  - e2bd3b3 🔧 Fix agent-template-starter with comprehensive enhancements
 
 Agents Changes:
   - workflows/config/agents.py
@@ -12,9 +12,8 @@ Agents Changes:
 Core Changes:
   - workflows/views.py
 
-Frontend Changes:
-  - static/js/workflows-core.js
-  - workflows/templates/workflows/data-analyzer.html
+Documentation Changes:
+  - CLAUDE.md
 
 Backend Changes:
   - docs_update_summary.txt
