@@ -46,6 +46,15 @@ AGENT_CONFIGS = {
         'price': 0.5,
         'icon': '🎯',
         'webhook_url': 'http://localhost:5678/webhook/template-demo',
+    },
+    
+    'data-analyzer': {
+        'name': 'Data Analyzer',
+        'description': 'AI-powered analysis of your data files with comprehensive insights',
+        'category': 'analytics',
+        'price': 8.0,
+        'icon': '📊',
+        'webhook_url': 'http://localhost:5678/webhook/simple-pdf-processor',
     }
 }
 

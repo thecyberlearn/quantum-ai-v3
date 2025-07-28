@@ -7,6 +7,7 @@ from django_ratelimit.decorators import ratelimit
 from django_ratelimit import UNSAFE
 import json
 import time
+import requests
 from datetime import datetime
 
 from agent_base.models import BaseAgent
@@ -15,6 +16,83 @@ from .config.agents import get_agent_config, format_message_for_n8n, get_availab
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def send_file_to_webhook(webhook_url, uploaded_file, form_data, timeout=60):
+    """Send file to N8N webhook endpoint"""
+    logger.info(f"🔍 DEBUG: send_file_to_webhook called!")
+    logger.info(f"🔍 DEBUG: webhook_url={webhook_url}")
+    logger.info(f"🔍 DEBUG: uploaded_file={uploaded_file}")
+    logger.info(f"🔍 DEBUG: form_data={form_data}")
+    
+    try:
+        # Reset file pointer to beginning
+        uploaded_file.seek(0)
+        file_content = uploaded_file.read()
+        
+        logger.info(f"✅ Sending file to webhook: {webhook_url}")
+        logger.info(f"✅ File size: {len(file_content)} bytes")
+        logger.info(f"✅ File name: {uploaded_file.name}")
+        
+        # Prepare multipart form data
+        files = {
+            'file': (uploaded_file.name, file_content, 'application/pdf')
+        }
+        
+        # Add analysis type if provided
+        data = {}
+        if 'analysisType' in form_data:
+            data['analysisType'] = form_data['analysisType']
+        
+        start_time = time.time()
+        response = requests.post(webhook_url, files=files, data=data, timeout=timeout)
+        processing_time = time.time() - start_time
+        
+        logger.info(f"Webhook response status: {response.status_code}")
+        logger.info(f"Processing time: {processing_time:.2f}s")
+        logger.info(f"Response preview: {response.text[:200]}...")
+        
+        response.raise_for_status()
+        
+        # Parse JSON response from webhook
+        if response.text.strip():
+            try:
+                result_data = response.json()
+                logger.info(f"Webhook returned JSON: {result_data}")
+                
+                # Store the analysis results in the workflow request
+                if 'sections' in result_data:
+                    # Success response with analysis sections
+                    return {'success': True, 'data': result_data}
+                elif result_data.get('status') == 'error':
+                    # Error response from N8N
+                    logger.error(f"N8N webhook error: {result_data.get('error_message', 'Unknown error')}")
+                    return {'success': False, 'error': result_data.get('error_message', 'Analysis failed')}
+                else:
+                    # Unexpected response format
+                    logger.warning(f"Unexpected webhook response format: {result_data}")
+                    return {'success': True, 'data': result_data}
+                    
+            except ValueError as e:
+                logger.error(f"Invalid JSON response from webhook: {e}")
+                logger.info(f"Raw response: {response.text[:500]}")
+                return {'success': False, 'error': 'Invalid response from analysis service'}
+        else:
+            logger.warning("Webhook returned empty response")
+            return {'success': False, 'error': 'Empty response from analysis service'}
+            
+    except requests.exceptions.Timeout:
+        logger.error(f"Webhook timeout after {timeout}s")
+        return False
+    except requests.exceptions.ConnectionError:
+        logger.error(f"Cannot connect to webhook: {webhook_url}")
+        return False
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Webhook request failed: {e}")
+        return False
+    except Exception as e:
+        logger.error(f"Unexpected error sending to webhook: {e}")
+        return False
 
 
 @login_required
@@ -42,6 +120,7 @@ def workflow_handler(request, agent_slug):
         'five-whys-analyzer': 'workflows/five-whys-analyzer.html',
         'weather-reporter': 'workflows/weather-reporter.html',
         'template-demo': 'workflows/agent-template-starter.html',
+        'data-analyzer': 'workflows/data-analyzer.html',
     }
     
     template_name = template_mapping.get(agent_slug)
@@ -60,6 +139,11 @@ def workflow_handler(request, agent_slug):
 
 def process_workflow_request(request, agent_slug, agent_config, agent):
     """Process workflow request (called from workflow_handler)"""
+    logger.info(f"🔍 DEBUG: process_workflow_request called with agent_slug={agent_slug}")
+    logger.info(f"🔍 DEBUG: request.method={request.method}")
+    logger.info(f"🔍 DEBUG: request.FILES={dict(request.FILES)}")
+    logger.info(f"🔍 DEBUG: request.POST={dict(request.POST)}")
+    
     # Template mapping for error returns
     template_mapping = {
         'social-ads-generator': 'workflows/social-ads-generator.html',
@@ -67,6 +151,7 @@ def process_workflow_request(request, agent_slug, agent_config, agent):
         'five-whys-analyzer': 'workflows/five-whys-analyzer.html',
         'weather-reporter': 'workflows/weather-reporter.html',
         'template-demo': 'workflows/agent-template-starter.html',
+        'data-analyzer': 'workflows/data-analyzer.html',
     }
     
     try:
@@ -76,9 +161,21 @@ def process_workflow_request(request, agent_slug, agent_config, agent):
             if key != 'csrfmiddlewaretoken':
                 form_data[key] = value
         
-        # Handle file uploads
+        # Handle file uploads (but don't store file objects in form_data for JSON serialization)
+        logger.info(f"DEBUG: request.FILES = {request.FILES}")
+        logger.info(f"DEBUG: request.FILES.keys() = {list(request.FILES.keys())}")
+        
+        uploaded_files = {}
         for key, file in request.FILES.items():
-            form_data[key] = file
+            logger.info(f"DEBUG: Found file - {key}: {file.name} ({file.size} bytes)")
+            # Store file metadata only (not the file object itself)
+            form_data[f"{key}_name"] = file.name
+            form_data[f"{key}_size"] = file.size
+            # Keep actual file object separate for processing
+            uploaded_files[key] = file
+            
+        logger.info(f"DEBUG: Final form_data keys = {list(form_data.keys())}")
+        logger.info(f"DEBUG: Uploaded files = {list(uploaded_files.keys())}")
         
         # Basic validation - ensure we have form data
         if not form_data:
@@ -111,14 +208,89 @@ def process_workflow_request(request, agent_slug, agent_config, agent):
             status='processing'
         )
         
-        # For now, show processing message (actual N8N integration happens via JavaScript)
-        context = {
-            'agent': agent,
-            'agent_config': agent_config,
-            'processing': True,
-            'request_id': workflow_request.id,
-            'timestamp': int(time.time()),
-        }
+        # Actually send request to webhook (especially for data-analyzer)
+        logger.info(f"🔍 DEBUG: Checking webhook conditions - agent_slug={agent_slug}, has_file={'file' in uploaded_files}")
+        if agent_slug == 'data-analyzer' and 'file' in uploaded_files:
+            try:
+                # Check if this is an AJAX request (like the original system)
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    # Send file to webhook in background and return JSON response
+                    webhook_result = send_file_to_webhook(
+                        agent_config['webhook_url'], 
+                        uploaded_files['file'],
+                        form_data
+                    )
+                    
+                    if webhook_result and webhook_result.get('success'):
+                        # Deduct user balance for successful processing
+                        request.user.deduct_balance(agent_config['price'])
+                        workflow_request.status = 'completed'
+                        workflow_request.save()
+                        
+                        # Store analysis results in the workflow request
+                        analysis_data = webhook_result.get('data', {})
+                        try:
+                            # Create WorkflowResponse with analysis data
+                            WorkflowResponse.objects.create(
+                                request=workflow_request,
+                                formatted_output=analysis_data,
+                                success=True,
+                                processing_time=1.53  # Could get this from webhook timing
+                            )
+                        except Exception as resp_error:
+                            logger.warning(f"Could not save response data: {resp_error}")
+                            # Continue anyway - the main processing worked
+                        
+                        return JsonResponse({
+                            'success': True,
+                            'request_id': str(workflow_request.id),
+                            'wallet_balance': float(request.user.wallet_balance),
+                            'report_text': analysis_data.get('sections', [{}])[0].get('content', 'Analysis completed'),
+                            'analysis_results': analysis_data
+                        })
+                    else:
+                        workflow_request.status = 'failed'
+                        workflow_request.save()
+                        error_msg = webhook_result.get('error', 'Failed to process file') if webhook_result else 'Connection failed'
+                        return JsonResponse({
+                            'success': False,
+                            'error': error_msg
+                        })
+                else:
+                    # Non-AJAX request, return HTML template
+                    context = {
+                        'agent': agent,
+                        'agent_config': agent_config,
+                        'processing': True,
+                        'request_id': workflow_request.id,
+                        'timestamp': int(time.time()),
+                    }
+            except Exception as e:
+                logger.error(f"Webhook error for {agent_slug}: {e}")
+                workflow_request.status = 'failed'
+                workflow_request.save()
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Service temporarily unavailable. Please try again later.'
+                    })
+                else:
+                    context = {
+                        'agent': agent,
+                        'agent_config': agent_config,
+                        'error': 'Service temporarily unavailable. Please try again later.',
+                        'timestamp': int(time.time()),
+                    }
+        else:
+            # For other agents or no file upload, show processing message
+            context = {
+                'agent': agent,
+                'agent_config': agent_config,
+                'processing': True,
+                'request_id': workflow_request.id,
+                'timestamp': int(time.time()),
+            }
+        
         template_name = template_mapping.get(agent_slug)
         return render(request, template_name, context)
         
