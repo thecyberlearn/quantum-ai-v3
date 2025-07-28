@@ -82,6 +82,7 @@ INSTALLED_APPS = [
     'social_ads_generator',
     'email_writer',
     'five_whys_analyzer',
+    'workflows',  # New unified workflows app
 ]
 
 # Development apps (only in DEBUG mode)

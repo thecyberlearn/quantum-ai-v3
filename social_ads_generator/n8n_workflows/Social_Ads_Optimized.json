@@ -1,0 +1,268 @@
+{
+  "name": "Social Ads Optimized",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "social-ads-optimized",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 200],
+      "id": "webhook-node-001",
+      "webhookId": "social-ads-optimized"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "session-id",
+              "name": "sessionId",
+              "value": "={{ $json.body.sessionId }}",
+              "type": "string"
+            },
+            {
+              "id": "description", 
+              "name": "description",
+              "value": "={{ $json.body.description }}",
+              "type": "string"
+            },
+            {
+              "id": "platform",
+              "name": "social_platform", 
+              "value": "={{ $json.body.social_platform }}",
+              "type": "string"
+            },
+            {
+              "id": "emoji",
+              "name": "include_emoji",
+              "value": "={{ $json.body.include_emoji }}",
+              "type": "string"
+            },
+            {
+              "id": "language",
+              "name": "language",
+              "value": "={{ $json.body.language }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Extract Form Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [400, 200],
+      "id": "extract-form-data-001"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "chat-input",
+              "name": "chatInput",
+              "value": "={{ \"Create compelling social media advertisement copy for the following:\\n\\nProduct/Service: \" + $json.description + \"\\nTarget Platform: \" + $json.social_platform + \"\\nLanguage: \" + $json.language + \"\\nInclude Emojis: \" + $json.include_emoji + \"\\n\\nPlease create advertisement copy that:\\n- Captures attention instantly\\n- Highlights key benefits and unique selling points\\n- Uses persuasive messaging that motivates action\\n- Includes a strong call-to-action\\n- Is tailored to \" + $json.social_platform + \" audience\\n- Uses \" + $json.language + \" language\" + ($json.include_emoji === \"yes\" ? \"\\n- Incorporates relevant emojis for engagement\" : \"\") + \"\\n\\nFormat the response as professional ad copy ready for social media posting. Provide multiple variations if possible.\" }}",
+              "type": "string"
+            },
+            {
+              "id": "session-id-copy",
+              "name": "sessionId",
+              "value": "={{ $('Extract Form Data').item.json.sessionId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Build AI Prompt",
+      "type": "n8n-nodes-base.set", 
+      "typeVersion": 3.4,
+      "position": [600, 200],
+      "id": "build-prompt-001"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "id": "openai-model-001",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [800, 100],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-credentials",
+          "name": "OpenAI API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Build AI Prompt').item.json.chatInput }}",
+        "options": {
+          "systemMessage": "You are an expert social media advertiser and copywriter. Your task is to create compelling, engaging social media advertisements that drive action. Focus on creating concise, persuasive copy that captures attention instantly and motivates the target audience to take action. Always include a strong call-to-action and tailor your language to the specified platform and audience. Be creative, authentic, and results-oriented in your approach."
+        }
+      },
+      "id": "ai-agent-001",
+      "name": "Social Ads AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [1000, 200],
+      "typeVersion": 1.9
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "response-output",
+              "name": "output",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "success-flag",
+              "name": "success",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "session-info",
+              "name": "sessionId",
+              "value": "={{ $('Extract Form Data').item.json.sessionId }}",
+              "type": "string"
+            },
+            {
+              "id": "metadata",
+              "name": "metadata",
+              "value": "={{ { \"platform\": $('Extract Form Data').item.json.social_platform, \"language\": $('Extract Form Data').item.json.language, \"emojis\": $('Extract Form Data').item.json.include_emoji, \"timestamp\": $now } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Format Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1200, 200],
+      "id": "format-response-001"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1400, 200],
+      "id": "respond-webhook-001"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract Form Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Form Data": {
+      "main": [
+        [
+          {
+            "node": "Build AI Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build AI Prompt": {
+      "main": [
+        [
+          {
+            "node": "Social Ads AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Social Ads AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Social Ads AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "optimized-social-ads-v1",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "social-ads-optimized-workflow"
+  },
+  "id": "social-ads-optimized",
+  "tags": [
+    {
+      "id": "ai-agent-optimized",
+      "name": "AI Agent Optimized"
+    },
+    {
+      "id": "social-media",
+      "name": "Social Media"
+    }
+  ]
+}

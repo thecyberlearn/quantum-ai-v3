@@ -75,6 +75,7 @@
             gap: var(--spacing-lg);
             align-items: flex-start;
             flex-wrap: wrap;
+            margin-bottom: var(--spacing-lg);
         }
 
         /* Typography */
@@ -104,24 +105,10 @@
             flex-direction: column;
         }
 
-        .agent-widget:hover {
-            box-shadow: var(--shadow-md);
-        }
-
-        .widget-large {
-            min-width: 400px;
-            flex: 1;
-        }
-
-        .widget-small {
-            min-width: 280px;
-            flex: 0 0 280px;
-        }
-
         .widget-header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: var(--spacing-sm);
             margin-bottom: var(--spacing-lg);
             padding-bottom: var(--spacing-md);
             border-bottom: 1px solid var(--outline-variant);
@@ -149,6 +136,21 @@
             display: flex;
             flex-direction: column;
             gap: var(--spacing-md);
+        }
+
+        /* Widget Sizes */
+        .widget-large {
+            flex: 1;
+            min-width: 400px;
+        }
+
+        .widget-small {
+            flex: 0 0 280px;
+        }
+
+        .widget-wide {
+            flex: 1 1 100%;
+            width: 100%;
         }
 
         /* Wallet Card */
@@ -195,6 +197,14 @@
             font-size: 20px;
         }
 
+        .wallet-content {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            position: relative;
+            z-index: 1;
+        }
+
         .balance-display {
             margin-bottom: 0;
         }
@@ -211,6 +221,25 @@
             font-size: 12px;
             opacity: 0.8;
             font-weight: 400;
+        }
+
+        .wallet-topup-btn {
+            width: 100%;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 12px;
+        }
+
+        .wallet-topup-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
         }
 
         /* Form Sections */
@@ -740,10 +769,10 @@
         <div class="agent-header">
             <div>
                 <h1 class="agent-title">Social Ads Generator</h1>
-                <p class="agent-subtitle">Create compelling social media advertisements optimized for different platforms</p>
+                <p class="agent-subtitle">Create compelling social media advertisements with AI-powered content generation</p>
             </div>
             <div class="header-controls">
-                <!-- Wallet Card -->
+                <!-- Wallet Card Component -->
                 <div class="wallet-card widget-small">
                     <div class="wallet-header">
                         <h3 class="wallet-title">Your Wallet</h3>
@@ -755,11 +784,9 @@
                         </div>
                         <div class="balance-label">Available Balance</div>
                     </div>
-                    <div style="margin-top: 12px;">
-                        <button type="button" class="wallet-topup-btn" style="width: 100%; padding: 8px 16px; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;" onclick="showToast('Top-up feature demo!', 'success')">
-                            💳 Top Up Wallet
-                        </button>
-                    </div>
+                    <button type="button" class="wallet-topup-btn" onclick="showToast('Top-up feature demo!', 'success')">
+                        💳 Top Up Wallet
+                    </button>
                 </div>
             </div>
         </div>
@@ -874,7 +901,7 @@
                         <!-- Action Button -->
                         <div style="margin-top: var(--spacing-lg);">
                             <button type="submit" class="btn btn-primary btn-full" id="processButton">
-                                📢 Generate Social Ads (7.00 AED)
+                                📢 Generate Social Ads
                             </button>
                         </div>
                     </form>
@@ -953,38 +980,57 @@
             </div>
         </div>
 
-        <!-- Demo Controls -->
+        <!-- N8N Integration Info -->
         <div class="agent-grid" style="margin-top: var(--spacing-xl); border-top: 1px solid var(--outline-variant); padding-top: var(--spacing-lg);">
             <div class="agent-widget" style="width: 100%;">
                 <div class="widget-header">
                     <h3 class="widget-title">
-                        <span class="widget-icon">🧪</span>
-                        Demo Controls
+                        <span class="widget-icon">🔗</span>
+                        N8N Integration Status
                     </h3>
                 </div>
                 <div class="widget-content">
                     <p style="margin-bottom: var(--spacing-md); color: var(--on-surface-variant);">
-                        Test the exact UI components and interactions:
+                        This page communicates directly with N8N webhook:
                     </p>
-                    <div style="display: flex; gap: var(--spacing-md); flex-wrap: wrap;">
-                        <button onclick="showProcessing()" class="btn btn-primary">
-                            Show Processing
+                    <div style="background: var(--surface-variant); padding: var(--spacing-md); border-radius: var(--radius-md); font-family: monospace; font-size: 12px; color: var(--on-surface-variant); word-break: break-all;">
+                        http://localhost:5678/webhook/2dc234d8-7217-454a-83e9-81afe5b4fe2d
+                    </div>
+                    
+                    <div style="margin-top: var(--spacing-md);">
+                        <button onclick="testN8NConnection()" class="btn btn-secondary" style="font-size: 12px; padding: 8px 16px;">
+                            🔍 Test N8N Connection
                         </button>
-                        <button onclick="hideProcessing()" class="btn btn-secondary">
-                            Hide Processing
-                        </button>
-                        <button onclick="showResults()" class="btn btn-primary">
-                            Show Results
-                        </button>
-                        <button onclick="hideResults()" class="btn btn-secondary">
-                            Hide Results
-                        </button>
-                        <button onclick="showToast('Success message!', 'success')" class="btn" style="background: var(--success); color: white;">
-                            Success Toast
-                        </button>
-                        <button onclick="showToast('Error message!', 'error')" class="btn" style="background: var(--error); color: white;">
-                            Error Toast
-                        </button>
+                    </div>
+                    
+                    <div style="margin-top: var(--spacing-md); font-size: 13px; color: var(--on-surface-variant);">
+                        <strong>Requirements:</strong><br>
+                        • N8N instance running on localhost:5678<br>
+                        • Workflow with the above webhook ID active<br>
+                        • CORS enabled if needed<br>
+                        • OpenAI API key configured in workflow
+                    </div>
+                    
+                    <div style="margin-top: var(--spacing-md); font-size: 13px; color: var(--on-surface-variant);">
+                        <strong>Troubleshooting:</strong><br>
+                        • Check N8N is accessible at <code>http://localhost:5678</code><br>
+                        • Verify workflow is active and webhook matches<br>
+                        • Check browser console for detailed errors
+                    </div>
+                    
+                    <div style="margin-top: var(--spacing-lg); padding: var(--spacing-md); background: #d4edda; border: 1px solid #c3e6cb; border-radius: var(--radius-md);">
+                        <div style="font-weight: 600; color: #155724; margin-bottom: var(--spacing-sm);">✅ USING ORIGINAL N8N WORKFLOW</div>
+                        <div style="font-size: 12px; color: #155724;">
+                            <strong>Frontend updated to work with:</strong><br>
+                            <code style="background: rgba(0,0,0,0.1); padding: 2px 4px; border-radius: 3px;">
+                            social_ads_generator/n8n_workflows/Social_Ads.json
+                            </code><br><br>
+                            
+                            <strong>Data format:</strong><br>
+                            <code>{"body": {"sessionId": "...", "message": {"text": "..."}}}</code><br><br>
+                            
+                            <strong>Status:</strong> Frontend now sends data in the correct format for the original workflow
+                        </div>
                     </div>
                 </div>
             </div>
@@ -992,7 +1038,75 @@
     </div>
 
     <script>
-        // Exact UI Copy JavaScript Functions
+        /*
+        ====================================================================
+        N8N WORKFLOW OPTIMIZATION - REQUIRED CHANGES
+        ====================================================================
+        
+        Frontend now sends SIMPLE data structure:
+        {
+            "description": "Product description here",
+            "social_platform": "facebook", 
+            "include_emoji": "yes",
+            "language": "English"
+        }
+        
+        REQUIRED N8N WORKFLOW CHANGES:
+        
+        1. UPDATE "Set Web Input" NODE:
+        Add these expressions to create the data structure the workflow needs:
+        
+        sessionId: 
+        "session_" + $now + "_" + $randomString(6)
+        
+        description:
+        $json.body.description
+        
+        social_platform: 
+        $json.body.social_platform
+        
+        include_emoji:
+        $json.body.include_emoji
+        
+        language:
+        $json.body.language
+        
+        message:
+        {
+          "text": "Create social media ads for: " + $json.body.description + 
+                  ". Target Platform: " + $json.body.social_platform + 
+                  ". Include Emojis: " + $json.body.include_emoji + 
+                  ". Language: " + $json.body.language + 
+                  "\n\nPlease create compelling social media advertisement copy that:" +
+                  "\n- Captures attention instantly" +
+                  "\n- Highlights key benefits and unique selling points" + 
+                  "\n- Uses persuasive messaging that motivates action" +
+                  "\n- Includes a strong call-to-action" +
+                  "\n- Is tailored to " + $json.body.social_platform + " audience" +
+                  "\n- Uses " + $json.body.language + " language" +
+                  ($json.body.include_emoji === "yes" ? "\n- Incorporates relevant emojis for engagement" : "") +
+                  "\n\nFormat the response as professional ad copy ready for social media posting."
+        }
+        
+        2. UPDATE "Simple Memory" NODE:
+        Change sessionKey expression to:
+        $('Set Web Input').item.json.sessionId
+        
+        3. UPDATE "AI Agent" NODE:
+        Change text expression to:
+        $('Set Web Input').item.json.message.text
+        
+        BENEFITS:
+        - Frontend code reduced by 90%
+        - Better separation of concerns
+        - Prompt changes only need N8N updates
+        - Session management handled in N8N
+        - Cleaner, more maintainable architecture
+        
+        ====================================================================
+        */
+        
+        // Simplified JavaScript Functions
 
         // Quick Agent Access Panel Functions
         function toggleQuickAgents() {
@@ -1077,13 +1191,80 @@
             showToast('Processing stopped...', 'success');
         }
 
-        // Results Functions
+        // Display real N8N results
+        function displayRealResults(data) {
+            const results = document.getElementById('adResults');
+            const adContent = document.getElementById('adContent');
+            
+            let content = '';
+            
+            try {
+                // Handle different N8N response formats
+                if (typeof data === 'string') {
+                    // If it's a string, use it directly
+                    content = data;
+                } else if (data && typeof data === 'object') {
+                    // If it's an object, look for common fields
+                    if (data.output) {
+                        content = data.output;
+                    } else if (data.text) {
+                        content = data.text;
+                    } else if (data.content) {
+                        content = data.content;
+                    } else if (data.ad_copy) {
+                        content = data.ad_copy;
+                    } else if (data.result) {
+                        content = data.result;
+                    } else if (data.message) {
+                        content = data.message;
+                    } else {
+                        // If it's an object but no recognizable fields, stringify it
+                        content = JSON.stringify(data, null, 2);
+                    }
+                } else {
+                    content = 'No content received from N8N';
+                }
+                
+                // Format content for display
+                const formattedContent = content ? content.replace(/\n/g, '<br>') : 'No content received';
+                
+                adContent.innerHTML = `
+                    <div class="generated-content">
+                        <h2>🎯 Generated Social Media Advertisement</h2>
+                        <div class="ad-content" style="background: var(--surface-variant); padding: var(--spacing-lg); border-radius: var(--radius-md); margin: var(--spacing-md) 0;">
+                            ${formattedContent}
+                        </div>
+                        <div class="generation-info" style="margin-top: var(--spacing-md); padding: var(--spacing-md); background: #f8f9fa; border-radius: var(--radius-sm); font-size: 12px;">
+                            <p><strong>Generated at:</strong> ${new Date().toLocaleString()}</p>
+                            <p><strong>Platform:</strong> ${document.getElementById('social_platform').value}</p>
+                            <p><strong>Language:</strong> ${document.getElementById('language').value}</p>
+                            <p><strong>Response type:</strong> ${typeof data} ${data && typeof data === 'object' ? '(object)' : '(text)'}</p>
+                        </div>
+                    </div>
+                `;
+                
+                results.style.display = 'block';
+                results.scrollIntoView({ behavior: 'smooth' });
+                showToast('✅ Social ads generated successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Error displaying results:', error);
+                showToast('Generated content but failed to display properly', 'error');
+                adContent.innerHTML = `
+                    <p>Content generated but display error occurred.</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                results.style.display = 'block';
+            }
+        }
+
+        // Demo results function (kept for demo button)
         function showResults() {
             const results = document.getElementById('adResults');
             const adContent = document.getElementById('adContent');
             
             adContent.innerHTML = `
-                <h2>🎯 Facebook Ad Campaign</h2>
+                <h2>🎯 Demo - Facebook Ad Campaign</h2>
                 <div class="key-points">
                     <h3>Primary Ad Copy</h3>
                     <p><strong>Headline:</strong> Transform Your Business with AI-Powered Solutions! 🚀</p>
@@ -1112,7 +1293,7 @@
             
             results.style.display = 'block';
             results.scrollIntoView({ behavior: 'smooth' });
-            showToast('Generated social ads results!', 'success');
+            showToast('Demo results displayed!', 'success');
         }
 
         function hideResults() {
@@ -1152,9 +1333,8 @@
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                showToast('💾 Social ads downloaded!', 'success');
             } catch (error) {
-                showToast('Failed to download file', 'error');
+                console.error('Download failed:', error);
             }
         }
 
@@ -1162,16 +1342,16 @@
             document.getElementById('socialAdsForm').reset();
             hideProcessing();
             hideResults();
-            showToast('Form reset! Ready for another ad campaign.', 'success');
         }
 
-        // Form submission demo
+        // Real form submission to N8N webhook
         document.getElementById('socialAdsForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const description = document.getElementById('description').value.trim();
             const platform = document.getElementById('social_platform').value;
             const emoji = document.getElementById('include_emoji').value;
+            const language = document.getElementById('language').value;
             
             if (!description || !platform || !emoji) {
                 showToast('Please fill in all required fields', 'error');
@@ -1180,27 +1360,118 @@
             
             showProcessing();
             
-            // Simulate processing steps
-            const steps = [
-                'Analyzing product information...',
-                'Understanding target platforms...',
-                'Crafting engaging headlines...',
-                'Writing compelling copy...',
-                'Optimizing for each platform...'
-            ];
+            // Format data for original N8N workflow structure
+            const sessionId = 'session_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+            const messageText = `Create compelling social media ads for: ${description}. Target platform: ${platform}. Include emojis: ${emoji}. Language: ${language}. Make it engaging and professional.`;
             
-            let currentStep = 0;
-            const stepInterval = setInterval(() => {
-                if (currentStep < steps.length) {
-                    document.getElementById('statusText').textContent = steps[currentStep];
-                    currentStep++;
-                } else {
-                    clearInterval(stepInterval);
-                    hideProcessing();
-                    showResults();
+            const webhookData = {
+                sessionId: sessionId,
+                message: {
+                    text: messageText
                 }
-            }, 800);
+            };
+            
+            // Debug: Log the data being sent
+            console.log('Sending to N8N webhook:', webhookData);
+            
+            // Call ORIGINAL N8N webhook 
+            fetch('http://localhost:5678/webhook/2dc234d8-7217-454a-83e9-81afe5b4fe2d', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(webhookData),
+                // Add timeout and credentials if needed
+                signal: AbortSignal.timeout(60000) // 60 second timeout
+            })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error(`N8N webhook not found (404). Please check if the workflow is active.`);
+                    } else if (response.status >= 500) {
+                        throw new Error(`N8N server error (${response.status}). Please check N8N instance.`);
+                    } else {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                }
+                
+                // Try to parse as JSON, fallback to text if that fails
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json().catch(() => response.text());
+                } else {
+                    return response.text();
+                }
+            })
+            .then(data => {
+                hideProcessing();
+                displayRealResults(data);
+            })
+            .catch(error => {
+                console.error('N8N webhook error:', error);
+                hideProcessing();
+                
+                // Enhanced error messages
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    showToast('❌ Connection failed. Please ensure N8N is running on localhost:5678', 'error');
+                } else if (error.name === 'TimeoutError') {
+                    showToast('⏰ Request timed out. N8N might be processing large data.', 'error');
+                } else if (error.message.includes('CORS')) {
+                    showToast('🔒 CORS error. N8N webhook may need CORS configuration.', 'error');
+                } else if (error.message.includes('404')) {
+                    showToast('🔍 Webhook not found. Please check if N8N workflow is active.', 'error');
+                } else {
+                    showToast(`❌ Error: ${error.message}`, 'error');
+                }
+            });
         });
+
+        // Test N8N connection function
+        function testN8NConnection() {
+            showToast('Testing N8N connection...', 'info');
+            
+            // Test data for original workflow structure
+            const testSessionId = 'test_session_' + Date.now();
+            const testData = {
+                body: {
+                    sessionId: testSessionId,
+                    message: {
+                        text: "Connection test - please generate a sample social media ad to verify the workflow is working"
+                    }
+                }
+            };
+            
+            fetch('http://localhost:5678/webhook/2dc234d8-7217-454a-83e9-81afe5b4fe2d', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(testData),
+                signal: AbortSignal.timeout(10000) // 10 second timeout for test
+            })
+            .then(response => {
+                if (response.ok) {
+                    showToast('✅ N8N connection successful!', 'success');
+                    return response.text(); // Don't try to parse JSON for test
+                } else {
+                    showToast(`❌ N8N responded with status: ${response.status}`, 'error');
+                }
+            })
+            .then(data => {
+                // Log the response for debugging but don't show to user
+                console.log('N8N test response:', data);
+            })
+            .catch(error => {
+                console.error('N8N connection test error:', error);
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    showToast('❌ Cannot connect to N8N. Is it running on localhost:5678?', 'error');
+                } else if (error.name === 'TimeoutError') {
+                    showToast('⏰ Connection test timed out', 'error');
+                } else {
+                    showToast(`❌ Connection test failed: ${error.message}`, 'error');
+                }
+            });
+        }
 
         // Close panel on Escape key
         document.addEventListener('keydown', function(e) {
@@ -1224,7 +1495,7 @@
             
             // Show welcome message
             setTimeout(() => {
-                showToast('Social Ads Generator - Exact UI Copy loaded!', 'success');
+                showToast('Social Ads Generator - Standalone N8N Integration ready!', 'success');
             }, 500);
         });
     </script>

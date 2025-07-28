@@ -12,6 +12,9 @@ import stripe
 from django.conf import settings
 import logging
 import ipaddress
+import json
+from django.views.decorators.csrf import ensure_csrf_cookie
+from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -232,3 +235,68 @@ def stripe_webhook_view(request):
     except Exception as e:
         logger.error(f"Webhook error from {remote_ip}: {e}")
         return JsonResponse({'status': 'error', 'message': 'Internal error'}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+@ratelimit(key='user', rate='10/m', method='POST', block=False)
+def wallet_deduct_api(request):
+    """API endpoint for wallet balance deduction (for direct N8N integration)"""
+    # Check if rate limited
+    if getattr(request, 'limited', False):
+        logger.warning(f"Wallet deduction rate limit exceeded for user {request.user.id}")
+        return JsonResponse({'error': 'Too many requests. Please wait a moment.'}, status=429)
+    
+    try:
+        # Parse JSON request body
+        data = json.loads(request.body)
+        
+        # Validate required fields
+        amount = data.get('amount')
+        description = data.get('description', 'Agent usage')
+        agent = data.get('agent', 'unknown')
+        
+        if not amount:
+            return JsonResponse({'error': 'Amount is required'}, status=400)
+        
+        # Validate amount
+        try:
+            amount = Decimal(str(amount))
+            if amount <= 0:
+                return JsonResponse({'error': 'Amount must be positive'}, status=400)
+            if amount > 1000:  # Maximum deduction limit
+                return JsonResponse({'error': 'Amount exceeds maximum limit'}, status=400)
+        except (ValueError, TypeError):
+            return JsonResponse({'error': 'Invalid amount format'}, status=400)
+        
+        # Check sufficient balance
+        if not request.user.has_sufficient_balance(amount):
+            return JsonResponse({
+                'error': 'Insufficient wallet balance',
+                'current_balance': float(request.user.wallet_balance)
+            }, status=400)
+        
+        # Sanitize description
+        description = str(description)[:200]  # Limit length
+        agent = str(agent)[:50]  # Limit length
+        
+        # Deduct balance
+        old_balance = request.user.wallet_balance
+        request.user.deduct_balance(amount, description, agent)
+        new_balance = request.user.wallet_balance
+        
+        logger.info(f"Wallet deduction successful for user {request.user.id}: {amount} AED for {agent}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Balance deducted successfully',
+            'old_balance': float(old_balance),
+            'new_balance': float(new_balance),
+            'deducted_amount': float(amount)
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
+    except Exception as e:
+        logger.error(f"Wallet deduction error for user {request.user.id}: {e}", exc_info=True)
+        return JsonResponse({'error': 'Internal error'}, status=500)

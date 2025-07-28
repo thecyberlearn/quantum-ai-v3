@@ -10,4 +10,5 @@ urlpatterns = [
     path('top-up/cancel/', views.wallet_topup_cancel_view, name='wallet_topup_cancel'),
     path('stripe/debug/', views.stripe_debug_view, name='stripe_debug'),
     path('stripe/webhook/', views.stripe_webhook_view, name='stripe_webhook'),
+    path('api/deduct/', views.wallet_deduct_api, name='wallet_deduct_api'),
 ]

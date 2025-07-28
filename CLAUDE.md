@@ -234,6 +234,16 @@ User Request → Django App (Railway) → HTTP POST → N8N Instance (Separate H
 - Wallet dashboard and transaction history
 - Payment processing and webhook handling
 
+**Workflows App (`workflows/`):**
+- Unified agent processing system with hybrid architecture
+- Individual agent templates with shared components and utilities
+- Direct N8N webhook integration with Django fallback processing
+- Configuration-driven agent definitions (no separate Django apps needed)
+- Shared CSS from main static directory (`{% static 'css/agent-base.css' %}`)
+- Self-contained JavaScript utilities in main static directory (`{% static 'js/workflows-core.js' %}`)
+- **Architecture Decision**: Uses external CSS/JS to avoid Django static file conflicts
+- Template Component Architecture with local components in `workflows/templates/workflows/components/`
+
 ### URL Structure
 
 ```
@@ -247,6 +257,7 @@ User Request → Django App (Railway) → HTTP POST → N8N Instance (Separate H
 /wallet/                    # Wallet management and top-up (wallet app)
 /wallet/stripe/             # Stripe webhooks and debug (wallet app)
 /agents/[agent-slug]/       # Individual agent pages (individual apps)
+/workflows/<agent-slug>/   # Unified workflows app agent processing (NEW)
 /admin/                     # Django admin
 /api/agents/               # Agent API endpoint (agent_base app)
 ```
@@ -283,44 +294,153 @@ Required environment variables (see `.env.example`):
 - Stripe keys for payment processing
 - Email configuration for password reset
 
-### Agent Creation with Template Prototype
+### Simplified Agent Creation Process
 
-**Quick Agent Creation:**
-- Use `agent_template_prototype.html` as foundation for all new agents
-- Follow detailed guide in `AGENT_CREATION_GUIDE.md`
-- Template provides complete CSS framework, JavaScript utilities, and UI components
-- Ensures consistent user experience across all agents
+**New Streamlined Workflow (90% less complexity!):**
+
+The workflows app now uses a dramatically simplified agent creation process. No more complex configurations or dynamic field systems - just simple metadata and individual templates.
+
+### 4-Step Agent Creation Process
+
+#### **Step 1: Add Agent Configuration (5 lines)**
+```python
+# In workflows/config/agents.py - add to AGENT_CONFIGS
+'your-agent-slug': {
+    'name': 'Your Agent Name',
+    'description': 'What this agent does',
+    'category': 'utilities',  # or 'marketing', 'analytics', 'content'
+    'price': 3.0,
+    'icon': '🤖',
+    'webhook_url': 'http://localhost:5678/webhook/your-webhook-id',
+},
+```
+
+#### **Step 2: Create Individual Template**
+```bash
+# Copy the starter template
+cp workflows/templates/workflows/agent-template-starter.html workflows/templates/workflows/your-agent.html
+
+# Customize the template by replacing:
+# - Form fields section with your agent-specific inputs
+# - Processing messages and result titles
+# - How it works steps (optional)
+```
+
+#### **Step 3: Add Template Mapping**
+```python
+# In workflows/views.py - add to template_mapping dict
+template_mapping = {
+    'social-ads-generator': 'workflows/social-ads-generator.html',
+    # ... existing mappings ...
+    'your-agent-slug': 'workflows/your-agent.html',  # <-- Add this line
+}
+```
+
+#### **Step 4: Optional - Add to Marketplace**
+```python
+# If you want the agent in the marketplace
+from agent_base.models import BaseAgent
+
+BaseAgent.objects.create(
+    name="Your Agent Name",
+    slug="your-agent-slug", 
+    description="What this agent does",
+    price=3.0,
+    is_active=True
+)
+```
+
+### Configuration Comparison
+
+**Before (Complex):**
+```python
+# 50+ lines of complex configuration
+'agent-slug': {
+    'name': 'Agent Name',
+    'form_sections': [
+        {
+            'title': '📝 Section Title',
+            'fields': [
+                {
+                    'name': 'field_name',
+                    'type': 'textarea',
+                    'label': 'Field Label',
+                    'placeholder': 'Placeholder text...',
+                    'required': True,
+                    'rows': 4,
+                    'validation': {...},
+                    # ... 20+ more lines per field
+                }
+            ]
+        }
+    ],
+    'message_template': 'Complex template string...',
+    'result_format': 'Format description...'
+}
+```
+
+**After (Simplified):**
+```python
+# 5 lines of essential metadata
+'agent-slug': {
+    'name': 'Agent Name',
+    'description': 'What this agent does',
+    'price': 3.0,
+    'icon': '🤖',
+    'webhook_url': 'http://localhost:5678/webhook/...',
+},
+```
+
+### Template Structure
+
+All templates use shared components for consistency:
+```django
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Shared components (automatic functionality) -->
+{% include "workflows/components/agent_header.html" %}
+{% include "workflows/components/quick_agents_panel.html" %}
+
+<!-- Your agent-specific form (customize this part only) -->
+<div class="agent-widget widget-large">
+    <form id="agentForm" method="POST">
+        <!-- Your unique form fields go here -->
+    </form>
+</div>
+
+<!-- Shared components (automatic functionality) -->
+{% include "workflows/components/processing_status.html" %}
+{% include "workflows/components/results_container.html" %}
+{% endblock %}
+```
+
+### Enhanced JavaScript Utilities
+
+All agents automatically get access to enhanced WorkflowsCore utilities:
+- `WorkflowsCore.showToast(message, type)` - Toast notifications
+- `WorkflowsCore.showProcessing(title)` - Show processing status
+- `WorkflowsCore.showResults(content, title)` - Display results
+- `WorkflowsCore.copyToClipboard(text, message)` - Copy functionality
+- `WorkflowsCore.downloadAsFile(content, filename)` - File downloads
+- `WorkflowsCore.handleFileChange(input)` - File upload handling
+- Plus many more utilities for common agent operations
 
 ### Development Workflow
 
-1. **Adding New Agent:**
-   - Use `python manage.py create_agent` command
-   - Follow existing agent patterns (inherit from `BaseAgentProcessor`)
-   - Add URL routing in main `urls.py`
-   - Agent will automatically appear in marketplace via `BaseAgent` model
+1. **Start with Template Starter** - Copy `agent-template-starter.html`
+2. **Customize Form Section** - Replace example fields with your agent's inputs
+3. **Add Configuration** - 5-line config entry
+4. **Map Template** - One line in views.py
+5. **Test & Deploy** - Agent ready to use!
 
-2. **Template Development (Component-First Approach):**
-   - **STEP 0: Check Existing Agents** - Examine `data_analyzer` or `social_ads_generator` templates first
-   - **STEP 1: Use Component Architecture** - Start with the required component includes (see Template Component Architecture section)
-   - **STEP 2: Add Agent-Specific Content** - Write only the unique form/logic for your agent
-   - **STEP 3: Use Shared CSS** - Link to `agent-base.css`, never recreate CSS frameworks
-   - **STEP 4: Verify Consistency** - Ensure template follows established patterns and stays under 500 lines
-
-3. **Agent Template Structure (Component-Based):**
-   ```
-   templates/agent_name/detail.html:
-   - {% include "components/agent_header.html" %} (replaces custom headers)
-   - {% include "components/quick_agents_panel.html" %} (replaces custom navigation)
-   - Agent-specific form content ONLY (your unique functionality)
-   - {% include "components/processing_status.html" %} (replaces custom loading)
-   - {% include "components/results_container.html" %} (replaces custom results)
-   - Link to agent-base.css (replaces inline CSS)
-   ```
-
-4. **Database Changes:**
-   - Always run migrations after model changes
-   - Use `check_db` command to verify configuration
-   - Test with `populate_agents` to ensure agent catalog works
+**Benefits:**
+- ✅ **90% less code** - 5 lines vs 50+ lines of configuration
+- ✅ **Shared components** - Consistent UI, automatic updates
+- ✅ **Enhanced utilities** - Advanced JavaScript functions included
+- ✅ **Dynamic data** - Agent lists update automatically
+- ✅ **Simple maintenance** - Easy to understand and modify
 
 ### Template Component Architecture
 
@@ -485,4 +605,4 @@ curl http://localhost:8000/health/
 Always run `python manage.py check_db` before making database-related changes to ensure proper configuration.
 
 ---
-Last updated: Last updated: Last updated: 2025-07-27 17:53:31
+Last updated: 2025-07-28 15:30:00
