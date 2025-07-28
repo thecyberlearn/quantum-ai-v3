@@ -317,13 +317,17 @@ The workflows app now uses a dramatically simplified agent creation process. No 
 
 #### **Step 2: Create Individual Template**
 ```bash
-# Copy the starter template
+# CORRECT: Start with agent template prototype for reference
+# Reference: agent_template_prototype.html (perfect UI patterns)
+# Then copy the starter template
 cp workflows/templates/workflows/agent-template-starter.html workflows/templates/workflows/your-agent.html
 
 # Customize the template by replacing:
 # - Form fields section with your agent-specific inputs
 # - Processing messages and result titles
 # - How it works steps (optional)
+
+# ⚠️ NEVER copy from existing agent templates (leads to bloat!)
 ```
 
 #### **Step 3: Add Template Mapping**
@@ -442,11 +446,83 @@ All agents automatically get access to enhanced WorkflowsCore utilities:
 - ✅ **Dynamic data** - Agent lists update automatically
 - ✅ **Simple maintenance** - Easy to understand and modify
 
+## Agent Creation Checklist
+
+Use this checklist to ensure proper component architecture and avoid legacy contamination:
+
+### ✅ Pre-Development Checklist
+- [ ] Read Template Component Architecture section above
+- [ ] Review `agent_template_prototype.html` for UI patterns
+- [ ] Understand WorkflowsCore utilities available
+- [ ] **Never** open existing agent templates for reference
+
+### ✅ Development Checklist
+- [ ] Start with `agent-template-starter.html` as base
+- [ ] Use required component includes:
+  - [ ] `{% include "workflows/components/agent_header.html" %}`
+  - [ ] `{% include "workflows/components/quick_agents_panel.html" %}`
+  - [ ] `{% include "workflows/components/processing_status.html" %}`
+  - [ ] `{% include "workflows/components/results_container.html" %}`
+- [ ] Link to shared CSS: `{% static 'css/agent-base.css' %}`
+- [ ] Link to WorkflowsCore: `{% static 'js/workflows-core.js' %}`
+- [ ] Write only agent-specific form fields (50-100 lines max)
+- [ ] Use WorkflowsCore utilities instead of custom JavaScript
+
+### ✅ Quality Assurance Checklist
+- [ ] Template under 500 lines total
+- [ ] Inline JavaScript under 100 lines
+- [ ] Agent-specific CSS under 200 lines
+- [ ] No duplicate utility functions
+- [ ] All shared functionality uses components
+- [ ] Copy/download/reset buttons work automatically
+
+### ❌ Red Flags (Reject if Present)
+- [ ] Template over 500 lines
+- [ ] Custom `copyResults()` function
+- [ ] Custom `downloadResults()` function  
+- [ ] Custom `showToast()` implementation
+- [ ] Inline agent header HTML
+- [ ] Inline quick agents panel HTML
+- [ ] Duplicate CSS from agent-base.css
+
+### 📋 Review Questions
+1. Does this template follow the component architecture?
+2. Could this code be maintained by someone else easily?
+3. Would adding a new shared feature require updating this template?
+4. Does this template look similar to other agent templates?
+
+**If any answer is "No", refactor using component architecture.**
+
 ### Template Component Architecture
 
 **CRITICAL: Always Use Component-Based Architecture**
 
 All agent templates MUST use the established component system. Never recreate shared functionality inline.
+
+**⚠️ WARNING: Avoid Legacy System Contamination**
+
+When creating new agents, NEVER use existing legacy agent templates as reference. This leads to:
+- ❌ 1,000+ line templates instead of clean 300-line templates
+- ❌ Duplicate JavaScript instead of WorkflowsCore utilities
+- ❌ Inline CSS instead of shared component styles
+- ❌ Technical debt imported into clean architecture
+
+**✅ CORRECT Process for New Agents:**
+1. Start with `agent_template_prototype.html` for UI patterns
+2. Use Template Component Architecture components
+3. Add only agent-specific form fields
+4. Leverage WorkflowsCore for all utilities
+5. Result: Clean, maintainable templates
+
+**❌ INCORRECT Process (Legacy Contamination):**
+1. Copy from existing working agent template
+2. Modify inline code for new functionality
+3. Result: Bloated, unmaintainable templates
+
+**📚 Additional Resources:**
+- [Legacy Migration Guide](./docs/development/legacy-migration-guide.md) - How to convert existing agents properly
+- [Agent Template Prototype](./agent_template_prototype.html) - Perfect UI reference
+- [WorkflowsCore Documentation](./static/js/workflows-core.js) - Shared utility functions
 
 **Required Components for Every Agent:**
 ```django

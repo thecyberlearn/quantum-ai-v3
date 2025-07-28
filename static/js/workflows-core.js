@@ -206,8 +206,10 @@ class WorkflowsCore {
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
             
-            // Show success message (file download is good feedback but toast confirms)
-            this.showToast('💾 ' + successMessage, 'success');
+            // Show success message only if provided
+            if (successMessage && successMessage.trim()) {
+                this.showToast('💾 ' + successMessage, 'success');
+            }
         } catch (error) {
             console.error('Download error:', error);
             this.showToast('❌ Failed to download file', 'error');
@@ -369,7 +371,7 @@ class WorkflowsCore {
         const content = document.getElementById('resultsContent') || document.querySelector('.results-content');
         if (content) {
             const text = content.textContent || content.innerText || '';
-            this.downloadAsFile(text, filename, 'Results downloaded!');
+            this.downloadAsFile(text, filename, ''); // No toast message
         } else {
             this.showToast('❌ No results to download', 'error');
         }
@@ -414,7 +416,7 @@ class WorkflowsCore {
             if (input) input.checked = true;
         }
         
-        this.showToast('🔄 Form reset', 'info');
+        // Form reset complete - no toast needed (visual feedback is sufficient)
     }
     
     /**
