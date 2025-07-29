@@ -700,7 +700,7 @@
                         <div class="empty-state">
                             <div class="empty-icon">📭</div>
                             <p class="empty-text">No transactions yet. Start using AI agents to see your transaction history!</p>
-                            <a href="{% url 'agent_base:marketplace' %}" class="btn btn-primary">🤖 Browse Agents</a>
+                            <a href="{% url 'workflows:marketplace' %}" class="btn btn-primary">🤖 Browse Agents</a>
                         </div>
                     {% endif %}
                 </div>
@@ -719,7 +719,7 @@
                         <a href="{% url 'wallet:wallet_topup' %}" class="action-btn">
                             💳 Top Up Wallet
                         </a>
-                        <a href="{% url 'agent_base:marketplace' %}" class="action-btn">
+                        <a href="{% url 'workflows:marketplace' %}" class="action-btn">
                             🤖 Browse Agents
                         </a>
                         <a href="{% url 'core:homepage' %}" class="action-btn">
