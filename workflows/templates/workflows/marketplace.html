@@ -275,33 +275,32 @@
         </p>
     </div>
 
-    <!-- Filters and Search -->
-    <div class="marketplace-filters">
-        <div class="search-box">
-            <form method="GET" style="position: relative;">
-                <span class="search-icon">🔍</span>
-                <input type="text" name="search" class="search-input" 
-                       placeholder="Search agents..." 
-                       value="{{ search_query }}"
-                       onchange="this.form.submit()">
-                {% if selected_category %}
-                    <input type="hidden" name="category" value="{{ selected_category }}">
-                {% endif %}
-            </form>
-        </div>
-        
-        <div class="category-filter">
-            <a href="{% url 'workflows:marketplace' %}" 
-               class="category-btn {% if not selected_category %}active{% endif %}">
-                All
+    <!-- Search Box -->
+    <div class="search-box" style="margin-bottom: var(--spacing-lg); max-width: 500px; margin-left: auto; margin-right: auto;">
+        <form method="GET" style="position: relative;">
+            <span class="search-icon">🔍</span>
+            <input type="text" name="search" class="search-input" 
+                   placeholder="Search agents..." 
+                   value="{{ search_query }}"
+                   onchange="this.form.submit()">
+            {% if selected_category %}
+                <input type="hidden" name="category" value="{{ selected_category }}">
+            {% endif %}
+        </form>
+    </div>
+    
+    <!-- Category Filter Buttons -->
+    <div class="category-filter" style="display: flex; gap: var(--spacing-sm); flex-wrap: wrap; justify-content: center; margin-bottom: var(--spacing-xl);">
+        <a href="{% url 'workflows:marketplace' %}" 
+           class="category-btn {% if not selected_category %}active{% endif %}">
+            All
+        </a>
+        {% for category in all_categories %}
+            <a href="?category={{ category }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+               class="category-btn {% if selected_category == category %}active{% endif %}">
+                {{ category }}
             </a>
-            {% for category in all_categories %}
-                <a href="?category={{ category }}{% if search_query %}&search={{ search_query }}{% endif %}" 
-                   class="category-btn {% if selected_category == category %}active{% endif %}">
-                    {{ category }}
-                </a>
-            {% endfor %}
-        </div>
+        {% endfor %}
     </div>
 
     <!-- Stats -->
