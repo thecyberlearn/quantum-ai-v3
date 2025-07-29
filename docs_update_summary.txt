@@ -1,14 +1,27 @@
 === Documentation Auto-Update Summary ===
-Update Date: 2025-07-28 22:36:00
+Update Date: 2025-07-29 19:33:01
 
 Recent Commits:
+  - 73d5141 ✅ All agents working: Direct N8N integration, fixed routing, and pricing sync
+  - adab6e4 🧹 Complete template component architecture and remove notification noise
   - bf1e882 🔄 Finalize auto-documentation cycle
-  - 01f7941 📝 Final documentation update summary
-  - c84029d 📚 Auto-update documentation after shared utilities implementation
 
-Backend Changes:
-  - docs_update_summary.txt
+Agents Changes:
+  - workflows/config/agents.py
+  - workflows/templates/workflows/components/quick_agents_panel.html
 
-No documentation files required updates.
+Core Changes:
+  - netcop_hub/urls.py
+
+Frontend Changes:
+  - static/js/data-analyzer.js
+  - static/js/job-posting-generator.js
+  - static/js/social-ads.js
+  - workflows/templates/workflows/data-analyzer.html
+  - workflows/templates/workflows/job-posting-generator.html
+
+Updated Documentation Files:
+  - /home/amit/projects/quantum_ai_v2/CLAUDE.md
+  - /home/amit/projects/quantum_ai_v2/docs/development/agent-creation.md
 
 === End Summary ===

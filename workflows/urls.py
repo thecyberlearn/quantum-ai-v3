@@ -4,6 +4,9 @@ from . import views
 app_name = 'workflows'
 
 urlpatterns = [
+    # Marketplace view at /agents/
+    path('', views.marketplace_view, name='marketplace'),
+    
     # Universal agent handler - matches any agent slug
     re_path(r'^(?P<agent_slug>[\w-]+)/$', views.workflow_handler, name='agent'),
     

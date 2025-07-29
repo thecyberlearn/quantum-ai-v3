@@ -73,16 +73,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'authentication',
-    'wallet',
+    'wallet', 
     'core',
-    'agent_base',
-    'weather_reporter',
-    'data_analyzer',
-    'job_posting_generator',
-    'social_ads_generator',
-    'email_writer',
-    'five_whys_analyzer',
-    'workflows',  # New unified workflows app
+    'workflows',  # Unified workflows app (includes marketplace and agent execution)
 ]
 
 # Development apps (only in DEBUG mode)
@@ -420,17 +413,7 @@ LOGGING = {
             'level': 'DEBUG' if DEBUG else 'INFO',
             'propagate': False,
         },
-        'agent_base': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': False,
-        },
         'wallet': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'agent_base.security': {
             'handlers': ['console', 'file'],
             'level': 'INFO',
             'propagate': False,

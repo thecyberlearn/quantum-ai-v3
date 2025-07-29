@@ -23,9 +23,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('authentication.urls')),
     path('wallet/', include('wallet.urls')),
-    path('', include('agent_base.urls')),
     
-    # Unified workflows system for all agents
+    # Unified workflows system for all agents (includes marketplace)
     path('agents/', include('workflows.urls')),
     
     path('', include('core.urls')),

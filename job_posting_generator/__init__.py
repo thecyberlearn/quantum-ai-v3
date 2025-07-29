@@ -1,1 +1,0 @@
-# Job Posting Generator Agent App

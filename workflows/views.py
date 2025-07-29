@@ -10,12 +10,59 @@ import time
 import requests
 from datetime import datetime
 
-from agent_base.models import BaseAgent
 from .models import WorkflowRequest, WorkflowResponse, WorkflowAnalytics
-from .config.agents import get_agent_config, format_message_for_n8n, get_available_agents
+from .config.agents import get_agent_config, format_message_for_n8n, get_available_agents, get_all_agents
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def marketplace_view(request):
+    """Agent marketplace using AGENT_CONFIGS - no database dependency"""
+    agents_data = get_all_agents()
+    
+    # Group agents by category
+    agents_by_category = {}
+    all_categories = set()
+    
+    for agent_slug, agent_config in agents_data.items():
+        category = agent_config.get('category', 'utilities')
+        all_categories.add(category)
+        
+        if category not in agents_by_category:
+            agents_by_category[category] = []
+            
+        # Add slug to agent data for URL generation
+        agent_data = agent_config.copy()
+        agent_data['slug'] = agent_slug
+        agents_by_category[category].append(agent_data)
+    
+    # Filter by category if specified
+    selected_category = request.GET.get('category')
+    if selected_category and selected_category in all_categories:
+        agents_by_category = {selected_category: agents_by_category[selected_category]}
+    
+    # Search functionality
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        filtered_agents = {}
+        for category, agents in agents_by_category.items():
+            filtered_agents[category] = [
+                agent for agent in agents 
+                if search_query.lower() in agent['name'].lower() or 
+                   search_query.lower() in agent['description'].lower()
+            ]
+        agents_by_category = {k: v for k, v in filtered_agents.items() if v}
+    
+    context = {
+        'agents_by_category': agents_by_category,
+        'all_categories': sorted(all_categories),
+        'selected_category': selected_category,
+        'search_query': search_query,
+        'total_agents': len(agents_data)
+    }
+    
+    return render(request, 'workflows/marketplace.html', context)
 
 
 def send_file_to_webhook(webhook_url, uploaded_file, form_data, timeout=60):
@@ -104,11 +151,14 @@ def workflow_handler(request, agent_slug):
     if not agent_config:
         raise Http404("Agent configuration not found")
     
-    # Get agent from BaseAgent model
-    try:
-        agent = BaseAgent.objects.get(slug=agent_slug, is_active=True)
-    except BaseAgent.DoesNotExist:
-        raise Http404("Agent not found")
+    # Agent config serves as the agent data (no database dependency)
+    agent = {
+        'slug': agent_slug,
+        'name': agent_config['name'],
+        'price': agent_config['price'],
+        'icon': agent_config['icon'],
+        'description': agent_config['description']
+    }
     
     if request.method == 'POST':
         return process_workflow_request(request, agent_slug, agent_config, agent)
