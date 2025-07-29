@@ -1,24 +1,45 @@
 === Documentation Auto-Update Summary ===
-Update Date: 2025-07-29 19:33:01
+Update Date: 2025-07-29 19:57:24
 
 Recent Commits:
+  - ec42b51 🗑️ Complete agent_base app removal and legacy cleanup
   - 73d5141 ✅ All agents working: Direct N8N integration, fixed routing, and pricing sync
   - adab6e4 🧹 Complete template component architecture and remove notification noise
-  - bf1e882 🔄 Finalize auto-documentation cycle
 
 Agents Changes:
-  - workflows/config/agents.py
-  - workflows/templates/workflows/components/quick_agents_panel.html
+  - agent_base/__init__.py
+  - agent_base/admin.py
+  - agent_base/apps.py
+  - agent_base/generators/__init__.py
+  - agent_base/generators/admin.py
 
 Core Changes:
-  - netcop_hub/urls.py
+  - core/views.py
+  - data_analyzer/urls.py
+  - data_analyzer/views.py
+  - email_writer/urls.py
+  - email_writer/views.py
+
+Documentation Changes:
+  - CLAUDE.md
+  - data_analyzer/n8n_workflows/README.md
+  - five_whys_analyzer/n8n_workflows/README.md
+  - job_posting_generator/n8n_workflows/README.md
+  - social_ads_generator/n8n_workflows/README.md
 
 Frontend Changes:
-  - static/js/data-analyzer.js
-  - static/js/job-posting-generator.js
-  - static/js/social-ads.js
-  - workflows/templates/workflows/data-analyzer.html
-  - workflows/templates/workflows/job-posting-generator.html
+  - data_analyzer/n8n_workflows/pdf_data_analyzer.json
+  - data_analyzer/templates/data_analyzer/detail.html
+  - email_writer/templates/email_writer/detail.html
+  - five_whys_analyzer/n8n_workflows/5_whys.json
+  - five_whys_analyzer/templates/five_whys_analyzer/detail.html
+
+Backend Changes:
+  - data_analyzer/__init__.py
+  - data_analyzer/admin.py
+  - data_analyzer/apps.py
+  - data_analyzer/management/__init__.py
+  - data_analyzer/management/commands/__init__.py
 
 Updated Documentation Files:
   - /home/amit/projects/quantum_ai_v2/CLAUDE.md

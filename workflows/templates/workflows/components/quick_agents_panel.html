@@ -18,25 +18,9 @@
                 </a>
             {% endfor %}
         {% else %}
-            <!-- Fallback to hardcoded agents if available_agents not provided -->
-            <a href="/agents/data-analyzer/" class="quick-agent-card">
-                <div class="agent-icon">📊</div>
-                <div class="agent-info">
-                    <h4>Data Analyzer</h4>
-                    <p>AI-powered data analysis</p>
-                </div>
-            </a>
-
-            <a href="/agents/weather-reporter/" class="quick-agent-card">
-                <div class="agent-icon">🌤️</div>
-                <div class="agent-info">
-                    <h4>Weather Reporter</h4>
-                    <p>Worldwide weather forecasts</p>
-                </div>
-            </a>
-
+            <!-- Fallback to hardcoded working agents if available_agents not provided -->
             <a href="/agents/social-ads-generator/" class="quick-agent-card">
-                <div class="agent-icon">📢</div>
+                <div class="agent-icon">📱</div>
                 <div class="agent-info">
                     <h4>Social Ads Generator</h4>
                     <p>Create social media ads</p>
@@ -51,11 +35,11 @@
                 </div>
             </a>
 
-            <a href="/agents/five-whys-analyzer/" class="quick-agent-card">
-                <div class="agent-icon">🤔</div>
+            <a href="/agents/data-analyzer/" class="quick-agent-card">
+                <div class="agent-icon">📊</div>
                 <div class="agent-info">
-                    <h4>Five Whys Analyzer</h4>
-                    <p>Problem analysis method</p>
+                    <h4>Data Analyzer</h4>
+                    <p>AI-powered data analysis</p>
                 </div>
             </a>
         {% endif %}

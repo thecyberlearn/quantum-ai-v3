@@ -317,10 +317,10 @@
 
     <!-- Agents Grid -->
     {% if agents_by_category %}
-        {% for category, agents in agents_by_category.items %}
-            <div class="category-section">
-                <h2 class="category-title">{{ category }}</h2>
-                <div class="agents-grid">
+        {% if not selected_category %}
+            <!-- Show all agents without category headings when "All" is selected -->
+            <div class="agents-grid">
+                {% for category, agents in agents_by_category.items %}
                     {% for agent in agents %}
                         <a href="{% url 'workflows:agent' agent.slug %}" class="agent-card">
                             <div class="agent-header">
@@ -337,9 +337,34 @@
                             </div>
                         </a>
                     {% endfor %}
-                </div>
+                {% endfor %}
             </div>
-        {% endfor %}
+        {% else %}
+            <!-- Show agents with category headings when specific category is selected -->
+            {% for category, agents in agents_by_category.items %}
+                <div class="category-section">
+                    <h2 class="category-title">{{ category }}</h2>
+                    <div class="agents-grid">
+                        {% for agent in agents %}
+                            <a href="{% url 'workflows:agent' agent.slug %}" class="agent-card">
+                                <div class="agent-header">
+                                    <div class="agent-icon">{{ agent.icon }}</div>
+                                    <div class="agent-info">
+                                        <h3>{{ agent.name }}</h3>
+                                        <p class="agent-price">{{ agent.price }} AED</p>
+                                    </div>
+                                </div>
+                                <p class="agent-description">{{ agent.description }}</p>
+                                <div class="agent-footer">
+                                    <span class="agent-category">{{ agent.category }}</span>
+                                    <button class="try-btn">Try Now →</button>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
     {% else %}
         <div class="no-results">
             <div class="no-results-icon">🔍</div>
