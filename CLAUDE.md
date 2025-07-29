@@ -37,7 +37,7 @@ MAKE ALL FIXES AND CODE CHANGES AS SIMPLE AS HUMANLY POSSIBLE. THEY SHOULD ONLY 
 
 ## Project Overview
 
-Quantum Tasks AI is a Django-based AI agent marketplace platform where users can purchase and interact with specialized AI agents. The system supports both webhook-based and API-based agents with integrated payment processing via Stripe.
+Quantum Tasks AI is a Django-based AI agent marketplace platform where users can purchase and interact with specialized AI agents. The system uses a unified workflows architecture with direct N8N webhook integration for maximum scalability and maintainability.
 
 ## Development Commands
 
@@ -55,18 +55,12 @@ pip install -r requirements.txt
 
 ### Database Operations
 ```bash
-# Check database configuration
-python manage.py check_db
-
 # Create and apply migrations
 python manage.py makemigrations
 python manage.py migrate
 
-# Backup user data
-python manage.py backup_users --action info
-
-# Populate agent catalog
-python manage.py populate_agents
+# Check Django configuration
+python manage.py check
 ```
 
 ### Development Server
@@ -80,33 +74,17 @@ python manage.py runserver
 
 ### Testing
 ```bash
-# Run specific agent tests
-python tests/test_weather_agent.py
-python tests/test_five_whys_webhook.py
-
-# Test homepage functionality
-python tests/test_homepage.py
-
 # Test health check endpoint
 curl http://localhost:8000/health/
+
+# Test agent configuration loading
+DJANGO_SETTINGS_MODULE=netcop_hub.settings python -c "import django; django.setup(); from workflows.config.agents import get_all_agents; print(f'✅ {len(get_all_agents())} agents loaded')"
 ```
 
-### Custom Management Commands
+### File Management
 ```bash
-# Create new agent
-python manage.py create_agent
-
-# Create test user
-python manage.py create_user
-
-# Reset database (development only)
-python manage.py reset_database
-
-# Test webhook functionality
-python manage.py test_webhook
-
-# Cleanup uploaded files
-python manage.py cleanup_uploads
+# File uploads are stored in media/uploads/
+# Files are automatically cleaned up after processing
 ```
 
 ### Documentation Management
@@ -144,36 +122,30 @@ python manage_n8n_workflows.py backup
 
 ## Architecture Overview
 
-### Agent System Architecture (`agent_base/`)
+### Unified Workflows System Architecture
 
-**Centralized Agent Management:**
-- `agent_base/models.py` - `BaseAgent` model for marketplace catalog
-- `agent_base/processors.py` - `BaseAgentProcessor` abstract class for agent interactions
-- `agent_base/views.py` - Marketplace and agent discovery views
-- `agent_base/urls.py` - Agent system URL routing
-- `agent_base/generators/` - Template generation system for creating new agents
-- `templates/agent_base/` - Marketplace and agent catalog templates
+**Scalable Plugin-Based Design:**
+The system uses a unified workflows architecture that eliminates the scalability issues of hard-coded agent handling. All agents are processed through a single, extensible system.
 
-**Agent Types:**
-1. **Webhook Agents** - Process requests via external N8N webhook APIs (require N8N workflows)
-   - `data_analyzer` - File analysis and insights
-   - `social_ads_generator` - Social media ad creation
-   - `job_posting_generator` - Professional job postings
-   - `five_whys_analyzer` - Root cause analysis
-2. **API Agents** - Direct API integration for immediate responses
-   - `weather_reporter` - OpenWeather API integration
-   - `email_writer` - Custom email composition logic
+### Core Components
 
-**Individual Agent Apps:**
-Each agent is a separate Django app following this structure:
-- `models.py` - Agent-specific request/response models
-- `processor.py` - Inherits from `BaseAgentProcessor`, implements specific logic
-- `views.py` - Agent detail page and request handling
-- `templates/[agent_name]/detail.html` - Agent interface
-- `urls.py` - Agent-specific URL routing
-- `n8n_workflows/` - N8N workflow configurations (webhook agents only)
-  - `workflow.json` - Production workflow
-  - `README.md` - Setup and configuration documentation
+**Workflows App (`workflows/`):**
+- `workflows/views.py` - Unified handler for all agents with plugin architecture
+- `workflows/processors/` - Agent-specific processing logic with shared base class  
+- `workflows/config/agents.py` - Simple 5-line agent configuration system
+- `workflows/templates/workflows/` - Individual agent templates with shared components
+
+**Working Agents:**
+1. **Social Ads Generator** - Create engaging social media advertisements (6.0 AED)
+2. **Job Posting Generator** - Create professional job postings (10.0 AED)  
+3. **Data Analyzer** - AI-powered analysis of data files (8.0 AED)
+
+**Agent System Architecture:**
+- Configuration-driven agent definitions in `workflows/config/agents.py`
+- Dynamic template loading based on agent slug
+- Direct N8N webhook integration with no Django fallbacks
+- Shared CSS from main static directory (`{% static 'css/agent-base.css' %}`)
+- Self-contained JavaScript utilities in main static directory (`{% static 'js/workflows-core.js' %}`)
 
 ### N8N Workflow Architecture
 
@@ -251,40 +223,40 @@ User Request → Django App (Railway) → HTTP POST → N8N Instance (Separate H
 /pricing/                   # Pricing page (core app)
 /health/                    # Health check endpoint for monitoring (core app)
 /contact/                   # Contact form submission (core app)
-/marketplace/               # Agent marketplace (agent_base app)
-/agents/<slug>/             # Agent detail redirect (agent_base app)
+/agents/                    # Agent marketplace (workflows app)
+/agents/<agent-slug>/       # Unified workflows system for all agents
 /auth/                      # Authentication (login, register, profile)
 /wallet/                    # Wallet management and top-up (wallet app)
 /wallet/stripe/             # Stripe webhooks and debug (wallet app)
-/agents/[agent-slug]/       # Individual agent pages (individual apps)
-/workflows/<agent-slug>/   # Unified workflows app agent processing (NEW)
 /admin/                     # Django admin
-/api/agents/               # Agent API endpoint (agent_base app)
 ```
 
 ### Template Architecture
 
-**Template Hierarchy:**
+**Component-Based System:**
 - `templates/base.html` - Main layout with navigation and auth
 - `templates/components/` - Reusable components (agent_header, wallet_card, etc.)
 - `templates/core/` - Platform pages (homepage, pricing)
-- `templates/agent_base/` - Agent marketplace and catalog
 - `templates/wallet/` - Payment and wallet management
 - `templates/authentication/` - User authentication pages
-- Agent-specific templates in individual app directories
+- `workflows/templates/workflows/` - Individual agent templates using shared components
+- `workflows/templates/workflows/marketplace.html` - Agent marketplace
 
 **CSS Architecture:**
 - `base.css` - Global styles and CSS variables
 - `agent-base.css` - Agent page styling
-- `header-component.css` - Header styling (replaces deprecated header.css)
+- `header-component.css` - Header styling
 - Component-specific CSS files
 
 ### Database Design
 
 **Key Models:**
-- `BaseAgent` - Agent catalog and marketplace data
 - `User` - Extended Django user with wallet functionality
-- Agent-specific request models (e.g., `WeatherReportAgentRequest`)
+- `WorkflowRequest` - Agent processing requests
+- `WorkflowResponse` - Agent processing results
+- `WorkflowAnalytics` - Usage analytics and metrics
+
+**Note:** Agent metadata is now configuration-driven via `workflows/config/agents.py` instead of database models.
 
 ### Environment Configuration
 
@@ -296,57 +268,41 @@ Required environment variables (see `.env.example`):
 
 ### Simplified Agent Creation Process
 
-**New Streamlined Workflow (90% less complexity!):**
+**New agents require only 5 lines of configuration:**
 
-The workflows app now uses a dramatically simplified agent creation process. No more complex configurations or dynamic field systems - just simple metadata and individual templates.
-
-### 4-Step Agent Creation Process
-
-#### **Step 1: Add Agent Configuration (5 lines)**
+#### **Step 1: Add Agent Configuration**
 ```python
 # In workflows/config/agents.py - add to AGENT_CONFIGS
 'your-agent-slug': {
     'name': 'Your Agent Name',
     'description': 'What this agent does',
-    'category': 'utilities',  # or 'marketing', 'analytics', 'content'
     'price': 3.0,
     'icon': '🤖',
     'webhook_url': 'http://localhost:5678/webhook/your-webhook-id',
 },
 ```
 
-#### **Step 2: Create Individual Template**
+#### **Step 2: Create Template**
+```django
+<!-- Copy workflows/templates/workflows/agent-template-starter.html -->
+<!-- Customize form fields for your agent -->
+<!-- All shared components included automatically -->
+```
+
+#### **Step 3: Test Agent**
 ```bash
-# CORRECT: Start with agent template prototype for reference
-# Reference: agent_template_prototype.html (perfect UI patterns)
-# Then copy the starter template
-cp workflows/templates/workflows/agent-template-starter.html workflows/templates/workflows/your-agent.html
-
-# Customize the template by replacing:
-# - Form fields section with your agent-specific inputs
-# - Processing messages and result titles
-# - How it works steps (optional)
-
-# ⚠️ NEVER copy from existing agent templates (leads to bloat!)
+# Agent automatically available at /agents/{slug}/
+# Plugin architecture handles everything automatically
 ```
 
-#### **Step 3: Add Template Mapping**
-```python
-# In workflows/views.py - add to template_mapping dict
-template_mapping = {
-    'social-ads-generator': 'workflows/social-ads-generator.html',
-    # ... existing mappings ...
-    'your-agent-slug': 'workflows/your-agent.html',  # <-- Add this line
-}
-```
+### Benefits of New Architecture
 
-#### **Step 4: Optional - Add to Marketplace**
-```python
-# If you want the agent in the marketplace
-from agent_base.models import BaseAgent
-
-BaseAgent.objects.create(
-    name="Your Agent Name",
+- ✅ **Infinite Scalability** - New agents need only 5 lines of config
+- ✅ **No Code Duplication** - Shared processors and webhook strategies
+- ✅ **Plugin Architecture** - Dynamic processor loading
+- ✅ **Consistent UI** - Shared components across all agents
+- ✅ **Easy Maintenance** - Single codebase for all agent processing
+- ✅ **Type Safety** - Abstract base classes enforce proper implementation
     slug="your-agent-slug", 
     description="What this agent does",
     price=3.0,
@@ -663,22 +619,22 @@ curl http://localhost:8000/health/
 
 **Single Responsibility:**
 - `core` - Platform presentation and static pages only
-- `agent_base` - Agent marketplace, catalog, and cross-agent functionality
+- `workflows` - Unified agent processing with plugin architecture and marketplace
 - `wallet` - Complete payment system with Stripe integration
-- Individual agent apps - Specific agent logic and interfaces
+- `authentication` - User authentication and management
 
 **URL Namespacing:**
-- Use `agent_base:marketplace` for marketplace links
+- Use `workflows:marketplace` for marketplace links
+- Use `workflows:agent` for individual agent pages
 - Use `wallet:wallet` for wallet-related links
 - Use `core:homepage` for platform homepage
-- Individual agents have their own URL namespaces
 
 **Template Organization:**
 - Templates are organized by app responsibility
 - Use proper URL namespacing in templates
-- Marketplace functionality is in `agent_base` app, not `core`
+- All agent functionality unified in `workflows` app
 
-Always run `python manage.py check_db` before making database-related changes to ensure proper configuration.
+Always run `python manage.py check` before making database-related changes to ensure proper configuration.
 
 ---
-Last updated: Last updated: Last updated: Last updated: Last updated: Last updated: Last updated: Last updated: 2025-07-29 20:04:46
+Last updated: Last updated: Last updated: Last updated: Last updated: Last updated: Last updated: Last updated: Last updated: 2025-07-29 20:12:03
