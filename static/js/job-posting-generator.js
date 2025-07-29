@@ -1,14 +1,15 @@
 /**
- * Social Ads Generator - Agent-Specific JavaScript
- * Handles unique functionality for Social Ads Generator agent
+ * Job Posting Generator - Agent-Specific JavaScript
+ * Handles unique functionality for Job Posting Generator agent
+ * Uses WorkflowsCore architecture like other agents
  */
 
-class SocialAdsProcessor extends WorkflowsCore {
+class JobPostingGeneratorProcessor extends WorkflowsCore {
     constructor() {
         super();
-        this.agentSlug = 'social-ads-generator';
-        this.webhookUrl = 'http://localhost:5678/webhook/2dc234d8-7217-454a-83e9-81afe5b4fe2d';
-        this.price = 5.0; // Will be overridden by template data
+        this.agentSlug = 'job-posting-generator';
+        this.webhookUrl = 'http://localhost:5678/webhook/43f84411-eaaa-488c-9b1f-856e90d0aaf6';
+        this.price = 4.0; // Will be overridden by template data
         this.sessionId = this.constructor.generateSessionId();
         
         // Initialize on page load
@@ -30,14 +31,6 @@ class SocialAdsProcessor extends WorkflowsCore {
         
         // Initialize form validation
         this.initializeFormValidation();
-        
-        // Set initial radio selection if any exist
-        const firstRadio = document.querySelector('.radio-card');
-        if (firstRadio && !document.querySelector('.radio-card.selected')) {
-            firstRadio.classList.add('selected');
-            const input = firstRadio.querySelector('input[type="radio"]');
-            if (input) input.checked = true;
-        }
     }
     
     /**
@@ -56,7 +49,7 @@ class SocialAdsProcessor extends WorkflowsCore {
         if (!this.constructor.checkBalance(this.price)) return;
         
         // Show processing status and disable submit button
-        this.constructor.showProcessing('Generating your social ads...');
+        this.constructor.showProcessing('Creating your professional job posting...');
         
         const submitBtn = document.getElementById('generateBtn');
         if (submitBtn) {
@@ -83,13 +76,16 @@ class SocialAdsProcessor extends WorkflowsCore {
             const formData = new FormData(form);
             
             // Extract form data
-            const description = formData.get('description').trim();
-            const platform = formData.get('social_platform');
-            const emoji = formData.get('include_emoji');
-            const language = formData.get('language');
+            const jobTitle = formData.get('job_title').trim();
+            const companyName = formData.get('company_name').trim();
+            const jobDescription = formData.get('job_description').trim();
+            const seniorityLevel = formData.get('seniority_level');
+            const contractType = formData.get('contract_type');
+            const location = formData.get('location').trim();
+            const language = formData.get('language') || 'English';
             
             // Create message for N8N
-            const messageText = `Create compelling social media ads for: ${description}. Target platform: ${platform}. Include emojis: ${emoji}. Language: ${language}. Make it engaging and professional.`;
+            const messageText = `Create a professional job posting for: ${jobTitle} at ${companyName}. Description: ${jobDescription}. Seniority: ${seniorityLevel}. Contract: ${contractType}. Location: ${location}. Language: ${language}. Make it comprehensive and attractive to candidates.`;
             
             const webhookData = {
                 sessionId: this.sessionId,
@@ -122,14 +118,14 @@ class SocialAdsProcessor extends WorkflowsCore {
             // Deduct wallet balance via Django API
             await this.constructor.deductBalance(
                 this.price, 
-                `Social Ads Generator - ${description.substring(0, 50)}...`,
+                `Job Posting Generator - ${jobTitle} at ${companyName}`,
                 this.agentSlug
             );
             
             // Display results using the enhanced display function
-            this.displayDirectN8NResults(data, platform, language);
+            this.displayDirectN8NResults(data, jobTitle, companyName);
             
-            this.constructor.showToast('✅ Social ads generated successfully!', 'success');
+            this.constructor.showToast('✅ Job posting generated successfully!', 'success');
             
         } catch (error) {
             console.error('N8N processing error:', error);
@@ -141,9 +137,99 @@ class SocialAdsProcessor extends WorkflowsCore {
     
     
     /**
+     * Form validation specific to Job Posting Generator
+     */
+    initializeFormValidation() {
+        const requiredFields = ['job_title', 'company_name', 'job_description', 'seniority_level', 'contract_type', 'location'];
+        
+        requiredFields.forEach(fieldName => {
+            const field = document.getElementById(fieldName);
+            if (field) {
+                field.addEventListener('blur', () => this.validateField(fieldName));
+                field.addEventListener('input', () => this.validateField(fieldName));
+            }
+        });
+    }
+    
+    validateField(fieldName) {
+        const field = document.getElementById(fieldName);
+        if (!field) return true;
+        
+        const value = field.value.trim();
+        
+        switch (fieldName) {
+            case 'job_title':
+                if (!value) {
+                    this.constructor.showFieldError(fieldName, 'Job title is required');
+                    return false;
+                }
+                if (value.length < 3) {
+                    this.constructor.showFieldError(fieldName, 'Job title should be at least 3 characters');
+                    return false;
+                }
+                break;
+                
+            case 'company_name':
+                if (!value) {
+                    this.constructor.showFieldError(fieldName, 'Company name is required');
+                    return false;
+                }
+                if (value.length < 2) {
+                    this.constructor.showFieldError(fieldName, 'Company name should be at least 2 characters');
+                    return false;
+                }
+                break;
+                
+            case 'job_description':
+                if (!value) {
+                    this.constructor.showFieldError(fieldName, 'Job description is required');
+                    return false;
+                }
+                break;
+                
+            case 'seniority_level':
+            case 'contract_type':
+                if (!value) {
+                    const fieldLabel = fieldName.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    this.constructor.showFieldError(fieldName, `${fieldLabel} is required`);
+                    return false;
+                }
+                break;
+                
+            case 'location':
+                if (!value) {
+                    this.constructor.showFieldError(fieldName, 'Location is required');
+                    return false;
+                }
+                if (value.length < 3) {
+                    this.constructor.showFieldError(fieldName, 'Location should be at least 3 characters');
+                    return false;
+                }
+                break;
+        }
+        
+        this.constructor.clearFieldError(fieldName);
+        return true;
+    }
+    
+    isFormValid() {
+        const requiredFields = ['job_title', 'company_name', 'job_description', 'seniority_level', 'contract_type', 'location'];
+        
+        let isValid = true;
+        requiredFields.forEach(fieldName => {
+            if (!this.validateField(fieldName)) {
+                isValid = false;
+            }
+        });
+        
+        return isValid;
+    }
+    
+    
+    /**
      * Display results from direct N8N call
      */
-    displayDirectN8NResults(data, platform, language) {
+    displayDirectN8NResults(data, jobTitle, companyName) {
         const resultsContainer = document.getElementById('resultsContainer');
         const resultsContent = document.getElementById('resultsContent');
         
@@ -155,14 +241,14 @@ class SocialAdsProcessor extends WorkflowsCore {
         if (typeof data === 'string') {
             content = data;
         } else if (data && typeof data === 'object') {
-            content = data.output || data.text || data.content || data.ad_copy || data.result || data.message || JSON.stringify(data, null, 2);
+            content = data.output || data.text || data.content || data.job_posting || data.result || data.message || JSON.stringify(data, null, 2);
         } else {
-            content = 'Social ads generated successfully!';
+            content = 'Job posting generated successfully!';
         }
         
         // Clear and populate results securely
         resultsContent.textContent = '';
-        this.renderSecureContent(resultsContent, content);
+        this.renderSecureJobContent(resultsContent, content);
         
         // Show results container
         resultsContainer.style.display = 'block';
@@ -172,18 +258,18 @@ class SocialAdsProcessor extends WorkflowsCore {
     }
     
     /**
-     * Secure content rendering without innerHTML to prevent XSS
+     * Secure content rendering for job postings without innerHTML to prevent XSS
      */
-    renderSecureContent(container, content) {
+    renderSecureJobContent(container, content) {
         // Sanitize and validate content
         if (!content || typeof content !== 'string') {
             container.textContent = 'No content available';
             return;
         }
         
-        // Create wrapper paragraph
+        // Create wrapper div
         const wrapper = document.createElement('div');
-        wrapper.className = 'results-content';
+        wrapper.className = 'job-posting-content';
         
         // Split content into lines and process safely
         const lines = content.split('\n');
@@ -202,34 +288,37 @@ class SocialAdsProcessor extends WorkflowsCore {
             // Handle headers (but escape content)
             if (line.startsWith('### ')) {
                 element = document.createElement('h3');
+                element.className = 'job-section-title';
                 element.textContent = line.substring(4);
             } else if (line.startsWith('## ')) {
                 element = document.createElement('h2');
+                element.className = 'job-section-title';
                 element.textContent = line.substring(3);
             } else if (line.startsWith('# ')) {
                 element = document.createElement('h1');
+                element.className = 'job-section-title';
+                element.textContent = line.substring(2);
+            } else if (line.startsWith('- ')) {
+                // Handle list items
+                element = document.createElement('li');
                 element.textContent = line.substring(2);
             } else {
                 // Handle regular text with basic formatting
-                element = document.createElement('span');
-                this.formatTextSecurely(element, line);
+                element = document.createElement('p');
+                element.className = 'job-paragraph';
+                this.formatJobTextSecurely(element, line);
             }
             
             wrapper.appendChild(element);
-            
-            // Add line break if not the last line
-            if (i < lines.length - 1) {
-                wrapper.appendChild(document.createElement('br'));
-            }
         }
         
         container.appendChild(wrapper);
     }
     
     /**
-     * Format text with basic styling while preventing XSS
+     * Format job posting text with basic styling while preventing XSS
      */
-    formatTextSecurely(element, text) {
+    formatJobTextSecurely(element, text) {
         // Simple approach: handle bold and italic formatting securely
         const parts = [];
         let currentText = text;
@@ -268,67 +357,15 @@ class SocialAdsProcessor extends WorkflowsCore {
         });
     }
     
+    
     /**
-     * Form validation specific to Social Ads Generator
+     * Escape HTML to prevent XSS
      */
-    initializeFormValidation() {
-        const fields = ['description', 'social_platform', 'include_emoji'];
-        
-        fields.forEach(fieldName => {
-            const field = document.getElementById(fieldName);
-            if (field) {
-                field.addEventListener('blur', () => this.validateField(fieldName));
-                field.addEventListener('input', () => this.constructor.clearFieldError(fieldName));
-            }
-        });
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
-    
-    validateField(fieldName) {
-        const field = document.getElementById(fieldName);
-        const value = field.value.trim();
-        
-        switch (fieldName) {
-            case 'description':
-                if (!value) {
-                    this.constructor.showFieldError(fieldName, 'Please provide a description of your product or service');
-                    return false;
-                } else if (value.length < 10) {
-                    this.constructor.showFieldError(fieldName, 'Description must be at least 10 characters long');
-                    return false;
-                }
-                break;
-            case 'social_platform':
-                if (!value) {
-                    this.constructor.showFieldError(fieldName, 'Please select a social media platform');
-                    return false;
-                }
-                break;
-            case 'include_emoji':
-                if (!value) {
-                    this.constructor.showFieldError(fieldName, 'Please select whether to include emojis');
-                    return false;
-                }
-                break;
-        }
-        
-        this.constructor.clearFieldError(fieldName);
-        return true;
-    }
-    
-    isFormValid() {
-        const fields = ['description', 'social_platform', 'include_emoji'];
-        let isValid = true;
-        
-        fields.forEach(fieldName => {
-            if (!this.validateField(fieldName)) {
-                isValid = false;
-            }
-        });
-        
-        return isValid;
-    }
-    
-    
     
     /**
      * Reset submit button to original state
@@ -337,7 +374,7 @@ class SocialAdsProcessor extends WorkflowsCore {
         const submitBtn = document.getElementById('generateBtn');
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.textContent = `📢 Generate Social Ads (${this.price} AED)`;
+            submitBtn.textContent = `💼 Generate Job Posting (${this.price} AED)`;
         }
     }
 }
@@ -347,7 +384,7 @@ function copyResults() {
     const content = document.getElementById('resultsContent');
     if (content) {
         const text = content.textContent || '';
-        WorkflowsCore.copyToClipboard(text, 'Social ads copied to clipboard!');
+        WorkflowsCore.copyToClipboard(text, 'Job posting copied to clipboard!');
     }
 }
 
@@ -355,7 +392,9 @@ function downloadResults() {
     const content = document.getElementById('resultsContent');
     if (content) {
         const text = content.textContent || '';
-        WorkflowsCore.downloadAsFile(text, 'social-ads-results.txt', 'Social ads downloaded!');
+        const jobTitle = document.getElementById('job_title')?.value || 'job-posting';
+        const filename = `${jobTitle.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.txt`;
+        WorkflowsCore.downloadAsFile(text, filename, 'Job posting downloaded!');
     }
 }
 
@@ -372,8 +411,8 @@ function resetForm() {
     if (processingStatus) processingStatus.style.display = 'none';
     
     // Clear validation errors
-    const fields = ['description', 'social_platform', 'include_emoji'];
-    fields.forEach(fieldName => WorkflowsCore.clearFieldError(fieldName));
+    const fields = ['job_title', 'company_name', 'job_description', 'seniority_level', 'contract_type', 'location'];
+    fields.forEach(field => WorkflowsCore.clearFieldError(field));
     
     // Scroll back to form
     const formSection = document.getElementById('agentForm');
@@ -382,8 +421,8 @@ function resetForm() {
     }
 }
 
-// Initialize Social Ads Processor when DOM is ready
+// Initialize Job Posting Generator Processor when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize processor (data attributes set by template)
-    window.socialAdsProcessor = new SocialAdsProcessor();
+    window.jobPostingGeneratorProcessor = new JobPostingGeneratorProcessor();
 });

@@ -25,16 +25,8 @@ urlpatterns = [
     path('wallet/', include('wallet.urls')),
     path('', include('agent_base.urls')),
     
-    # New unified workflows (will replace individual agent apps)
-    path('workflows/', include('workflows.urls')),
-    
-    # Legacy individual agent apps (will be deprecated)
-    path('agents/weather-reporter/', include('weather_reporter.urls')),
-    path('agents/data-analyzer/', include('data_analyzer.urls')),
-    path('agents/job-posting-generator/', include('job_posting_generator.urls')),
-    path('agents/social-ads-generator/', include('social_ads_generator.urls')),
-    path('agents/email-writer/', include('email_writer.urls')),
-    path('agents/five-whys-analyzer/', include('five_whys_analyzer.urls')),
+    # Unified workflows system for all agents
+    path('agents/', include('workflows.urls')),
     
     path('', include('core.urls')),
 ]

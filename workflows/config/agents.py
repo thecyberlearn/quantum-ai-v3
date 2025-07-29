@@ -8,7 +8,7 @@ AGENT_CONFIGS = {
         'name': 'Social Ads Generator',
         'description': 'Create engaging social media advertisements with AI-powered content generation',
         'category': 'marketing',
-        'price': 5.0,
+        'price': 6.0,
         'icon': '📱',
         'webhook_url': 'http://localhost:5678/webhook/2dc234d8-7217-454a-83e9-81afe5b4fe2d',
     },
@@ -17,9 +17,9 @@ AGENT_CONFIGS = {
         'name': 'Job Posting Generator',
         'description': 'Create professional job postings that attract top talent',
         'category': 'content',
-        'price': 4.0,
+        'price': 10.0,
         'icon': '💼',
-        'webhook_url': 'http://localhost:5678/webhook/job-posting-webhook-id',
+        'webhook_url': 'http://localhost:5678/webhook/43f84411-eaaa-488c-9b1f-856e90d0aaf6',
     },
     
     'five-whys-analyzer': {

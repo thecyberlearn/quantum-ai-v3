@@ -9,7 +9,7 @@
     <div class="quick-agents-grid">
         {% if available_agents %}
             {% for agent_slug, agent_info in available_agents.items %}
-                <a href="/workflows/{{ agent_slug }}/" class="quick-agent-card">
+                <a href="/agents/{{ agent_slug }}/" class="quick-agent-card">
                     <div class="agent-icon">{{ agent_info.icon }}</div>
                     <div class="agent-info">
                         <h4>{{ agent_info.name }}</h4>
@@ -19,7 +19,7 @@
             {% endfor %}
         {% else %}
             <!-- Fallback to hardcoded agents if available_agents not provided -->
-            <a href="/workflows/data-analyzer/" class="quick-agent-card">
+            <a href="/agents/data-analyzer/" class="quick-agent-card">
                 <div class="agent-icon">📊</div>
                 <div class="agent-info">
                     <h4>Data Analyzer</h4>
@@ -27,7 +27,7 @@
                 </div>
             </a>
 
-            <a href="/workflows/weather-reporter/" class="quick-agent-card">
+            <a href="/agents/weather-reporter/" class="quick-agent-card">
                 <div class="agent-icon">🌤️</div>
                 <div class="agent-info">
                     <h4>Weather Reporter</h4>
@@ -35,7 +35,7 @@
                 </div>
             </a>
 
-            <a href="/workflows/social-ads-generator/" class="quick-agent-card">
+            <a href="/agents/social-ads-generator/" class="quick-agent-card">
                 <div class="agent-icon">📢</div>
                 <div class="agent-info">
                     <h4>Social Ads Generator</h4>
@@ -43,7 +43,7 @@
                 </div>
             </a>
 
-            <a href="/workflows/job-posting-generator/" class="quick-agent-card">
+            <a href="/agents/job-posting-generator/" class="quick-agent-card">
                 <div class="agent-icon">💼</div>
                 <div class="agent-info">
                     <h4>Job Posting Generator</h4>
@@ -51,7 +51,7 @@
                 </div>
             </a>
 
-            <a href="/workflows/five-whys-analyzer/" class="quick-agent-card">
+            <a href="/agents/five-whys-analyzer/" class="quick-agent-card">
                 <div class="agent-icon">🤔</div>
                 <div class="agent-info">
                     <h4>Five Whys Analyzer</h4>

@@ -180,6 +180,11 @@ document.body.setAttribute('data-agent-price', '{{ agent_config.price }}');
                             </div>
                         </div>
                         <input type="file" id="dataFile" name="file" accept=".pdf" style="display: none;" required>
+                        
+                        <!-- File Display Elements -->
+                        <div id="fileName" style="margin-top: var(--spacing-sm); color: var(--success); font-weight: 500; display: none;"></div>
+                        <div id="fileSize" style="margin-top: var(--spacing-xs); color: var(--on-surface-variant); font-size: 12px; display: none;"></div>
+                        
                         <div class="form-help">Supported format: PDF files only. Max size: 10MB</div>
                         <div id="dataFile-error" class="form-error" style="display: none;"></div>
                     </div>
@@ -212,7 +217,7 @@ document.body.setAttribute('data-agent-price', '{{ agent_config.price }}');
                     <div style="margin-top: var(--spacing-lg);">
                         {% if user.is_authenticated %}
                             {% if user.wallet_balance >= agent_config.price %}
-                                <button type="submit" class="btn btn-primary btn-full" id="analyzeBtn">
+                                <button type="submit" class="btn btn-primary btn-full" id="generateBtn">
                                     🚀 Analyze Data ({{ agent_config.price }} AED)
                                 </button>
                             {% else %}
