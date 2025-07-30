@@ -1,26 +1,31 @@
 === Documentation Auto-Update Summary ===
-Update Date: 2025-07-29 20:12:03
+Update Date: 2025-07-30 11:51:21
 
 Recent Commits:
-  - fe6dbe1 🔧 Fix wallet NoReverseMatch error - update agent_base references
-  - 94a8655 Improve marketplace layout: search above, category buttons below
-  - bc160b1 🎯 Keep only working agents and simplify marketplace view
+  - 4ee9e09 📚 Update CLAUDE.md with enhanced agent template documentation
+  - c2cdaa4 ✨ Enhance agent template with modern UX patterns and data analyzer improvements
+  - 6c665f3 📚 Update documentation to reflect current simplified architecture
 
 Agents Changes:
-  - templates/components/quick_agents_panel.html
+  - docs/development/agent-creation.md
+  - docs/development/subagents-guide.md
 
-Frontend Changes:
-  - templates/403.html
-  - templates/404.html
-  - templates/500.html
-  - templates/wallet/wallet.html
-  - templates/wallet/wallet_topup.html
+Deployment Changes:
+  - docs/deployment/railway-deployment.md
+
+Documentation Changes:
+  - AUTO_DOCS_SETUP_COMPLETE.md
+  - CLAUDE.md
+  - DEVELOPMENT_WORKFLOW.md
+  - docs/README.md
+  - docs/deployment/deployment-checklist.md
 
 Backend Changes:
+  - DOCUMENTATION_UPDATE_SUMMARY.txt
+  - deploy_n8n_workflows.sh
   - docs_update_summary.txt
 
 Updated Documentation Files:
   - /home/amit/projects/quantum_ai_v2/CLAUDE.md
-  - /home/amit/projects/quantum_ai_v2/docs/development/agent-creation.md
 
 === End Summary ===
