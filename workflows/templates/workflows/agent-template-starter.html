@@ -2,19 +2,37 @@
 {% load static %}
 
 {# 
-AGENT TEMPLATE STARTER - Copy this file and customize for new agents
+AGENT TEMPLATE STARTER - Enhanced Version with Modern UX Patterns
+Copy this file and customize for new agents
 
-REPLACE THE FOLLOWING:
-1. "Agent Template Starter" -> Your agent name
-2. "YOUR_AGENT_SLUG" -> your-agent-slug  
-3. Form fields in the widget-content section
-4. How it works steps (optional)
-5. Agent-specific JavaScript (optional)
+REQUIRED CUSTOMIZATIONS:
+1. File names: "agent-template-starter" -> "your-agent-slug"
+2. Agent info: "Agent Template Starter" -> Your agent name
+3. Form fields: Replace example fields with your agent's specific inputs
+4. JavaScript: Update agent-template-starter.js with your agent logic
+5. Agent config: Add your agent to workflows/config/agents.py
 
-KEEP THE FOLLOWING:
-- All include statements for shared components
-- Basic template structure and CSS links
+TEMPLATE FEATURES INCLUDED:
+✅ Enhanced file upload with preview, progress, and validation
+✅ Real-time form validation with detailed error messages
+✅ Drag-and-drop file support with visual feedback
+✅ Class-based JavaScript architecture following data-analyzer pattern
+✅ Comprehensive CSS framework with all modern patterns
+✅ Mobile-responsive design with proper accessibility
+✅ Integration with workflows-core.js and existing components
+
+KEEP THE FOLLOWING UNCHANGED:
+- All {% include %} statements for shared components
+- Template structure (agent-container, agent-grid, etc.)
 - Processing and results components
+- Authentication and wallet balance checks
+- CSS variable system and design tokens
+
+OPTIONAL CUSTOMIZATIONS:
+- How it works steps (change steps parameter)
+- Custom CSS in the designated section
+- Additional form sections or validation rules
+- Custom result formatting in JavaScript
 #}
 
 {% block title %}Agent Template Starter - Quantum Tasks AI{% endblock %}
@@ -190,11 +208,7 @@ KEEP THE FOLLOWING:
     color: #0369a1;
 }
 
-/* File Upload Styling */
-.file-upload-container {
-    margin-bottom: var(--spacing-md);
-}
-
+/* Enhanced File Upload Styling */
 .file-upload-area {
     border: 2px dashed var(--outline-variant);
     border-radius: var(--radius-md);
@@ -210,72 +224,189 @@ KEEP THE FOLLOWING:
 .file-upload-area.dragover {
     border-color: var(--primary);
     background: var(--surface-variant);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
 }
 
-.file-upload-content {
+.file-upload-area.file-selected {
+    border-color: var(--success);
+    background: #f0fdf4;
+    color: #16a34a;
+    cursor: default;
+}
+
+.file-upload-area.upload-error {
+    border-color: var(--error);
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.file-upload-area.uploading {
+    border-color: var(--primary);
+    background: var(--surface-variant);
+    pointer-events: none;
+}
+
+.upload-icon {
+    font-size: 48px;
+    margin-bottom: var(--spacing-sm);
+    opacity: 0.7;
+}
+
+.upload-text {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: var(--spacing-sm);
-}
-
-.file-upload-icon {
-    font-size: 32px;
-    margin-bottom: var(--spacing-sm);
-}
-
-.file-upload-text {
-    font-size: 16px;
-    color: var(--on-surface);
-}
-
-.file-upload-hint {
-    font-size: 14px;
     color: var(--on-surface-variant);
 }
 
-.file-input {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-}
-
-.file-info {
-    background: var(--surface-variant);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-md);
-    border: 1px solid var(--outline-variant);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.file-name {
+.upload-text > div:first-child {
     font-weight: 500;
     color: var(--on-surface);
 }
 
-.file-size {
+/* File Preview Section */
+.file-preview {
+    display: none;
+    background: var(--surface-variant);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-md);
+    position: relative;
+}
+
+.file-preview.show {
+    display: block;
+}
+
+.file-preview-content {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+}
+
+.file-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+    opacity: 0.8;
+}
+
+.file-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.file-name {
+    font-weight: 600;
+    color: var(--on-surface);
+    margin-bottom: var(--spacing-xs);
+    word-break: break-all;
+}
+
+.file-meta {
     font-size: 12px;
+    color: var(--on-surface-variant);
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.file-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-shrink: 0;
+}
+
+.file-action-btn {
+    background: none;
+    border: 1px solid var(--outline);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
     color: var(--on-surface-variant);
 }
 
-.file-remove {
-    background: var(--error);
-    color: white;
-    border: none;
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
+.file-action-btn:hover {
+    background: var(--surface);
+    border-color: var(--primary);
+    color: var(--primary);
 }
 
-.file-remove:hover {
-    background: #dc2626;
+.file-action-btn.remove {
+    color: var(--error);
+    border-color: var(--error);
+}
+
+.file-action-btn.remove:hover {
+    background: #fef2f2;
+}
+
+/* Upload Progress */
+.upload-progress {
+    display: none;
+    margin-top: var(--spacing-sm);
+}
+
+.upload-progress.show {
+    display: block;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--outline-variant);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: var(--spacing-xs);
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--primary);
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.progress-text {
+    font-size: 12px;
+    color: var(--on-surface-variant);
+    text-align: center;
+}
+
+/* Validation Messages */
+.validation-message {
+    display: none;
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.validation-message.show {
+    display: block;
+}
+
+.validation-message.error {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.validation-message.success {
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+}
+
+.validation-message.warning {
+    background: #fffbeb;
+    color: #d97706;
+    border: 1px solid #fed7aa;
 }
 
 /* Responsive Design */
@@ -316,8 +447,24 @@ KEEP THE FOLLOWING:
     .file-upload-area {
         padding: var(--spacing-lg);
     }
+    
+    .file-preview-content {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    
+    .file-actions {
+        align-self: stretch;
+        justify-content: center;
+    }
+    
+    .validation-message {
+        font-size: 12px;
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
 }
-{# Add agent-specific CSS here if needed #}
+
+/* Add agent-specific CSS here if needed */
 </style>
 {% endblock %}
 
@@ -350,8 +497,29 @@ document.body.setAttribute('data-agent-price', '{{ agent_config.price }}');
             <form id="agentForm" method="POST">
                 {% csrf_token %}
                 
-                {# CUSTOMIZE: Replace this section with your agent-specific form fields #}
-                <!-- Example form section - REPLACE WITH YOUR FIELDS -->
+                {# 
+                CUSTOMIZE: Replace this entire section with your agent-specific form fields
+                
+                FORM FIELD EXAMPLES INCLUDED:
+                - Text input with validation
+                - Textarea with character limits
+                - Select dropdown with options
+                - Enhanced file upload with preview
+                
+                VALIDATION FEATURES:
+                - Required field validation
+                - Real-time error display
+                - File type and size validation
+                - Success/error visual feedback
+                
+                CUSTOMIZE FOR YOUR AGENT:
+                1. Replace field names (example_input -> your_field_name)
+                2. Update validation rules in JavaScript
+                3. Modify form labels and help text
+                4. Add/remove fields as needed
+                5. Update placeholder text and options
+                #}
+                <!-- EXAMPLE FORM SECTION - REPLACE WITH YOUR FIELDS -->
                 <div class="section-container">
                     <h4 class="section-subtitle">📝 Input Section</h4>
                     
@@ -392,42 +560,107 @@ document.body.setAttribute('data-agent-price', '{{ agent_config.price }}');
                     </div>
                 </div>
                 
-                <!-- OPTIONAL: File Upload Section - Remove this section if not needed -->
+                {# 
+                OPTIONAL: Enhanced File Upload Section
+                
+                FEATURES INCLUDED:
+                ✅ Drag and drop file upload
+                ✅ File preview with metadata (name, size, timestamp)
+                ✅ Replace/remove file actions
+                ✅ Real-time validation (file type, size limits)
+                ✅ Progress indicator during upload
+                ✅ Visual feedback for different states
+                ✅ Mobile-responsive design
+                ✅ Accessibility features (keyboard navigation, ARIA labels)
+                
+                CUSTOMIZATION OPTIONS:
+                1. Change accepted file types in 'accept' attribute
+                2. Modify file size limits in JavaScript validation
+                3. Update help text and file format descriptions
+                4. Customize validation messages
+                5. Remove entire section if file upload not needed
+                
+                REMOVE THIS SECTION IF YOUR AGENT DOESN'T NEED FILE UPLOAD
+                #}
+                <!-- ENHANCED FILE UPLOAD SECTION -->
                 <div class="section-container"> <!-- File upload section enabled -->
                     <h4 class="section-subtitle">📁 File Upload (Optional)</h4>
                     
                     <div class="form-group">
-                        <label class="form-label" for="example_file">Upload File (Optional)</label>
-                        <div class="file-upload-container" data-field-name="example_file">
-                            <div class="file-upload-area" id="example_file_upload_area">
-                                <div class="file-upload-content">
-                                    <div class="file-upload-icon">📁</div>
-                                    <div class="file-upload-text">
-                                        <strong>Click to upload</strong> or drag and drop
-                                    </div>
-                                    <div class="file-upload-hint">
-                                        Supported formats: PDF, DOC, TXT, etc.
-                                    </div>
-                                </div>
-                                <input type="file" 
-                                       id="example_file" 
-                                       name="example_file" 
-                                       class="file-input"
-                                       accept=".pdf,.doc,.docx,.txt">
-                            </div>
-                            <div class="file-info" id="example_file_file_info" style="display: none;">
-                                <div class="file-name"></div>
-                                <div class="file-size"></div>
-                                <button type="button" class="file-remove" onclick="removeFile('example_file')">Remove</button>
+                        <label class="form-label">📁 Upload File (Optional)</label>
+                        <div class="file-upload-area" id="fileUploadArea" onclick="triggerFileSelect()"
+                             role="button" tabindex="0" aria-label="Click to upload file or drag and drop"
+                             onkeydown="if(event.key==='Enter'||event.key===' '){triggerFileSelect()}">
+                            <div class="upload-text" id="uploadText">
+                                <div class="upload-icon">📁</div>
+                                <div><strong>Click to upload</strong> or drag and drop</div>
+                                <div>Supported formats: PDF, DOC, TXT, etc.</div>
                             </div>
                         </div>
-                        <div class="form-help">Upload a file if needed for processing</div>
+                        <input type="file" id="example_file" name="example_file" accept=".pdf,.doc,.docx,.txt" style="display: none;">
+                        
+                        <!-- Upload Progress -->
+                        <div class="upload-progress" id="uploadProgress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <div class="progress-text" id="progressText">Preparing upload...</div>
+                        </div>
+                        
+                        <!-- File Preview -->
+                        <div class="file-preview" id="filePreview">
+                            <div class="file-preview-content">
+                                <div class="file-icon">📄</div>
+                                <div class="file-details">
+                                    <div class="file-name" id="previewFileName"></div>
+                                    <div class="file-meta">
+                                        <span id="previewFileSize"></span>
+                                        <span id="previewFileType">Document</span>
+                                        <span id="previewTimestamp"></span>
+                                    </div>
+                                </div>
+                                <div class="file-actions">
+                                    <button type="button" class="file-action-btn" onclick="replaceFile()" title="Replace file">
+                                        🔄 Replace
+                                    </button>
+                                    <button type="button" class="file-action-btn remove" onclick="removeFile()" title="Remove file">
+                                        🗑️ Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Validation Messages -->
+                        <div class="validation-message" id="validationMessage"></div>
+                        
+                        <div class="form-help">Upload a file if needed for processing (Max size: 10MB)</div>
                         <div id="example_file-error" class="form-error" style="display: none;"></div>
                     </div>
                 </div>
                 {# END CUSTOMIZE SECTION #}
 
-                <!-- Submit Button with Balance Check - KEEP THIS STRUCTURE -->
+                {# 
+                SUBMIT BUTTON SECTION - KEEP THIS STRUCTURE UNCHANGED
+                
+                FEATURES INCLUDED:
+                ✅ Authentication check (redirects to login if not authenticated)
+                ✅ Wallet balance validation (shows top-up if insufficient funds)
+                ✅ Proper form submission handling
+                ✅ Loading states and user feedback
+                ✅ Price display from agent configuration
+                ✅ Consistent styling across all agents
+                
+                CUSTOMIZATION OPTIONS:
+                - Change action verb in button text ("Generate" -> "Analyze", "Create", etc.)
+                - Update button icon emoji to match your agent
+                
+                DO NOT CHANGE:
+                - Authentication and balance check logic
+                - Template structure and Django template tags
+                - CSS classes and styling
+                - Error message formatting
+                #}
+                <!-- SUBMIT BUTTON WITH AUTHENTICATION & BALANCE CHECKS -->
                 <div style="margin-top: var(--spacing-lg);">
                     {% if user.is_authenticated %}
                         {% if user.wallet_balance >= agent_config.price %}
@@ -470,136 +703,100 @@ document.body.setAttribute('data-agent-price', '{{ agent_config.price }}');
 
 {% block extra_js %}
 <script src="{% static 'js/workflows-core.js' %}?v={{ timestamp }}"></script>
-{# CUSTOMIZE: Add agent-specific JavaScript file if needed #}
-{# <script src="{% static 'js/your-agent.js' %}?v={{ timestamp }}"></script> #}
-
-{# CUSTOMIZE: Add agent-specific JavaScript inline if needed #}
-<script>
-// Agent-specific JavaScript - Enhanced Template with Validation
-// You have access to all WorkflowsCore functions:
-// - WorkflowsCore.showToast(message, type)
-// - WorkflowsCore.showProcessing(title)
-// - WorkflowsCore.showResults(content, title)
-// - WorkflowsCore.copyToClipboard(text, message)
-// - WorkflowsCore.downloadAsFile(content, filename, message)
-// - WorkflowsCore.showFieldError(fieldName, message)
-// - WorkflowsCore.clearFieldError(fieldName)
-// - And many more...
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize your agent-specific functionality here
-    console.log('Agent template loaded');
-    
-    // Handle form submission with validation
-    const form = document.getElementById('agentForm');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Validate required fields
-            const exampleInput = document.getElementById('example_input');
-            const exampleTextarea = document.getElementById('example_textarea');
-            const exampleSelect = document.getElementById('example_select');
-            
-            // Clear previous errors
-            WorkflowsCore.clearFieldError('example_input');
-            WorkflowsCore.clearFieldError('example_textarea');
-            WorkflowsCore.clearFieldError('example_select');
-            
-            let hasErrors = false;
-            
-            // Validate input field
-            if (!exampleInput.value.trim()) {
-                WorkflowsCore.showFieldError('example_input', 'This field is required');
-                hasErrors = true;
-            }
-            
-            // Validate textarea
-            if (!exampleTextarea.value.trim()) {
-                WorkflowsCore.showFieldError('example_textarea', 'This field is required');
-                hasErrors = true;
-            }
-            
-            // Validate select
-            if (!exampleSelect.value) {
-                WorkflowsCore.showFieldError('example_select', 'Please select an option');
-                hasErrors = true;
-            }
-            
-            // Check authentication and balance
-            if (!WorkflowsCore.checkAuthentication()) {
-                return;
-            }
-            
-            const agentPrice = parseFloat(document.body.getAttribute('data-agent-price'));
-            if (!WorkflowsCore.checkBalance(agentPrice)) {
-                return;
-            }
-            
-            if (hasErrors) {
-                WorkflowsCore.showToast('Please fix the errors above', 'error');
-                return;
-            }
-            
-            // Show processing
-            WorkflowsCore.showProcessing('Processing your request...');
-            
-            // Submit form data
-            const formData = new FormData(form);
-            
-            fetch(window.location.href, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                }
-            })
-            .then(response => response.text())
-            .then(html => {
-                // Handle the response - customize this for your agent
-                WorkflowsCore.showResults(
-                    '<h3>Processing Complete</h3><p>Your request has been processed successfully. Results would appear here in a real implementation.</p>',
-                    'Generated Results'
-                );
-                WorkflowsCore.showToast('✅ Processing completed!', 'success');
-            })
-            .catch(error => {
-                console.error('Processing error:', error);
-                WorkflowsCore.hideProcessing();
-                WorkflowsCore.showToast('❌ Processing failed. Please try again.', 'error');
-            });
-        });
-    }
-    
-    // Real-time validation on input
-    const inputs = document.querySelectorAll('#agentForm input, #agentForm textarea, #agentForm select');
-    inputs.forEach(input => {
-        input.addEventListener('input', function() {
-            if (this.value.trim()) {
-                WorkflowsCore.clearFieldError(this.name);
-            }
-        });
-    });
-    
-    // File validation if file input exists
-    const fileInput = document.getElementById('example_file');
-    if (fileInput) {
-        fileInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                // Check file size (limit to 10MB)
-                if (file.size > 10 * 1024 * 1024) {
-                    WorkflowsCore.showFieldError('example_file', 'File size must be less than 10MB');
-                    this.value = '';
-                    return;
-                }
-                
-                // Clear any previous errors
-                WorkflowsCore.clearFieldError('example_file');
-                WorkflowsCore.showToast(`📁 File selected: ${file.name}`, 'success');
-            }
-        });
-    }
-});
-</script>
+{# CUSTOMIZE: Replace 'agent-template-starter' with your agent slug #}
+<script src="{% static 'js/agent-template-starter.js' %}?v={{ timestamp }}"></script>
 {% endblock %}
+
+{#
+===============================================================================
+SETUP INSTRUCTIONS FOR NEW AGENTS
+===============================================================================
+
+1. COPY FILES:
+   - Copy this template: agent-template-starter.html -> your-agent-name.html
+   - Copy JavaScript: agent-template-starter.js -> your-agent-name.js
+   - Place in: workflows/templates/workflows/ and static/js/ respectively
+
+2. UPDATE AGENT CONFIG:
+   - Add your agent to workflows/config/agents.py
+   - Set name, description, price, icon, and webhook_url
+   - Example:
+     'your-agent-slug': {
+         'name': 'Your Agent Name',
+         'description': 'Description of what your agent does',
+         'price': 10.0,
+         'icon': '🤖',
+         'webhook_url': 'your-n8n-webhook-url',
+     }
+
+3. CUSTOMIZE TEMPLATE:
+   - Update page title and meta information
+   - Replace example form fields with your agent's inputs
+   - Modify section titles and descriptions
+   - Update How It Works steps if needed
+   - Remove file upload section if not needed
+
+4. CUSTOMIZE JAVASCRIPT:
+   - Change class name: AgentTemplateProcessor -> YourAgentProcessor
+   - Update agent slug and webhook URL
+   - Modify form validation rules for your fields
+   - Customize result formatting for your agent's output
+   - Update file validation if using file upload
+
+5. ADD URL ROUTE:
+   - Add URL pattern in workflows/urls.py
+   - Point to your agent's view function
+   - Example: path('your-agent-slug/', views.your_agent_view, name='your_agent')
+
+6. CREATE VIEW:
+   - Add view function in workflows/views.py
+   - Handle form processing and N8N integration
+   - Return appropriate JSON responses
+   - Follow existing agent patterns
+
+7. TESTING:
+   - Test form validation and submission
+   - Verify file upload functionality (if used)
+   - Check responsive design on mobile
+   - Test authentication and wallet balance flows
+   - Verify N8N webhook integration
+
+8. PRODUCTION:
+   - Update N8N webhook URLs to production
+   - Test with real user accounts
+   - Monitor error logs and performance
+   - Update documentation if needed
+
+===============================================================================
+AVAILABLE WORKFLOWSCORE FUNCTIONS (from workflows-core.js)
+===============================================================================
+
+Authentication & Balance:
+- WorkflowsCore.checkAuthentication()
+- WorkflowsCore.checkBalance(price)
+- WorkflowsCore.updateWalletBalance(balance)
+
+UI Feedback:
+- WorkflowsCore.showToast(message, type)
+- WorkflowsCore.showProcessing(title)
+- WorkflowsCore.hideProcessing()
+- WorkflowsCore.showResults(content, title)
+
+Form Validation:
+- WorkflowsCore.showFieldError(fieldName, message)
+- WorkflowsCore.clearFieldError(fieldName)
+- WorkflowsCore.clearAllFieldErrors()
+
+Utilities:
+- WorkflowsCore.copyToClipboard(text, message)
+- WorkflowsCore.downloadAsFile(content, filename, message)
+- WorkflowsCore.generateSessionId()
+- WorkflowsCore.formatFileSize(bytes)
+
+Processing:
+- WorkflowsCore.startPolling(requestId)
+- WorkflowsCore.stopPolling()
+- WorkflowsCore.pollForResults(requestId, callback)
+
+===============================================================================
+#}

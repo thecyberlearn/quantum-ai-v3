@@ -30,6 +30,162 @@
     border-color: var(--success);
     background: #f0fdf4;
     color: #16a34a;
+    cursor: default;
+}
+
+.file-upload-area.upload-error {
+    border-color: var(--error);
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.file-upload-area.uploading {
+    border-color: var(--primary);
+    background: var(--surface-variant);
+    pointer-events: none;
+}
+
+/* File Preview Section */
+.file-preview {
+    display: none;
+    background: var(--surface-variant);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-md);
+    position: relative;
+}
+
+.file-preview.show {
+    display: block;
+}
+
+.file-preview-content {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+}
+
+.file-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+    opacity: 0.8;
+}
+
+.file-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.file-name {
+    font-weight: 600;
+    color: var(--on-surface);
+    margin-bottom: var(--spacing-xs);
+    word-break: break-all;
+}
+
+.file-meta {
+    font-size: 12px;
+    color: var(--on-surface-variant);
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.file-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-shrink: 0;
+}
+
+.file-action-btn {
+    background: none;
+    border: 1px solid var(--outline);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--on-surface-variant);
+}
+
+.file-action-btn:hover {
+    background: var(--surface);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.file-action-btn.remove {
+    color: var(--error);
+    border-color: var(--error);
+}
+
+.file-action-btn.remove:hover {
+    background: #fef2f2;
+}
+
+/* Upload Progress */
+.upload-progress {
+    display: none;
+    margin-top: var(--spacing-sm);
+}
+
+.upload-progress.show {
+    display: block;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--outline-variant);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: var(--spacing-xs);
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--primary);
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.progress-text {
+    font-size: 12px;
+    color: var(--on-surface-variant);
+    text-align: center;
+}
+
+/* Validation Messages */
+.validation-message {
+    display: none;
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.validation-message.show {
+    display: block;
+}
+
+.validation-message.error {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.validation-message.success {
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+}
+
+.validation-message.warning {
+    background: #fffbeb;
+    color: #d97706;
+    border: 1px solid #fed7aa;
 }
 
 
@@ -170,10 +326,10 @@ document.body.setAttribute('data-agent-price', '{{ agent_config.price }}');
                     <!-- File Upload Section -->
                     <div class="form-group">
                         <label class="form-label">📁 Upload Data File *</label>
-                        <div class="file-upload-area" onclick="document.getElementById('dataFile').click()"
+                        <div class="file-upload-area" id="fileUploadArea" onclick="triggerFileSelect()"
                              role="button" tabindex="0" aria-label="Click to upload data file or drag and drop"
-                             onkeydown="if(event.key==='Enter'||event.key===' '){document.getElementById('dataFile').click()}">
-                            <div class="upload-text">
+                             onkeydown="if(event.key==='Enter'||event.key===' '){triggerFileSelect()}">
+                            <div class="upload-text" id="uploadText">
                                 <div class="upload-icon">📁</div>
                                 <div><strong>Click to upload</strong> or drag and drop</div>
                                 <div>PDF files only</div>
@@ -181,9 +337,39 @@ document.body.setAttribute('data-agent-price', '{{ agent_config.price }}');
                         </div>
                         <input type="file" id="dataFile" name="file" accept=".pdf" style="display: none;" required>
                         
-                        <!-- File Display Elements -->
-                        <div id="fileName" style="margin-top: var(--spacing-sm); color: var(--success); font-weight: 500; display: none;"></div>
-                        <div id="fileSize" style="margin-top: var(--spacing-xs); color: var(--on-surface-variant); font-size: 12px; display: none;"></div>
+                        <!-- Upload Progress -->
+                        <div class="upload-progress" id="uploadProgress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <div class="progress-text" id="progressText">Preparing upload...</div>
+                        </div>
+                        
+                        <!-- File Preview -->
+                        <div class="file-preview" id="filePreview">
+                            <div class="file-preview-content">
+                                <div class="file-icon">📄</div>
+                                <div class="file-details">
+                                    <div class="file-name" id="previewFileName"></div>
+                                    <div class="file-meta">
+                                        <span id="previewFileSize"></span>
+                                        <span id="previewFileType">PDF Document</span>
+                                        <span id="previewTimestamp"></span>
+                                    </div>
+                                </div>
+                                <div class="file-actions">
+                                    <button type="button" class="file-action-btn" onclick="replaceFile()" title="Replace file">
+                                        🔄 Replace
+                                    </button>
+                                    <button type="button" class="file-action-btn remove" onclick="removeFile()" title="Remove file">
+                                        🗑️ Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Validation Messages -->
+                        <div class="validation-message" id="validationMessage"></div>
                         
                         <div class="form-help">Supported format: PDF files only. Max size: 10MB</div>
                         <div id="dataFile-error" class="form-error" style="display: none;"></div>

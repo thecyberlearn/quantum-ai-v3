@@ -199,45 +199,188 @@ class DataAnalyzerProcessor extends WorkflowsCore {
     }
     
     /**
-     * Handle file change events
+     * Handle file change events with enhanced UX
      */
     handleFileChange(event) {
         const file = event.target.files[0];
-        const fileNameDisplay = document.getElementById('fileName');
-        const fileSizeDisplay = document.getElementById('fileSize');
-        const uploadArea = document.querySelector('.file-upload-area');
+        const uploadArea = document.getElementById('fileUploadArea');
+        const filePreview = document.getElementById('filePreview');
+        const validationMessage = document.getElementById('validationMessage');
         
         if (file) {
-            if (fileNameDisplay) {
-                fileNameDisplay.textContent = `✅ ${file.name}`;
-                fileNameDisplay.style.display = 'block';
-            }
-            if (fileSizeDisplay) {
-                fileSizeDisplay.textContent = this.formatFileSize(file.size);
-                fileSizeDisplay.style.display = 'block';
+            // Validate file first
+            const validation = this.validateFileUpload(file);
+            
+            if (!validation.valid) {
+                this.showValidationMessage(validation.message, 'error');
+                uploadArea.classList.add('upload-error');
+                uploadArea.classList.remove('file-selected');
+                this.hideFilePreview();
+                return;
             }
             
-            // Add visual feedback
-            if (uploadArea) {
-                uploadArea.classList.add('file-selected');
-            }
+            // Show success validation
+            this.showValidationMessage(validation.message, 'success');
+            
+            // Update upload area
+            uploadArea.classList.remove('upload-error');
+            uploadArea.classList.add('file-selected');
+            
+            // Show file preview with enhanced info
+            this.showFilePreview(file);
             
             // Clear any previous errors
             this.constructor.clearFieldError('dataFile');
-            
-            // Validate file immediately
-            this.validateField('dataFile');
         } else {
-            // Reset display if no file
-            if (fileNameDisplay) {
-                fileNameDisplay.textContent = '';
-                fileNameDisplay.style.display = 'none';
+            // Reset all states
+            this.resetFileUploadState();
+        }
+    }
+    
+    /**
+     * Validate file upload with detailed feedback
+     */
+    validateFileUpload(file) {
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        const allowedTypes = ['application/pdf'];
+        const allowedExtensions = ['.pdf'];
+        
+        // Check file type
+        if (!allowedTypes.includes(file.type) && !allowedExtensions.includes('.' + file.name.split('.').pop().toLowerCase())) {
+            return {
+                valid: false,
+                message: 'Invalid file type. Please upload a PDF file only.'
+            };
+        }
+        
+        // Check file size
+        if (file.size > maxSize) {
+            return {
+                valid: false,
+                message: `File too large (${this.formatFileSize(file.size)}). Maximum size is 10MB.`
+            };
+        }
+        
+        // Check for empty file
+        if (file.size === 0) {
+            return {
+                valid: false,
+                message: 'File appears to be empty. Please select a valid PDF file.'
+            };
+        }
+        
+        return {
+            valid: true,
+            message: `✅ File validated successfully (${this.formatFileSize(file.size)})`
+        };
+    }
+    
+    /**
+     * Show file preview with enhanced information
+     */
+    showFilePreview(file) {
+        const filePreview = document.getElementById('filePreview');
+        const previewFileName = document.getElementById('previewFileName');
+        const previewFileSize = document.getElementById('previewFileSize');
+        const previewTimestamp = document.getElementById('previewTimestamp');
+        
+        if (filePreview && previewFileName && previewFileSize && previewTimestamp) {
+            previewFileName.textContent = file.name;
+            previewFileSize.textContent = this.formatFileSize(file.size);
+            previewTimestamp.textContent = `Added ${new Date().toLocaleTimeString()}`;
+            
+            filePreview.classList.add('show');
+        }
+    }
+    
+    /**
+     * Hide file preview
+     */
+    hideFilePreview() {
+        const filePreview = document.getElementById('filePreview');
+        if (filePreview) {
+            filePreview.classList.remove('show');
+        }
+    }
+    
+    /**
+     * Show validation message with type
+     */
+    showValidationMessage(message, type = 'info') {
+        const validationMessage = document.getElementById('validationMessage');
+        if (validationMessage) {
+            validationMessage.textContent = message;
+            validationMessage.className = `validation-message show ${type}`;
+        }
+    }
+    
+    /**
+     * Hide validation message
+     */
+    hideValidationMessage() {
+        const validationMessage = document.getElementById('validationMessage');
+        if (validationMessage) {
+            validationMessage.classList.remove('show');
+        }
+    }
+    
+    /**
+     * Reset file upload state
+     */
+    resetFileUploadState() {
+        const uploadArea = document.getElementById('fileUploadArea');
+        const filePreview = document.getElementById('filePreview');
+        
+        if (uploadArea) {
+            uploadArea.classList.remove('file-selected', 'upload-error', 'uploading');
+        }
+        
+        this.hideFilePreview();
+        this.hideValidationMessage();
+    }
+    
+    /**
+     * Show upload progress
+     */
+    showUploadProgress() {
+        const uploadProgress = document.getElementById('uploadProgress');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        
+        if (uploadProgress) {
+            uploadProgress.classList.add('show');
+        }
+        
+        // Simulate progress for visual feedback
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 90) progress = 90;
+            
+            if (progressFill) progressFill.style.width = `${progress}%`;
+            if (progressText) progressText.textContent = `Uploading... ${Math.round(progress)}%`;
+            
+            if (progress >= 90) {
+                clearInterval(interval);
+                if (progressText) progressText.textContent = 'Processing file...';
             }
-            if (fileSizeDisplay) {
-                fileSizeDisplay.textContent = '';
-                fileSizeDisplay.style.display = 'none';
-            }
-            if (uploadArea) uploadArea.classList.remove('file-selected');
+        }, 200);
+        
+        this.uploadProgressInterval = interval;
+    }
+    
+    /**
+     * Hide upload progress
+     */
+    hideUploadProgress() {
+        const uploadProgress = document.getElementById('uploadProgress');
+        if (uploadProgress) {
+            uploadProgress.classList.remove('show');
+        }
+        
+        if (this.uploadProgressInterval) {
+            clearInterval(this.uploadProgressInterval);
+            this.uploadProgressInterval = null;
         }
     }
     
@@ -336,6 +479,101 @@ function selectRadio(value) {
     }
 }
 
+// File management functions (global for template onclick handlers)
+function triggerFileSelect() {
+    const fileInput = document.getElementById('dataFile');
+    if (fileInput) {
+        fileInput.click();
+    }
+}
+
+function replaceFile() {
+    const fileInput = document.getElementById('dataFile');
+    if (fileInput) {
+        fileInput.value = '';
+        fileInput.click();
+    }
+}
+
+function removeFile() {
+    const fileInput = document.getElementById('dataFile');
+    const uploadArea = document.getElementById('fileUploadArea');
+    const filePreview = document.getElementById('filePreview');
+    const validationMessage = document.getElementById('validationMessage');
+    
+    if (fileInput) {
+        fileInput.value = '';
+        
+        // Reset upload area
+        if (uploadArea) {
+            uploadArea.classList.remove('file-selected', 'upload-error');
+        }
+        
+        // Hide preview and validation
+        if (filePreview) {
+            filePreview.classList.remove('show');
+        }
+        
+        if (validationMessage) {
+            validationMessage.classList.remove('show');
+        }
+        
+        // Clear any form errors
+        if (window.dataAnalyzerProcessor) {
+            window.dataAnalyzerProcessor.constructor.clearFieldError('dataFile');
+        }
+    }
+}
+
+// Drag and drop functionality
+function setupDragAndDrop() {
+    const uploadArea = document.getElementById('fileUploadArea');
+    const fileInput = document.getElementById('dataFile');
+    
+    if (!uploadArea || !fileInput) return;
+    
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    // Highlight drop area when item is dragged over it
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, unhighlight, false);
+    });
+    
+    // Handle dropped files
+    uploadArea.addEventListener('drop', handleDrop, false);
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    function highlight(e) {
+        uploadArea.classList.add('dragover');
+    }
+    
+    function unhighlight(e) {
+        uploadArea.classList.remove('dragover');
+    }
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length > 0) {
+            fileInput.files = files;
+            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+}
+
 // Result action functions (global for button onclick handlers)
 function copyResults() {
     const content = document.getElementById('resultsContent');
@@ -401,4 +639,7 @@ function resetForm() {
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize processor (data attributes set by template)
     window.dataAnalyzerProcessor = new DataAnalyzerProcessor();
+    
+    // Setup drag and drop functionality
+    setupDragAndDrop();
 });
