@@ -1,14 +1,13 @@
 === Documentation Auto-Update Summary ===
-Update Date: 2025-07-31 19:18:31
+Update Date: 2025-07-31 22:55:38
 
 Recent Commits:
+  - 4424780 🧹 Clean up marketplace to keep only 3 working agents
   - 400f2b7 📄 Add PDF Summarizer agent with advanced file upload system
   - cf8583d 💼 Add Job Posting Generator agent with comprehensive form schema
-  - 27a1c7d 📚 Auto-update documentation after agents app implementation
 
 Agents Changes:
-  - agents/management/commands/create_pdf_summarizer_agent.py
-  - agents/templates/agents/agent_detail.html
+  - agents/templates/agents/marketplace.html
   - static/js/agents-core.js
 
 Documentation Changes:

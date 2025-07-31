@@ -534,6 +534,24 @@ function resetForm() {
         }
     });
     
+    // Reset file upload UI components
+    const fileUploadContainers = document.querySelectorAll('.file-upload-container');
+    fileUploadContainers.forEach(container => {
+        const input = container.querySelector('.form-file-input');
+        const label = container.querySelector('.file-upload-label');
+        const selectedDiv = container.querySelector('.file-selected');
+        
+        if (input) {
+            input.value = '';
+        }
+        if (label) {
+            label.style.display = 'block';
+        }
+        if (selectedDiv) {
+            selectedDiv.style.display = 'none';
+        }
+    });
+    
     // Scroll back to form
     const formSection = document.getElementById('agentForm');
     if (formSection) {

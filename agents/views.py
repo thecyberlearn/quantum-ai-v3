@@ -183,6 +183,7 @@ def format_agent_message(agent_slug, input_data):
 
 
 # Web interface views
+@login_required
 def agent_detail_view(request, slug):
     """Render agent detail page with dynamic form"""
     agent = get_object_or_404(Agent, slug=slug, is_active=True)
