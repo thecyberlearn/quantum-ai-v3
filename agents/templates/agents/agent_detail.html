@@ -312,10 +312,10 @@ document.body.setAttribute('data-user-balance', '{{ user.wallet_balance }}');
 
 <div class="agent-container">
     <!-- Agent Header Component -->
-    {% include "workflows/components/agent_header.html" with agent_title=agent.name agent_subtitle=agent.short_description %}
+    {% include "components/agent_header.html" with agent_title=agent.name agent_subtitle=agent.short_description %}
 
     <!-- Quick Agent Access Panel Component -->
-    {% include "workflows/components/quick_agents_panel.html" %}
+    {% include "components/quick_agents_panel.html" %}
 
     <!-- Main Agent Grid -->
     <div class="agent-grid">
@@ -460,14 +460,14 @@ document.body.setAttribute('data-user-balance', '{{ user.wallet_balance }}');
         </div>
 
         <!-- How It Works Widget -->
-        {% include "workflows/components/how_it_works_widget.html" with steps="agents" %}
+        {% include "components/how_it_works_widget.html" with steps="agents" %}
     </div>
 
     <!-- Processing Status Component -->
-    {% include "workflows/components/processing_status.html" with status_title="Processing..." status_text="Please wait while we execute your agent..." %}
+    {% include "components/processing_status.html" with status_title="Processing..." status_text="Please wait while we execute your agent..." %}
     
     <!-- Results Component -->
-    {% include "workflows/components/results_container.html" with results_title="Agent Results" %}
+    {% include "components/results_container.html" with results_title="Agent Results" %}
 </div>
 {% endblock %}
 

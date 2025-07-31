@@ -6,7 +6,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django_ratelimit.decorators import ratelimit
 from django_ratelimit import UNSAFE
-from workflows.config.agents import get_all_agents
+from agents.models import Agent
 from .models import ContactSubmission
 from django.db import connection
 import logging
@@ -23,9 +23,8 @@ def homepage_view(request):
         messages.warning(request, 'Too many requests. Please wait a moment before refreshing.')
     
     try:
-        # Get featured agents for homepage from config
-        all_agents = get_all_agents()
-        featured_agents = list(all_agents.items())[:6]
+        # Get featured agents for homepage from database
+        featured_agents = Agent.objects.filter(is_active=True).select_related('category')[:6]
         
         context = {
             'user_balance': request.user.wallet_balance if request.user.is_authenticated else 0,
@@ -51,9 +50,8 @@ def pricing_view(request):
         return redirect('wallet:wallet_topup')
     
     try:
-        # Get sample agents to show pricing context from config
-        all_agents = get_all_agents()
-        sample_agents = list(all_agents.items())[:4]
+        # Get sample agents to show pricing context from database
+        sample_agents = Agent.objects.filter(is_active=True).select_related('category')[:4]
         
         context = {
             'sample_agents': sample_agents,
@@ -244,9 +242,9 @@ def health_check_view(request):
                 'response_time_ms': round((time.time() - start_time) * 1000, 2)
             }
             
-        # If database is working, get agent count from config
+        # If database is working, get agent count from database
         try:
-            agent_count = len(get_all_agents())
+            agent_count = Agent.objects.filter(is_active=True).count()
             health_data['checks']['agents'] = {
                 'status': 'healthy',
                 'active_count': agent_count
@@ -254,7 +252,7 @@ def health_check_view(request):
         except Exception as e:
             health_data['checks']['agents'] = {
                 'status': 'warning',
-                'error': 'Could not load agent config',
+                'error': 'Could not load agents',
                 'message': str(e)[:100]
             }
             

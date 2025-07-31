@@ -1,14 +1,17 @@
 === Documentation Auto-Update Summary ===
-Update Date: 2025-07-31 22:55:38
+Update Date: 2025-07-31 23:12:15
 
 Recent Commits:
+  - c368bb5 ✨ Enhance marketplace with modern design and authentication
   - 4424780 🧹 Clean up marketplace to keep only 3 working agents
   - 400f2b7 📄 Add PDF Summarizer agent with advanced file upload system
-  - cf8583d 💼 Add Job Posting Generator agent with comprehensive form schema
 
 Agents Changes:
   - agents/templates/agents/marketplace.html
+  - agents/views.py
   - static/js/agents-core.js
+  - templates/components/quick_agents_panel.html
+  - workflows/templates/workflows/components/quick_agents_panel.html
 
 Documentation Changes:
   - CLAUDE.md
