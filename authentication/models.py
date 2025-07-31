@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.db import models
+from django.db import models, transaction
 from decimal import Decimal
 import uuid
 from django.utils import timezone
@@ -29,15 +29,23 @@ class User(AbstractUser):
     def has_sufficient_balance(self, amount):
         return self.wallet_balance >= Decimal(str(amount))
     
+    @transaction.atomic
     def deduct_balance(self, amount, description="", agent_slug=""):
-        if self.has_sufficient_balance(amount):
-            self.wallet_balance -= Decimal(str(amount))
-            self.save()
+        """
+        Deduct balance from user wallet with atomic transaction to prevent race conditions.
+        Uses select_for_update to lock the user record during the transaction.
+        """
+        # Lock the user record for the duration of this transaction
+        user = User.objects.select_for_update().get(id=self.id)
+        
+        if user.wallet_balance >= Decimal(str(amount)):
+            user.wallet_balance -= Decimal(str(amount))
+            user.save()
             
             # Create transaction record
             from wallet.models import WalletTransaction
             transaction_data = {
-                'user': self,
+                'user': user,
                 'amount': -Decimal(str(amount)),
                 'type': 'agent_usage',
                 'description': description,
@@ -54,6 +62,9 @@ class User(AbstractUser):
                     WalletTransaction.objects.create(**transaction_data)
                 else:
                     raise e
+            
+            # Update the current instance's balance to reflect the change
+            self.wallet_balance = user.wallet_balance
             return True
         return False
     

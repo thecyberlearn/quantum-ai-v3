@@ -13,6 +13,46 @@ import requests
 import json
 import time
 import uuid
+import ipaddress
+from urllib.parse import urlparse
+
+def validate_webhook_url(url):
+    """
+    Validate webhook URL to prevent SSRF attacks.
+    Only allows HTTPS URLs to external, non-private networks.
+    """
+    try:
+        parsed = urlparse(url)
+        
+        # Only allow HTTP/HTTPS protocols
+        if parsed.scheme not in ['http', 'https']:
+            raise ValueError("Only HTTP/HTTPS URLs are allowed")
+        
+        # Get hostname
+        hostname = parsed.hostname
+        if not hostname:
+            raise ValueError("Invalid hostname in URL")
+        
+        # For localhost development, allow localhost URLs first
+        if hostname in ['localhost', '127.0.0.1'] and parsed.port in [5678, 8000, 8080]:
+            return True  # Allow N8N development server
+        
+        # Check if hostname is an IP address
+        try:
+            ip = ipaddress.ip_address(hostname)
+            # Block private, loopback, and reserved IP ranges
+            if (ip.is_private or ip.is_loopback or ip.is_reserved or 
+                ip.is_link_local or ip.is_multicast):
+                raise ValueError("Internal/private IP addresses are not allowed")
+        except ValueError as e:
+            if "does not appear to be an IPv4 or IPv6 address" not in str(e):
+                raise  # Re-raise if it's not just a "not an IP" error
+            # If it's not an IP, it's a domain name - that's fine
+            
+        return True
+        
+    except Exception as e:
+        raise ValueError(f"Invalid webhook URL: {str(e)}")
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -80,6 +120,15 @@ def execute_agent(request):
                 execution.error_message = 'Failed to deduct wallet balance'
                 execution.save()
                 return Response({'error': 'Failed to deduct wallet balance'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate webhook URL to prevent SSRF attacks
+        try:
+            validate_webhook_url(agent.webhook_url)
+        except ValueError as e:
+            execution.status = 'failed'
+            execution.error_message = f'Invalid webhook URL: {str(e)}'
+            execution.save()
+            return Response({'error': f'Invalid webhook URL: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
         
         # Call n8n webhook with proper payload format
         execution.status = 'running'

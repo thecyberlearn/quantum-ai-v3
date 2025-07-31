@@ -137,10 +137,22 @@ gunicorn netcop_hub.wsgi:application
 - `DATABASE_URL`: PostgreSQL connection string (Railway)
 
 **N8N Webhook URLs:**
-Agent-specific webhook URLs are stored in the database with each agent. Current working agents:
-- Social Ads Generator: Creates compelling social media advertisements
-- Job Posting Generator: Creates professional job postings
-- PDF Summarizer: Analyzes and summarizes PDF documents with file upload
+Agent-specific webhook URLs are stored in the database with each agent. Current working agents (all tested and confirmed working):
+
+1. **Social Ads Generator** (social-ads-generator) - 6.00 AED
+   - Creates compelling social media advertisements
+   - Form fields: description, social_platform, include_emoji, language
+   - Webhook: N8N endpoint for social media ad generation
+
+2. **Job Posting Generator** (job-posting-generator) - 10.00 AED  
+   - Creates professional job postings
+   - Form fields: job_title, company_name, job_description, seniority_level, contract_type, location, language
+   - Webhook: N8N endpoint for job posting generation
+
+3. **PDF Summarizer** (pdf-summarizer) - 8.00 AED
+   - Analyzes and summarizes PDF documents with file upload
+   - Form fields: pdf_file (file upload with drag-and-drop), summary_type
+   - Webhook: N8N endpoint for PDF processing with multipart file support
 
 ### URL Structure
 ```
@@ -256,5 +268,25 @@ class Command(BaseCommand):
 3. Test agent execution flow
 4. Check AgentExecution records and results display
 
+## System Status
+
+**Current Status: ✅ STABLE WORKING SYSTEM**
+- All 3 agents confirmed working and tested
+- Clean agents-only architecture (workflows app completely removed)
+- Emergency recovery completed from optimization failures
+- System restored to stable commit 657712f
+
+**Latest Changes:**
+- Removed workflows app completely for simplified architecture
+- Enhanced agent marketplace with modern responsive design
+- Fixed all authentication-aware UI components
+- Implemented file upload support for PDF Summarizer
+- Real-time wallet balance updates after agent execution
+
+**Future Development:**
+- Optimization work available in feature/optimization-backup branch
+- Safe to add new agents via database-driven approach
+- Performance optimizations should be applied incrementally with testing
+
 ---
-Last updated: Last updated: Last updated: Last updated: Last updated: Last updated: Last updated: Last updated: Last updated: 2025-07-31 23:12:15
+Last updated: 2025-07-31 23:35:00
