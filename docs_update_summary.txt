@@ -1,23 +1,17 @@
 === Documentation Auto-Update Summary ===
-Update Date: 2025-07-31 23:12:15
+Update Date: 2025-08-01 01:37:09
 
 Recent Commits:
+  - c8ad34f 🔒 Implement critical security fixes for production readiness
+  - 657712f 🗑️ Remove workflows app completely and streamline to agents-only
   - c368bb5 ✨ Enhance marketplace with modern design and authentication
-  - 4424780 🧹 Clean up marketplace to keep only 3 working agents
-  - 400f2b7 📄 Add PDF Summarizer agent with advanced file upload system
 
 Agents Changes:
-  - agents/templates/agents/marketplace.html
   - agents/views.py
-  - static/js/agents-core.js
-  - templates/components/quick_agents_panel.html
-  - workflows/templates/workflows/components/quick_agents_panel.html
+  - authentication/models.py
 
 Documentation Changes:
   - CLAUDE.md
-
-Backend Changes:
-  - docs_update_summary.txt
 
 Updated Documentation Files:
   - /home/amit/projects/quantum_ai_v2/CLAUDE.md
