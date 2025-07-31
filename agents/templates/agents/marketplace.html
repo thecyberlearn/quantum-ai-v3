@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}AI Agents Marketplace - Quantum Tasks AI{% endblock %}
+{% block title %}AI Agent Marketplace - Quantum Tasks AI{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/agent-base.css' %}?v={{ timestamp }}">
+<link rel="stylesheet" href="{% static 'css/agent-base.css' %}">
 <style>
 /* Marketplace Specific Styles */
 .marketplace-header {
@@ -24,7 +24,7 @@
     font-size: 1.1rem;
     color: var(--on-surface-variant);
     max-width: 600px;
-    margin: 0 auto var(--spacing-xl) auto;
+    margin: 0 auto;
 }
 
 .marketplace-filters {
@@ -72,100 +72,162 @@
     flex-wrap: wrap;
 }
 
-.category-select {
+.category-btn {
     padding: 8px 16px;
     border: 2px solid var(--outline-variant);
     border-radius: var(--radius-md);
     background: var(--surface);
-    color: var(--on-surface);
+    color: var(--on-surface-variant);
+    text-decoration: none;
     font-size: 14px;
-    min-width: 160px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-transform: capitalize;
 }
 
-.results-info {
+.category-btn:hover {
+    border-color: var(--primary);
+    background: var(--surface-variant);
+    transform: translateY(-1px);
+}
+
+.category-btn.active {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: white;
+}
+
+.marketplace-stats {
     text-align: center;
     margin-bottom: var(--spacing-lg);
     color: var(--on-surface-variant);
     font-size: 14px;
 }
 
+.category-section {
+    margin-bottom: var(--spacing-xl);
+}
+
+.category-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--on-surface);
+    margin-bottom: var(--spacing-lg);
+    text-transform: capitalize;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.category-title::before {
+    content: '';
+    width: 4px;
+    height: 24px;
+    background: var(--primary);
+    border-radius: 2px;
+}
+
 .agents-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: var(--spacing-lg);
-    margin-bottom: var(--spacing-xl);
 }
 
 .agent-card {
     background: var(--surface);
-    border: 1px solid var(--outline-variant);
+    border: 2px solid var(--outline-variant);
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
-    transition: all 0.2s ease;
-    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    position: relative;
+    overflow: hidden;
 }
 
 .agent-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
     border-color: var(--primary);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    background: var(--surface-variant);
 }
 
-.agent-card-header {
+.agent-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-md);
 }
 
 .agent-icon {
-    font-size: 2rem;
-    width: 48px;
-    height: 48px;
+    font-size: 2.5rem;
+    width: 60px;
+    height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--surface-variant);
     border-radius: var(--radius-md);
-    flex-shrink: 0;
+    border: 2px solid var(--outline-variant);
 }
 
-.agent-meta {
-    flex: 1;
-    min-width: 0;
-}
-
-.agent-name {
-    font-size: 1.1rem;
+.agent-info h3 {
+    font-size: 1.2rem;
     font-weight: 600;
     color: var(--on-surface);
-    margin: 0 0 4px 0;
-    word-wrap: break-word;
-}
-
-.agent-category {
-    font-size: 12px;
-    color: var(--on-surface-variant);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    margin: 0 0 var(--spacing-xs) 0;
 }
 
 .agent-price {
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--primary);
-    flex-shrink: 0;
+    margin: 0;
 }
 
 .agent-description {
     color: var(--on-surface-variant);
-    font-size: 14px;
-    line-height: 1.4;
+    line-height: 1.5;
     margin-bottom: var(--spacing-lg);
+    font-size: 14px;
+}
+
+.agent-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+}
+
+.agent-category {
+    background: var(--surface-variant);
+    color: var(--on-surface-variant);
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.try-btn {
+    background: var(--primary);
+    color: white;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.try-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.05);
 }
 
 .no-results {
-    grid-column: 1 / -1;
     text-align: center;
     padding: var(--spacing-xl);
     color: var(--on-surface-variant);
@@ -174,63 +236,7 @@
 .no-results-icon {
     font-size: 4rem;
     margin-bottom: var(--spacing-md);
-}
-
-.categories-section {
-    margin-top: var(--spacing-xl);
-    padding-top: var(--spacing-xl);
-    border-top: 1px solid var(--outline-variant);
-}
-
-.categories-section h2 {
-    text-align: center;
-    margin-bottom: var(--spacing-xl);
-    color: var(--on-surface);
-}
-
-.categories-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: var(--spacing-md);
-}
-
-.category-card {
-    background: var(--surface);
-    border: 1px solid var(--outline-variant);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-lg);
-    text-decoration: none;
-    transition: all 0.2s ease;
-    display: block;
-}
-
-.category-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-    border-color: var(--primary);
-}
-
-.category-icon {
-    font-size: 2rem;
-    margin-bottom: var(--spacing-sm);
-}
-
-.category-card h3 {
-    color: var(--on-surface);
-    margin: 0 0 var(--spacing-sm) 0;
-    font-size: 1.1rem;
-}
-
-.category-card p {
-    color: var(--on-surface-variant);
-    font-size: 14px;
-    margin: 0 0 var(--spacing-sm) 0;
-}
-
-.category-count {
-    color: var(--primary);
-    font-size: 12px;
-    font-weight: 600;
+    opacity: 0.5;
 }
 
 /* Responsive Design */
@@ -252,8 +258,8 @@
         grid-template-columns: 1fr;
     }
     
-    .categories-grid {
-        grid-template-columns: 1fr;
+    .category-filter {
+        justify-content: center;
     }
 }
 </style>
@@ -263,85 +269,77 @@
 <div class="agent-container">
     <!-- Marketplace Header -->
     <div class="marketplace-header">
-        <h1 class="marketplace-title">🤖 AI Agents Marketplace</h1>
-        <p class="marketplace-subtitle">Discover powerful AI agents to automate your tasks and boost productivity</p>
-        
-        <!-- Search and Filters -->
-        <div class="marketplace-filters">
-            <form method="GET" style="display: flex; gap: var(--spacing-md); flex-wrap: wrap; justify-content: center; width: 100%;">
-                <div class="search-box">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" name="search" value="{{ search_query }}" 
-                           placeholder="Search agents..." class="search-input">
-                </div>
-                
-                <div class="category-filter">
-                    <select name="category" onchange="this.form.submit()" class="category-select">
-                        <option value="">All Categories</option>
-                        {% for category in categories %}
-                            <option value="{{ category.slug }}" 
-                                {% if category.slug == selected_category %}selected{% endif %}>
-                                {{ category.icon }} {{ category.name }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </form>
-        </div>
+        <h1 class="marketplace-title">🤖 AI Agent Marketplace</h1>
+        <p class="marketplace-subtitle">
+            Discover powerful AI agents to automate your tasks, boost productivity, and streamline your workflow
+        </p>
     </div>
 
-    <!-- Results Info -->
-    <div class="results-info">
-        <p>{{ agents.count }} agent{{ agents.count|pluralize }} found</p>
+    <!-- Search Box -->
+    <div class="search-box" style="margin-bottom: var(--spacing-lg); max-width: 500px; margin-left: auto; margin-right: auto;">
+        <form method="GET" style="position: relative;">
+            <span class="search-icon">🔍</span>
+            <input type="text" name="search" class="search-input" 
+                   placeholder="Search agents..." 
+                   value="{{ search_query }}"
+                   onchange="this.form.submit()">
+            {% if selected_category %}
+                <input type="hidden" name="category" value="{{ selected_category }}">
+            {% endif %}
+        </form>
     </div>
-
-    <!-- Agents Grid -->
-    <div class="agents-grid">
-        {% for agent in agents %}
-            <div class="agent-card">
-                <div class="agent-card-header">
-                    <div class="agent-icon">{{ agent.category.icon }}</div>
-                    <div class="agent-meta">
-                        <h3 class="agent-name">{{ agent.name }}</h3>
-                        <span class="agent-category">{{ agent.category.name }}</span>
-                    </div>
-                    <div class="agent-price">{{ agent.price }} AED</div>
-                </div>
-                
-                <div class="agent-card-body">
-                    <p class="agent-description">{{ agent.short_description }}</p>
-                </div>
-                
-                <div class="agent-card-footer">
-                    <a href="{% url 'agents:detail' agent.slug %}" class="btn btn-primary btn-full">
-                        🚀 Use Agent
-                    </a>
-                </div>
-            </div>
-        {% empty %}
-            <div class="no-results">
-                <div class="no-results-icon">🤖</div>
-                <h3>No agents found</h3>
-                <p>Try adjusting your search or filter criteria</p>
-                <a href="{% url 'agents:marketplace' %}" class="btn btn-primary">View All Agents</a>
-            </div>
+    
+    <!-- Category Filter Buttons -->
+    <div class="category-filter" style="display: flex; gap: var(--spacing-sm); flex-wrap: wrap; justify-content: center; margin-bottom: var(--spacing-xl);">
+        <a href="{% url 'agents:marketplace' %}" 
+           class="category-btn {% if not selected_category %}active{% endif %}">
+            All
+        </a>
+        {% for category in categories %}
+            <a href="?category={{ category.slug }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+               class="category-btn {% if selected_category == category.slug %}active{% endif %}">
+                {{ category.icon }} {{ category.name }}
+            </a>
         {% endfor %}
     </div>
 
-    <!-- Categories Overview -->
-    {% if not selected_category and not search_query %}
-        <div class="categories-section">
-            <h2>Browse by Category</h2>
-            <div class="categories-grid">
-                {% for category in categories %}
-                    <a href="?category={{ category.slug }}" class="category-card">
-                        <div class="category-icon">{{ category.icon }}</div>
-                        <h3>{{ category.name }}</h3>
-                        <p>{{ category.description }}</p>
-                        <span class="category-count">{{ category.agents.count }} agent{{ category.agents.count|pluralize }}</span>
-                    </a>
-                {% endfor %}
-            </div>
+    <!-- Stats -->
+    <div class="marketplace-stats">
+        {% if search_query %}
+            Search results for "{{ search_query }}" • 
+        {% endif %}
+        {% if selected_category %}
+            {{ selected_category|capfirst }} category • 
+        {% endif %}
+        {{ agents.count }} agent{{ agents.count|pluralize }} available
+    </div>
+
+    <!-- Agents Grid -->
+    {% if agents %}
+        <div class="agents-grid">
+            {% for agent in agents %}
+                <a href="{% url 'agents:detail' agent.slug %}" class="agent-card">
+                    <div class="agent-header">
+                        <div class="agent-icon">{{ agent.category.icon }}</div>
+                        <div class="agent-info">
+                            <h3>{{ agent.name }}</h3>
+                            <p class="agent-price">{{ agent.price }} AED</p>
+                        </div>
+                    </div>
+                    <p class="agent-description">{{ agent.short_description }}</p>
+                    <div class="agent-footer">
+                        <span class="agent-category">{{ agent.category.name }}</span>
+                        <button class="try-btn">Try Now →</button>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-results">
+            <div class="no-results-icon">🔍</div>
+            <h3>No agents found</h3>
+            <p>Try adjusting your search or browse all categories</p>
+            <a href="{% url 'agents:marketplace' %}" class="btn btn-primary">Browse All Agents</a>
         </div>
     {% endif %}
 </div>

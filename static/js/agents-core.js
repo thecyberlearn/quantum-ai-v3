@@ -244,8 +244,15 @@ class AgentsCore extends WorkflowsCore {
         
         // Handle different response formats from file processing
         if (data && typeof data === 'object') {
-            if (data.sections) {
-                // Multi-section response
+            if (data.sections && Array.isArray(data.sections)) {
+                // Multi-section response (array format)
+                content = data.sections.map(section => {
+                    const heading = section.heading || 'Section';
+                    const sectionContent = section.content || '';
+                    return `## ${heading}\n\n${sectionContent}`;
+                }).join('\n\n');
+            } else if (data.sections && typeof data.sections === 'object') {
+                // Multi-section response (object format)
                 content = Object.entries(data.sections).map(([section, text]) => {
                     return `## ${section.replace('_', ' ').toUpperCase()}\n\n${text}`;
                 }).join('\n\n');

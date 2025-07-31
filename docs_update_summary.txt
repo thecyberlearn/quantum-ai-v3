@@ -1,14 +1,18 @@
 === Documentation Auto-Update Summary ===
-Update Date: 2025-07-31 19:10:15
+Update Date: 2025-07-31 19:18:31
 
 Recent Commits:
+  - 400f2b7 📄 Add PDF Summarizer agent with advanced file upload system
   - cf8583d 💼 Add Job Posting Generator agent with comprehensive form schema
   - 27a1c7d 📚 Auto-update documentation after agents app implementation
-  - 5eba8fe 🚀 Complete agents app implementation with social ads frontend
 
 Agents Changes:
-  - agents/management/commands/create_job_posting_agent.py
-  - agents/views.py
+  - agents/management/commands/create_pdf_summarizer_agent.py
+  - agents/templates/agents/agent_detail.html
+  - static/js/agents-core.js
+
+Documentation Changes:
+  - CLAUDE.md
 
 Backend Changes:
   - docs_update_summary.txt
