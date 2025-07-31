@@ -174,6 +174,91 @@
     color: #0369a1;
 }
 
+/* File Upload Styles */
+.file-upload-container {
+    position: relative;
+}
+
+.form-file-input {
+    display: none;
+}
+
+.file-upload-label {
+    display: block;
+    padding: var(--spacing-lg);
+    border: 2px dashed var(--outline-variant);
+    border-radius: var(--radius-md);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--surface-variant);
+    color: var(--on-surface-variant);
+}
+
+.file-upload-label:hover {
+    border-color: var(--primary);
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.file-upload-label.dragover {
+    border-color: var(--primary);
+    background: rgba(0, 0, 0, 0.05);
+    transform: scale(1.02);
+}
+
+.file-upload-icon {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: var(--spacing-sm);
+}
+
+.file-upload-text {
+    display: block;
+    font-weight: 500;
+    margin-bottom: var(--spacing-xs);
+    color: var(--on-surface);
+}
+
+.file-upload-info {
+    font-size: 12px;
+    color: var(--on-surface-variant);
+}
+
+.file-selected {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md);
+    background: var(--surface);
+    border: 1px solid var(--success);
+    border-radius: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+}
+
+.file-name {
+    font-size: 14px;
+    color: var(--on-surface);
+    font-weight: 500;
+}
+
+.file-remove {
+    background: var(--error);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.file-remove:hover {
+    background: #dc2626;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .toast {
@@ -243,7 +328,7 @@ document.body.setAttribute('data-user-balance', '{{ user.wallet_balance }}');
                 </h3>
             </div>
             <div class="widget-content">
-                <form id="agentForm" method="POST" data-agent-id="{{ agent.id }}">
+                <form id="agentForm" method="POST" enctype="multipart/form-data" data-agent-id="{{ agent.id }}">
                     {% csrf_token %}
                     
                     <!-- Dynamic Form Fields -->
@@ -315,6 +400,30 @@ document.body.setAttribute('data-user-balance', '{{ user.wallet_balance }}');
                                         <span class="checkmark"></span>
                                         {{ field.label }}
                                     </label>
+                                
+                                {% elif field.type == 'file' %}
+                                    <div class="file-upload-container">
+                                        <input 
+                                            type="file" 
+                                            id="{{ field.name }}" 
+                                            name="{{ field.name }}" 
+                                            class="form-file-input"
+                                            {% if field.accept %}accept="{{ field.accept }}"{% endif %}
+                                            {% if field.required %}required{% endif %}
+                                        />
+                                        <label for="{{ field.name }}" class="file-upload-label">
+                                            <span class="file-upload-icon">📎</span>
+                                            <span class="file-upload-text">Choose file or drag here</span>
+                                            <span class="file-upload-info">
+                                                {% if field.accept %}{{ field.accept }} files{% endif %}
+                                                {% if field.max_size %} • Max {{ field.max_size }}{% endif %}
+                                            </span>
+                                        </label>
+                                        <div class="file-selected" style="display: none;">
+                                            <span class="file-name"></span>
+                                            <button type="button" class="file-remove" onclick="removeFile('{{ field.name }}')">×</button>
+                                        </div>
+                                    </div>
                                 {% endif %}
                                 
                                 {% if field.help_text %}
@@ -365,4 +474,81 @@ document.body.setAttribute('data-user-balance', '{{ user.wallet_balance }}');
 {% block extra_js %}
 <script src="{% static 'js/workflows-core.js' %}?v={{ timestamp }}"></script>
 <script src="{% static 'js/agents-core.js' %}?v={{ timestamp }}"></script>
+<script>
+// File upload handling
+function setupFileUpload() {
+    document.querySelectorAll('.file-upload-label').forEach(label => {
+        const input = document.getElementById(label.getAttribute('for'));
+        const container = label.closest('.file-upload-container');
+        const selectedDiv = container.querySelector('.file-selected');
+        const fileName = container.querySelector('.file-name');
+        
+        // Handle file selection
+        input.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                fileName.textContent = file.name + ' (' + formatFileSize(file.size) + ')';
+                label.style.display = 'none';
+                selectedDiv.style.display = 'flex';
+            }
+        });
+        
+        // Handle drag and drop
+        label.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            label.classList.add('dragover');
+        });
+        
+        label.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            label.classList.remove('dragover');
+        });
+        
+        label.addEventListener('drop', function(e) {
+            e.preventDefault();
+            label.classList.remove('dragover');
+            
+            if (e.dataTransfer.files.length > 0) {
+                const file = e.dataTransfer.files[0];
+                
+                // Check file type if accept attribute is present
+                const accept = input.getAttribute('accept');
+                if (accept && !accept.split(',').some(type => file.name.toLowerCase().endsWith(type.trim()))) {
+                    alert('Please select a valid file type: ' + accept);
+                    return;
+                }
+                
+                input.files = e.dataTransfer.files;
+                fileName.textContent = file.name + ' (' + formatFileSize(file.size) + ')';
+                label.style.display = 'none';
+                selectedDiv.style.display = 'flex';
+            }
+        });
+    });
+}
+
+function removeFile(fieldName) {
+    const input = document.getElementById(fieldName);
+    const container = input.closest('.file-upload-container');
+    const label = container.querySelector('.file-upload-label');
+    const selectedDiv = container.querySelector('.file-selected');
+    
+    input.value = '';
+    label.style.display = 'block';
+    selectedDiv.style.display = 'none';
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Initialize file upload when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    setupFileUpload();
+});
+</script>
 {% endblock %}

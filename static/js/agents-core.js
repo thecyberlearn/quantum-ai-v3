@@ -69,64 +69,208 @@ class AgentsCore extends WorkflowsCore {
         try {
             const formData = new FormData(form);
             
-            // Extract all form data dynamically
-            const inputData = {};
-            for (let [key, value] of formData.entries()) {
-                if (key !== 'csrfmiddlewaretoken') {
-                    inputData[key] = value;
-                }
+            // Check if form contains file uploads
+            const hasFiles = Array.from(formData.entries()).some(([key, value]) => 
+                value instanceof File && key !== 'csrfmiddlewaretoken'
+            );
+            
+            if (hasFiles) {
+                // Handle file upload via multipart form data
+                await this.executeWithFileUpload(formData);
+            } else {
+                // Handle regular form data via JSON API
+                await this.executeWithJsonAPI(formData);
             }
-            
-            // Get CSRF token
-            const csrfToken = formData.get('csrfmiddlewaretoken');
-            
-            // Call agents API
-            const response = await fetch('/agents/api/execute/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                body: JSON.stringify({
-                    agent_slug: this.agentSlug,
-                    input_data: inputData
-                }),
-                signal: AbortSignal.timeout(90000) // 90 second timeout
-            });
-            
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-                throw new Error(errorData.error || `API error: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            // Process successful execution
-            this.constructor.hideProcessing();
-            
-            // Update wallet balance if fee was charged
-            if (data.fee_charged) {
-                const currentBalance = parseFloat(document.body.getAttribute('data-user-balance') || '0');
-                const newBalance = currentBalance - parseFloat(data.fee_charged);
-                
-                // Update the wallet balance display
-                this.constructor.updateWalletBalance(newBalance);
-                
-                // Update the data attribute for future calculations
-                document.body.setAttribute('data-user-balance', newBalance.toString());
-            }
-            
-            // Display results
-            this.displayExecutionResults(data);
-            
-            this.constructor.showToast('✅ Agent executed successfully!', 'success');
-            
         } catch (error) {
             console.error('Agent execution error:', error);
             this.constructor.hideProcessing();
             this.constructor.showToast(`❌ ${error.message}`, 'error');
             this.resetSubmitButton();
         }
+    }
+    
+    /**
+     * Execute agent with file upload using multipart form data
+     */
+    async executeWithFileUpload(formData) {
+        // Get CSRF token
+        const csrfToken = formData.get('csrfmiddlewaretoken');
+        
+        // Prepare multipart form data for direct webhook call (similar to workflows)
+        const webhookFormData = new FormData();
+        
+        // Add files and regular form fields
+        for (let [key, value] of formData.entries()) {
+            if (key !== 'csrfmiddlewaretoken') {
+                if (value instanceof File) {
+                    webhookFormData.append('file', value);
+                } else {
+                    // Map form fields to webhook expected format
+                    if (key === 'analysis_type') {
+                        webhookFormData.append('analysisType', value);
+                    } else {
+                        webhookFormData.append(key, value);
+                    }
+                }
+            }
+        }
+        
+        // Call webhook directly for file uploads (similar to workflows approach)
+        const response = await fetch(this.webhookUrl, {
+            method: 'POST',
+            body: webhookFormData,
+            signal: AbortSignal.timeout(120000) // 2 minute timeout for file processing
+        });
+        
+        if (!response.ok) {
+            throw new Error(`File processing failed: ${response.status}`);
+        }
+        
+        // Parse response
+        const data = await response.json();
+        
+        // Deduct wallet balance manually since we bypassed the API
+        await this.deductBalanceForFileUpload();
+        
+        // Process successful execution
+        this.constructor.hideProcessing();
+        
+        // Display results
+        this.displayFileProcessingResults(data);
+        
+        this.constructor.showToast('✅ File processed successfully!', 'success');
+    }
+    
+    /**
+     * Execute agent with JSON API (for non-file uploads)
+     */
+    async executeWithJsonAPI(formData) {
+        // Extract all form data dynamically
+        const inputData = {};
+        for (let [key, value] of formData.entries()) {
+            if (key !== 'csrfmiddlewaretoken') {
+                inputData[key] = value;
+            }
+        }
+        
+        // Get CSRF token
+        const csrfToken = formData.get('csrfmiddlewaretoken');
+        
+        // Call agents API
+        const response = await fetch('/agents/api/execute/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                agent_slug: this.agentSlug,
+                input_data: inputData
+            }),
+            signal: AbortSignal.timeout(90000) // 90 second timeout
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+            throw new Error(errorData.error || `API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Process successful execution
+        this.constructor.hideProcessing();
+        
+        // Update wallet balance if fee was charged
+        if (data.fee_charged) {
+            const currentBalance = parseFloat(document.body.getAttribute('data-user-balance') || '0');
+            const newBalance = currentBalance - parseFloat(data.fee_charged);
+            
+            // Update the wallet balance display
+            this.constructor.updateWalletBalance(newBalance);
+            
+            // Update the data attribute for future calculations
+            document.body.setAttribute('data-user-balance', newBalance.toString());
+        }
+        
+        // Display results
+        this.displayExecutionResults(data);
+        
+        this.constructor.showToast('✅ Agent executed successfully!', 'success');
+    }
+    
+    /**
+     * Deduct wallet balance for file upload (manual deduction)
+     */
+    async deductBalanceForFileUpload() {
+        try {
+            // Call the wallet deduction API
+            const response = await fetch('/wallet/api/deduct/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({
+                    amount: this.price,
+                    description: `${this.agentSlug.replace('-', ' ')} execution`,
+                    agent_slug: this.agentSlug
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.new_balance !== undefined) {
+                    // Update wallet balance display
+                    this.constructor.updateWalletBalance(data.new_balance);
+                    document.body.setAttribute('data-user-balance', data.new_balance.toString());
+                }
+            }
+        } catch (error) {
+            console.error('Wallet deduction error:', error);
+            // Continue execution even if wallet update fails
+        }
+    }
+    
+    /**
+     * Display results from file processing
+     */
+    displayFileProcessingResults(data) {
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsContent = document.getElementById('resultsContent');
+        
+        if (!resultsContainer || !resultsContent) return;
+        
+        let content = '';
+        
+        // Handle different response formats from file processing
+        if (data && typeof data === 'object') {
+            if (data.sections) {
+                // Multi-section response
+                content = Object.entries(data.sections).map(([section, text]) => {
+                    return `## ${section.replace('_', ' ').toUpperCase()}\n\n${text}`;
+                }).join('\n\n');
+            } else if (data.output || data.result || data.summary) {
+                content = data.output || data.result || data.summary;
+            } else if (data.error) {
+                content = `Error: ${data.error}`;
+            } else {
+                content = JSON.stringify(data, null, 2);
+            }
+        } else if (typeof data === 'string') {
+            content = data;
+        } else {
+            content = 'File processed successfully!';
+        }
+        
+        // Clear and populate results securely
+        resultsContent.textContent = '';
+        this.renderSecureContent(resultsContent, content);
+        
+        // Show results container
+        resultsContainer.style.display = 'block';
+        resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        this.resetSubmitButton();
     }
     
     /**
