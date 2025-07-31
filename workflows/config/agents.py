@@ -27,6 +27,7 @@ AGENT_CONFIGS = {
         'icon': '📊',
         'webhook_url': 'http://localhost:5678/webhook/simple-pdf-processor',
     },
+    
 }
 
 

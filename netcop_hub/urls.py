@@ -25,7 +25,10 @@ urlpatterns = [
     path('wallet/', include('wallet.urls')),
     
     # Unified workflows system for all agents (includes marketplace)
-    path('agents/', include('workflows.urls')),
+    path('workflows/', include('workflows.urls')),
+    
+    # New REST API-based agents system (web interface + API)
+    path('agents/', include('agents.urls')),
     
     path('', include('core.urls')),
 ]

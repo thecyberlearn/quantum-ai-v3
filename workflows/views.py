@@ -258,16 +258,21 @@ def process_workflow_request(request, agent_slug, agent_config, agent):
             status='processing'
         )
         
-        # Actually send request to webhook (especially for data-analyzer)
-        logger.info(f"🔍 DEBUG: Checking webhook conditions - agent_slug={agent_slug}, has_file={'file' in uploaded_files}")
-        if agent_slug == 'data-analyzer' and 'file' in uploaded_files:
+        # Actually send request to webhook (for agents that support file upload)
+        logger.info(f"🔍 DEBUG: Checking webhook conditions - agent_slug={agent_slug}, has_file={'document_file' in uploaded_files or 'file' in uploaded_files}")
+        file_upload_agents = ['data-analyzer']
+        has_file = 'file' in uploaded_files or 'document_file' in uploaded_files
+        
+        if agent_slug in file_upload_agents and has_file:
             try:
                 # Check if this is an AJAX request (like the original system)
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     # Send file to webhook in background and return JSON response
+                    # Get the uploaded file (different field names for different agents)
+                    uploaded_file = uploaded_files.get('file') or uploaded_files.get('document_file')
                     webhook_result = send_file_to_webhook(
                         agent_config['webhook_url'], 
-                        uploaded_files['file'],
+                        uploaded_file,
                         form_data
                     )
                     

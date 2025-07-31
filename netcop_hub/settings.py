@@ -76,6 +76,7 @@ INSTALLED_APPS = [
     'wallet', 
     'core',
     'workflows',  # Unified workflows app (includes marketplace and agent execution)
+    'agents',     # New REST API-based agents system
 ]
 
 # Development apps (only in DEBUG mode)
