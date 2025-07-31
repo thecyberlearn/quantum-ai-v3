@@ -166,6 +166,17 @@ def format_agent_message(agent_slug, input_data):
         
         return f"Execute Social Media Ad Creator with the following parameters:. Describe what you'd like to generate: {description}. Include Emoji: {emoji.title()}. For Social Media Platform: {platform.title()}. Language: {language}."
     
+    elif agent_slug == 'job-posting-generator':
+        job_title = input_data.get('job_title', '')
+        company_name = input_data.get('company_name', '')
+        description = input_data.get('job_description', '')
+        seniority = input_data.get('seniority_level', '')
+        contract = input_data.get('contract_type', '')
+        location = input_data.get('location', '')
+        language = input_data.get('language', 'English')
+        
+        return f"Create a professional job posting for: {job_title} at {company_name}. Description: {description}. Seniority: {seniority}. Contract: {contract}. Location: {location}. Language: {language}. Make it comprehensive and attractive to candidates."
+    
     # Default formatting for other agents
     params = [f"{key}: {value}" for key, value in input_data.items() if value]
     return f"Execute {agent_slug.replace('-', ' ').title()} with parameters: {'. '.join(params)}."
