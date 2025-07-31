@@ -1,14 +1,27 @@
 === Documentation Auto-Update Summary ===
-Update Date: 2025-07-30 11:54:01
+Update Date: 2025-07-31 19:05:10
 
 Recent Commits:
-  - d103aba 📋 Update final documentation summary
+  - 5eba8fe 🚀 Complete agents app implementation with social ads frontend
+  - 8097f6f ✨ Complete agent template enhancement and repository cleanup
   - 87e780c 📄 Final documentation summary update
-  - c759794 📝 Update documentation timestamps after cleanup
 
-Backend Changes:
-  - docs_update_summary.txt
+Agents Changes:
+  - agents/__init__.py
+  - agents/admin.py
+  - agents/apps.py
+  - agents/management/__init__.py
+  - agents/management/commands/__init__.py
 
-No documentation files required updates.
+Core Changes:
+  - netcop_hub/settings.py
+  - netcop_hub/urls.py
+  - workflows/views.py
+
+Documentation Changes:
+  - AGENTS_APP_RECREATION_GUIDE.md
+
+Updated Documentation Files:
+  - /home/amit/projects/quantum_ai_v2/CLAUDE.md
 
 === End Summary ===
