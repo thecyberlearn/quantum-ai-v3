@@ -1,73 +1,17 @@
 /* NetCop AI Agents - Unified CSS System */
 /* Supports multiple themes with consistent components */
 
-/* Data Analyzer CSS Variables - Exact Copy */
+/* Agent-specific overrides and theme variations */
 :root {
-    /* Data Analyzer Primary Variables */
+    /* Agent-specific primary color (black theme) */
     --primary: #000000;
-    --surface: #ffffff;
-    --surface-variant: #f8fafc;
-    --background: #f3f4f6;
-    --outline: #e4e7eb;
-    --outline-variant: #e1e4e7;
-    --on-surface: #1a1a1a;
-    --on-surface-variant: #6b7280;
-    --success: #10b981;
-    --error: #ef4444;
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --spacing-xs: 4px;
-    --spacing-sm: 8px;
-    --spacing-md: 16px;
-    --spacing-lg: 24px;
-    --spacing-xl: 32px;
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
     
-    /* Legacy compatibility - map old names to new */
-    --bg-color: var(--background);
-    --text-color: var(--on-surface);
-    --primary-color: var(--primary);
-    --card-bg: var(--surface);
-    --border-color: var(--outline);
-    --hover-color: var(--surface-variant);
-    --accent-color: var(--on-surface-variant);
-    --success-color: var(--success);
-    --error-color: var(--error);
-    --warning-color: #f59e0b;
-    
-    /* Typography - Unified with header component */
-    --font-primary: 'Inter', Arial, sans-serif;
-    
-    /* Font Sizes - Crisp & Readable */
+    /* Agent-specific font sizes (slightly smaller for dense layouts) */
     --text-xs: 11px;
     --text-sm: 13px;
     --text-base: 14px;
     --text-lg: 16px;
     --text-xl: 18px;
-    
-    /* Spacing System */
-    --space-xs: 4px;
-    --space-sm: 8px;
-    --space-md: 12px;
-    --space-lg: 16px;
-    --space-xl: 24px;
-    
-    /* Design Tokens */
-    --radius: 6px;
-    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    --transition: 150ms ease;
-    
-    /* Theme-specific Properties */
-    --agent-bg: var(--bg-color);
-    --agent-primary: var(--primary-color);
-    --agent-card-bg: var(--card-bg);
-    --agent-border: var(--border-color);
-    --agent-backdrop-filter: none;
-    --agent-card-shadow: var(--shadow);
-    --agent-card-border: 1px solid var(--border-color);
 }
 
 /* Professional Theme (Default - Black & White) */
@@ -196,110 +140,12 @@ html {
     letter-spacing: 0.5px;
 }
 
-/* Forms - Data Analyzer Exact Copy */
-.form-group {
-    margin-bottom: var(--spacing-lg);
-}
+/* Agent-specific form theme overrides */
 
-.form-label {
-    display: block;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--on-surface);
-    margin-bottom: var(--spacing-sm);
-}
-
-.form-input, .form-textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid var(--outline-variant);
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    line-height: 1.5;
-    transition: all 0.2s ease;
-    background: var(--surface);
-    color: var(--on-surface);
-    font-family: inherit;
-}
-
-.form-input:focus, .form-textarea:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
-}
-
-.form-input:hover, .form-textarea:hover {
-    border-color: var(--on-surface-variant);
-}
-
-.form-textarea {
-    resize: vertical;
-    min-height: 120px;
-}
-
-.form-help {
-    color: var(--on-surface-variant);
-    font-size: 12px;
-    margin-top: var(--spacing-xs);
-}
-
-.form-error {
-    color: var(--error);
-    font-size: 12px;
-    margin-top: var(--spacing-xs);
-}
-
-.form-label {
-    display: block;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-color);
-    margin-bottom: 8px;
-}
-
-.form-input, .form-textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid var(--agent-border);
-    border-radius: var(--radius);
-    font-size: 14px;
-    line-height: 1.5;
-    transition: all 0.2s ease;
-    background: white;
-    color: var(--text-color);
-    font-family: inherit;
-}
-
-.form-textarea {
-    resize: vertical;
-    min-height: 120px;
-}
-
-.form-input:focus, .form-textarea:focus {
-    outline: none;
-    border-color: var(--agent-primary);
-    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
-}
-
-.form-input:hover, .form-textarea:hover {
-    border-color: var(--accent-color);
-}
-
-.form-help {
-    color: var(--accent-color);
-    font-size: 12px;
-    margin-top: 4px;
-}
-
-.form-error {
-    color: var(--error-color);
-    font-size: 12px;
-    margin-top: 4px;
-}
-
+/* Form validation enhancements */
 .required::after {
     content: " *";
-    color: var(--error-color);
+    color: var(--error);
 }
 
 /* Creative theme focus styles */
@@ -863,100 +709,13 @@ html {
     flex-wrap: wrap;
 }
 
-/* Buttons - Data Analyzer Exact Copy */
-.btn {
-    padding: 12px 24px;
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-sm);
-    text-decoration: none;
-    min-height: 44px;
-}
-
-.btn-primary {
-    background: var(--primary);
-    color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-    background: #333333;
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
-.btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.btn-secondary {
-    background: var(--surface);
-    color: var(--on-surface);
-    border: 2px solid var(--outline);
-}
-
-.btn-secondary:hover {
-    background: var(--surface-variant);
-    border-color: var(--outline);
-}
-
-.btn-full {
-    width: 100%;
-}
-
-/* Creative theme button styles */
+/* Agent-specific button theme overrides */
 .theme-creative .btn {
     padding: 16px 32px;
     border-radius: 12px;
     font-weight: 600;
     font-size: 16px;
     min-height: 48px;
-}
-
-.theme-creative .btn-secondary {
-    border: 2px solid var(--border-medium);
-}
-
-.btn:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.btn-primary:hover:not(:disabled) {
-    opacity: 0.9;
-}
-
-.btn-secondary:hover:not(:disabled) {
-    border-color: var(--agent-primary);
-    background: var(--hover-color);
-}
-
-.btn-full {
-    width: 100%;
-}
-
-.btn:active {
-    transform: translateY(0);
-}
-
-.btn:disabled {
-    background: var(--accent-color);
-    cursor: not-allowed;
-    opacity: 0.5;
-    transform: none;
-}
-
-.btn.loading {
-    opacity: 0.6;
-    pointer-events: none;
 }
 
 /* Wallet Sidebar */
