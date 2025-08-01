@@ -17,6 +17,11 @@ class AgentCategory(models.Model):
         return self.name
 
 class Agent(models.Model):
+    AGENT_TYPE_CHOICES = [
+        ('form', 'Form-based'),
+        ('chat', 'Chat-based'),
+    ]
+    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
@@ -24,7 +29,8 @@ class Agent(models.Model):
     description = models.TextField()
     category = models.ForeignKey(AgentCategory, on_delete=models.CASCADE, related_name='agents')
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    form_schema = models.JSONField(help_text="JSON schema for agent input form")
+    agent_type = models.CharField(max_length=10, choices=AGENT_TYPE_CHOICES, default='form', help_text="Agent interaction type")
+    form_schema = models.JSONField(help_text="JSON schema for agent input form", null=True, blank=True)
     webhook_url = models.URLField(help_text="n8n webhook URL for execution")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -62,3 +68,55 @@ class AgentExecution(models.Model):
     
     def __str__(self):
         return f"{self.agent.name} - {self.user.email} - {self.status}"
+
+class ChatSession(models.Model):
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('completed', 'Completed'),
+        ('abandoned', 'Abandoned'),
+        ('failed', 'Failed'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    session_id = models.CharField(max_length=100, unique=True, help_text="Unique session identifier")
+    agent = models.ForeignKey(Agent, on_delete=models.CASCADE, related_name='chat_sessions')
+    user = models.ForeignKey('authentication.User', on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    context_data = models.JSONField(default=dict, help_text="Session context and progress tracking")
+    fee_charged = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['session_id']),
+            models.Index(fields=['user', '-created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.agent.name} - {self.user.email} - {self.session_id}"
+
+class ChatMessage(models.Model):
+    MESSAGE_TYPE_CHOICES = [
+        ('user', 'User Message'),
+        ('agent', 'Agent Response'),
+        ('system', 'System Message'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    session = models.ForeignKey(ChatSession, on_delete=models.CASCADE, related_name='messages')
+    message_type = models.CharField(max_length=10, choices=MESSAGE_TYPE_CHOICES)
+    content = models.TextField()
+    metadata = models.JSONField(default=dict, help_text="Additional message data like webhook responses")
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['timestamp']
+        indexes = [
+            models.Index(fields=['session', 'timestamp']),
+        ]
+    
+    def __str__(self):
+        return f"{self.session.session_id} - {self.message_type} - {self.timestamp}"

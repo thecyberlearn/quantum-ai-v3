@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.db import models
-from .models import Agent, AgentExecution, AgentCategory
+from .models import Agent, AgentExecution, AgentCategory, ChatSession, ChatMessage
 from .serializers import AgentSerializer, AgentExecutionSerializer
 import requests
 import json
@@ -234,9 +234,14 @@ def format_agent_message(agent_slug, input_data):
 # Web interface views
 @login_required
 def agent_detail_view(request, slug):
-    """Render agent detail page with dynamic form"""
+    """Render agent detail page with dynamic form or chat interface"""
     agent = get_object_or_404(Agent, slug=slug, is_active=True)
     
+    # Handle chat-based agents
+    if agent.agent_type == 'chat':
+        return chat_agent_view(request, agent)
+    
+    # Handle form-based agents (existing behavior)
     context = {
         'agent': agent,
         'timestamp': int(time.time())  # For cache busting
@@ -273,3 +278,271 @@ def agents_marketplace(request):
     }
     
     return render(request, 'agents/marketplace.html', context)
+
+
+# Chat-based agent views
+def chat_agent_view(request, agent):
+    """Render chat interface for chat-based agents"""
+    chat_session = None
+    messages = []
+    
+    if request.user.is_authenticated:
+        # Get or create active chat session
+        chat_session = ChatSession.objects.filter(
+            agent=agent,
+            user=request.user,
+            status='active'
+        ).first()
+        
+        # Get session ID from URL parameter if resuming a session
+        session_id = request.GET.get('session')
+        if session_id and not chat_session:
+            chat_session = ChatSession.objects.filter(
+                session_id=session_id,
+                agent=agent,
+                user=request.user
+            ).first()
+        
+        # Get messages for the session
+        if chat_session:
+            messages = ChatMessage.objects.filter(session=chat_session).order_by('timestamp')
+    
+    context = {
+        'agent': agent,
+        'chat_session': chat_session,
+        'messages': messages,
+        'timestamp': int(time.time())
+    }
+    
+    return render(request, 'agents/agent_chat.html', context)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def start_chat_session(request):
+    """Start a new chat session"""
+    agent_slug = request.data.get('agent_slug')
+    
+    if not agent_slug:
+        return Response({'error': 'agent_slug is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    agent = get_object_or_404(Agent, slug=agent_slug, is_active=True, agent_type='chat')
+    
+    # Check wallet balance
+    if hasattr(request.user, 'wallet_balance') and request.user.wallet_balance < agent.price:
+        return Response({'error': 'Insufficient wallet balance'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Check for existing active session
+    existing_session = ChatSession.objects.filter(
+        agent=agent,
+        user=request.user,
+        status='active'
+    ).first()
+    
+    if existing_session:
+        return Response({
+            'session_id': existing_session.session_id,
+            'message': 'Active session already exists'
+        })
+    
+    # Create new chat session
+    session_id = f"{int(time.time() * 1000)}_{uuid.uuid4().hex[:8]}"
+    
+    chat_session = ChatSession.objects.create(
+        session_id=session_id,
+        agent=agent,
+        user=request.user,
+        fee_charged=agent.price,
+        status='active'
+    )
+    
+    # Deduct fee from wallet (if wallet system is implemented)
+    # This would integrate with the existing wallet system
+    
+    # Send welcome message
+    welcome_message = f"Welcome to {agent.name}! I'm here to help you with 5 Whys analysis. What problem would you like to analyze?"
+    
+    ChatMessage.objects.create(
+        session=chat_session,
+        message_type='agent',
+        content=welcome_message
+    )
+    
+    return Response({
+        'session_id': chat_session.session_id,
+        'message': 'Chat session started successfully'
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def send_chat_message(request):
+    """Send a message in a chat session"""
+    session_id = request.data.get('session_id')
+    message_content = request.data.get('message', '').strip()
+    
+    if not session_id or not message_content:
+        return Response({'error': 'session_id and message are required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Get chat session
+    chat_session = get_object_or_404(
+        ChatSession,
+        session_id=session_id,
+        user=request.user,
+        status='active'
+    )
+    
+    # Save user message
+    user_message = ChatMessage.objects.create(
+        session=chat_session,
+        message_type='user',
+        content=message_content
+    )
+    
+    # Prepare webhook payload
+    webhook_payload = {
+        "message": {
+            "text": f"Chat message: {message_content}. Provide helpful guidance about 5 Whys analysis. Do not generate the final report - just chat and help the user understand their problem."
+        },
+        "sessionId": session_id,
+        "userId": str(request.user.id),
+        "agentId": chat_session.agent.slug,
+        "messageType": "chat"
+    }
+    
+    try:
+        # Validate webhook URL
+        validate_webhook_url(chat_session.agent.webhook_url)
+        
+        # Send to webhook
+        response = requests.post(
+            chat_session.agent.webhook_url,
+            json=webhook_payload,
+            timeout=30,
+            headers={'Content-Type': 'application/json'}
+        )
+        
+        if response.status_code == 200:
+            response_data = response.json()
+            agent_response = response_data.get('response', 'I received your message but couldn\'t generate a response.')
+            
+            # Save agent response
+            agent_message = ChatMessage.objects.create(
+                session=chat_session,
+                message_type='agent',
+                content=agent_response,
+                metadata={'webhook_response': response_data}
+            )
+            
+            # Update session timestamp
+            chat_session.updated_at = timezone.now()
+            chat_session.save()
+            
+            return Response({
+                'user_message': {
+                    'id': str(user_message.id),
+                    'content': user_message.content,
+                    'timestamp': user_message.timestamp.isoformat()
+                },
+                'agent_message': {
+                    'id': str(agent_message.id),
+                    'content': agent_message.content,
+                    'timestamp': agent_message.timestamp.isoformat()
+                }
+            })
+        else:
+            # Webhook error
+            error_message = "I'm having trouble processing your message right now. Please try again."
+            agent_message = ChatMessage.objects.create(
+                session=chat_session,
+                message_type='agent',
+                content=error_message,
+                metadata={'error': f'Webhook returned {response.status_code}'}
+            )
+            
+            return Response({
+                'user_message': {
+                    'id': str(user_message.id),
+                    'content': user_message.content,
+                    'timestamp': user_message.timestamp.isoformat()
+                },
+                'agent_message': {
+                    'id': str(agent_message.id),
+                    'content': agent_message.content,
+                    'timestamp': agent_message.timestamp.isoformat()
+                }
+            }, status=status.HTTP_202_ACCEPTED)
+            
+    except Exception as e:
+        # Handle webhook errors
+        error_message = "I'm experiencing technical difficulties. Please try again later."
+        agent_message = ChatMessage.objects.create(
+            session=chat_session,
+            message_type='agent',
+            content=error_message,
+            metadata={'error': str(e)}
+        )
+        
+        return Response({
+            'user_message': {
+                'id': str(user_message.id),
+                'content': user_message.content,
+                'timestamp': user_message.timestamp.isoformat()
+            },
+            'agent_message': {
+                'id': str(agent_message.id),
+                'content': agent_message.content,
+                'timestamp': agent_message.timestamp.isoformat()
+            }
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_chat_history(request, session_id):
+    """Get chat history for a session"""
+    chat_session = get_object_or_404(
+        ChatSession,
+        session_id=session_id,
+        user=request.user
+    )
+    
+    messages = ChatMessage.objects.filter(session=chat_session).order_by('timestamp')
+    
+    message_data = []
+    for message in messages:
+        message_data.append({
+            'id': str(message.id),
+            'message_type': message.message_type,
+            'content': message.content,
+            'timestamp': message.timestamp.isoformat()
+        })
+    
+    return Response({
+        'session_id': session_id,
+        'status': chat_session.status,
+        'messages': message_data
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def end_chat_session(request):
+    """End a chat session"""
+    session_id = request.data.get('session_id')
+    
+    if not session_id:
+        return Response({'error': 'session_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    chat_session = get_object_or_404(
+        ChatSession,
+        session_id=session_id,
+        user=request.user,
+        status='active'
+    )
+    
+    chat_session.status = 'completed'
+    chat_session.completed_at = timezone.now()
+    chat_session.save()
+    
+    return Response({'message': 'Chat session ended successfully'})

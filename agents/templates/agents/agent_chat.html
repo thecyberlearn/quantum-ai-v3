@@ -1,0 +1,590 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ agent.name }} - Quantum Tasks AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/agent-base.css' %}?v={{ timestamp }}">
+<style>
+/* Chat Interface Styles */
+.chat-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.chat-widget {
+    background: var(--surface);
+    border: 1px solid var(--outline);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    height: 600px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--outline);
+    background: var(--gradient-primary);
+    color: white;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.chat-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chat-subtitle {
+    margin: 5px 0 0 0;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.message {
+    display: flex;
+    margin-bottom: 15px;
+}
+
+.message.user {
+    justify-content: flex-end;
+}
+
+.message.agent {
+    justify-content: flex-start;
+}
+
+.message.system {
+    justify-content: center;
+}
+
+.message-bubble {
+    max-width: 70%;
+    padding: 12px 16px;
+    border-radius: 18px;
+    position: relative;
+    word-wrap: break-word;
+}
+
+.message.user .message-bubble {
+    background: var(--primary);
+    color: white;
+    border-bottom-right-radius: 6px;
+}
+
+.message.agent .message-bubble {
+    background: var(--surface-variant);
+    color: var(--on-surface);
+    border-bottom-left-radius: 6px;
+}
+
+.message.system .message-bubble {
+    background: var(--background-light);
+    color: var(--on-surface-variant);
+    font-style: italic;
+    font-size: 13px;
+    max-width: 90%;
+    text-align: center;
+}
+
+.message-time {
+    font-size: 11px;
+    opacity: 0.7;
+    margin-top: 4px;
+}
+
+.chat-input-area {
+    padding: 20px;
+    border-top: 1px solid var(--outline);
+    background: var(--surface-variant);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.chat-input-form {
+    display: flex;
+    gap: 10px;
+}
+
+.chat-input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid var(--outline-variant);
+    border-radius: 25px;
+    font-size: 14px;
+    background: var(--surface);
+    color: var(--on-surface);
+    outline: none;
+}
+
+.chat-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.chat-send-btn {
+    padding: 12px 20px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.chat-send-btn:hover:not(:disabled) {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.chat-send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.typing-indicator {
+    display: none;
+    padding: 10px 16px;
+    color: var(--on-surface-variant);
+    font-style: italic;
+    font-size: 13px;
+}
+
+.typing-indicator.show {
+    display: block;
+}
+
+/* Session Info */
+.session-info {
+    background: var(--background-light);
+    padding: 15px 20px;
+    border-radius: var(--radius-md);
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.session-status {
+    font-size: 14px;
+    color: var(--on-surface-variant);
+}
+
+.session-id {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--on-surface-variant);
+    background: var(--surface);
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .chat-container {
+        padding: 10px;
+    }
+    
+    .chat-widget {
+        height: 500px;
+    }
+    
+    .message-bubble {
+        max-width: 85%;
+    }
+    
+    .chat-input-form {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .chat-send-btn {
+        align-self: flex-end;
+        width: auto;
+    }
+}
+
+/* Empty state */
+.chat-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--on-surface-variant);
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.chat-empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.chat-empty-text {
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.chat-empty-subtext {
+    font-size: 14px;
+    opacity: 0.7;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<script>
+// Set data attributes for JavaScript access
+document.body.setAttribute('data-user-authenticated', '{{ user.is_authenticated|yesno:"true,false" }}');
+document.body.setAttribute('data-agent-price', '{{ agent.price }}');
+document.body.setAttribute('data-agent-id', '{{ agent.id }}');
+document.body.setAttribute('data-agent-slug', '{{ agent.slug }}');
+document.body.setAttribute('data-webhook-url', '{{ agent.webhook_url }}');
+{% if user.is_authenticated %}
+document.body.setAttribute('data-user-balance', '{{ user.wallet_balance }}');
+document.body.setAttribute('data-user-id', '{{ user.id }}');
+{% endif %}
+{% if chat_session %}
+document.body.setAttribute('data-session-id', '{{ chat_session.session_id }}');
+{% endif %}
+</script>
+
+<div class="chat-container">
+    <!-- Agent Header Component -->
+    {% include "components/agent_header.html" with agent_title=agent.name agent_subtitle=agent.short_description %}
+
+    <!-- Quick Agent Access Panel Component -->
+    {% include "components/quick_agents_panel.html" %}
+
+    {% if user.is_authenticated %}
+        {% if user.wallet_balance >= agent.price or chat_session %}
+            <!-- Session Info -->
+            {% if chat_session %}
+            <div class="session-info">
+                <div class="session-status">
+                    💬 Chat Session: <strong>{{ chat_session.get_status_display }}</strong>
+                </div>
+                <div class="session-id">ID: {{ chat_session.session_id }}</div>
+            </div>
+            {% endif %}
+
+            <!-- Chat Widget -->
+            <div class="chat-widget">
+                <div class="chat-header">
+                    <h3 class="chat-title">
+                        <span>{{ agent.category.icon }}</span>
+                        {{ agent.name }}
+                    </h3>
+                    <p class="chat-subtitle">{{ agent.description }}</p>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="message {{ message.message_type }}">
+                            <div class="message-bubble">
+                                {{ message.content|linebreaks }}
+                                <div class="message-time">{{ message.timestamp|date:"H:i" }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="chat-empty">
+                            <div class="chat-empty-icon">🤖</div>
+                            <div class="chat-empty-text">Welcome to {{ agent.name }}!</div>
+                            <div class="chat-empty-subtext">Send a message to start your conversation</div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="typing-indicator" id="typingIndicator">
+                    {{ agent.name }} is typing...
+                </div>
+
+                <div class="chat-input-area" id="chatInputArea">
+                    {% if not chat_session or chat_session.status == 'active' %}
+                    <form class="chat-input-form" id="chatForm">
+                        {% csrf_token %}
+                        <input type="text" 
+                               class="chat-input" 
+                               id="chatInput" 
+                               placeholder="Type your message..."
+                               maxlength="500"
+                               required>
+                        <button type="submit" class="chat-send-btn" id="sendBtn">
+                            Send
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="session-status">
+                        Chat session {{ chat_session.get_status_display|lower }}. 
+                        <a href="{% url 'agents:detail' agent.slug %}" class="btn btn-primary btn-sm">Start New Chat</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <!-- Insufficient Balance -->
+            <div class="chat-widget">
+                <div class="chat-header">
+                    <h3 class="chat-title">
+                        <span>{{ agent.category.icon }}</span>
+                        {{ agent.name }}
+                    </h3>
+                </div>
+                <div class="chat-messages">
+                    <div class="chat-empty">
+                        <div class="chat-empty-icon">💰</div>
+                        <div class="chat-empty-text">Insufficient Balance</div>
+                        <div class="chat-empty-subtext">
+                            You need {{ agent.price }} AED to start a chat session.
+                        </div>
+                        <a href="{% url 'wallet:wallet' %}" class="btn btn-primary" style="margin-top: 20px;">
+                            💰 Top Up Wallet
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <!-- Not Authenticated -->
+        <div class="chat-widget">
+            <div class="chat-header">
+                <h3 class="chat-title">
+                    <span>{{ agent.category.icon }}</span>
+                    {{ agent.name }}
+                </h3>
+            </div>
+            <div class="chat-messages">
+                <div class="chat-empty">
+                    <div class="chat-empty-icon">🔐</div>
+                    <div class="chat-empty-text">Login Required</div>
+                    <div class="chat-empty-subtext">
+                        Please login to start chatting with {{ agent.name }}.
+                    </div>
+                    <a href="{% url 'authentication:login' %}?next={% url 'agents:detail' agent.slug %}" 
+                       class="btn btn-primary" 
+                       style="margin-top: 20px;">
+                        🔐 Login to Continue
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- How It Works Widget -->
+    {% include "components/how_it_works_widget.html" with steps="agents" %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/workflows-core.js' %}?v={{ timestamp }}"></script>
+<script src="{% static 'js/agents-core.js' %}?v={{ timestamp }}"></script>
+<script>
+// Chat functionality
+class ChatInterface {
+    constructor() {
+        this.agentSlug = document.body.getAttribute('data-agent-slug');
+        this.userId = document.body.getAttribute('data-user-id');
+        this.sessionId = document.body.getAttribute('data-session-id');
+        this.isAuthenticated = document.body.getAttribute('data-user-authenticated') === 'true';
+        
+        this.chatMessages = document.getElementById('chatMessages');
+        this.chatForm = document.getElementById('chatForm');
+        this.chatInput = document.getElementById('chatInput');
+        this.sendBtn = document.getElementById('sendBtn');
+        this.typingIndicator = document.getElementById('typingIndicator');
+        
+        this.init();
+    }
+    
+    init() {
+        if (!this.isAuthenticated) {
+            console.log('User not authenticated, chat disabled');
+            return;
+        }
+        
+        // Set up form submission
+        if (this.chatForm) {
+            this.chatForm.addEventListener('submit', (e) => this.handleSubmit(e));
+        }
+        
+        // Auto-start session if no active session
+        if (!this.sessionId) {
+            this.startSession();
+        }
+        
+        // Auto-scroll to bottom
+        this.scrollToBottom();
+        
+        console.log('Chat interface initialized for agent:', this.agentSlug);
+    }
+    
+    async startSession() {
+        try {
+            const response = await fetch('/agents/api/chat/start/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCSRFToken()
+                },
+                body: JSON.stringify({
+                    agent_slug: this.agentSlug
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.sessionId = data.session_id;
+                document.body.setAttribute('data-session-id', this.sessionId);
+                console.log('Chat session started:', this.sessionId);
+                
+                // Reload page to show welcome message
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            } else {
+                this.showError(data.error || 'Failed to start chat session');
+            }
+        } catch (error) {
+            console.error('Error starting chat session:', error);
+            this.showError('Failed to start chat session');
+        }
+    }
+    
+    async handleSubmit(e) {
+        e.preventDefault();
+        
+        const message = this.chatInput.value.trim();
+        if (!message || !this.sessionId) return;
+        
+        // Disable input and show typing
+        this.setInputState(false);
+        this.showTyping(true);
+        
+        // Add user message to UI immediately
+        this.addMessage('user', message);
+        this.chatInput.value = '';
+        this.scrollToBottom();
+        
+        try {
+            const response = await fetch('/agents/api/chat/send/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCSRFToken()
+                },
+                body: JSON.stringify({
+                    session_id: this.sessionId,
+                    message: message
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                // Add agent response
+                this.addMessage('agent', data.agent_message.content);
+            } else {
+                this.showError(data.error || 'Failed to send message');
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+            this.addMessage('agent', 'Sorry, I\'m experiencing technical difficulties. Please try again.');
+        } finally {
+            this.showTyping(false);
+            this.setInputState(true);
+            this.scrollToBottom();
+        }
+    }
+    
+    addMessage(type, content) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${type}`;
+        
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.className = 'message-bubble';
+        
+        // Convert line breaks to <br> tags
+        const formattedContent = content.replace(/\n/g, '<br>');
+        bubbleDiv.innerHTML = formattedContent;
+        
+        // Add timestamp
+        const timeDiv = document.createElement('div');
+        timeDiv.className = 'message-time';
+        timeDiv.textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        bubbleDiv.appendChild(timeDiv);
+        
+        messageDiv.appendChild(bubbleDiv);
+        
+        // Remove empty state if exists
+        const emptyState = this.chatMessages.querySelector('.chat-empty');
+        if (emptyState) {
+            emptyState.remove();
+        }
+        
+        this.chatMessages.appendChild(messageDiv);
+    }
+    
+    setInputState(enabled) {
+        if (this.chatInput) this.chatInput.disabled = !enabled;
+        if (this.sendBtn) this.sendBtn.disabled = !enabled;
+    }
+    
+    showTyping(show) {
+        if (this.typingIndicator) {
+            this.typingIndicator.classList.toggle('show', show);
+        }
+    }
+    
+    scrollToBottom() {
+        if (this.chatMessages) {
+            this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+        }
+    }
+    
+    showError(message) {
+        this.addMessage('system', `Error: ${message}`);
+        this.scrollToBottom();
+    }
+    
+    getCSRFToken() {
+        const token = document.querySelector('[name=csrfmiddlewaretoken]');
+        return token ? token.value : '';
+    }
+}
+
+// Initialize chat interface when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    new ChatInterface();
+});
+
+// Handle wallet balance check
+document.addEventListener('DOMContentLoaded', function() {
+    const userBalance = parseFloat(document.body.getAttribute('data-user-balance') || '0');
+    const agentPrice = parseFloat(document.body.getAttribute('data-agent-price') || '0');
+    const isAuthenticated = document.body.getAttribute('data-user-authenticated') === 'true';
+    
+    if (isAuthenticated && userBalance < agentPrice) {
+        console.log('Insufficient balance for chat session');
+    }
+});
+</script>
+{% endblock %}
