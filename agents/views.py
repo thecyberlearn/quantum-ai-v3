@@ -348,12 +348,16 @@ def start_chat_session(request):
     # Create new chat session
     session_id = f"{int(time.time() * 1000)}_{uuid.uuid4().hex[:8]}"
     
+    from django.utils import timezone
+    from datetime import timedelta
+    
     chat_session = ChatSession.objects.create(
         session_id=session_id,
         agent=agent,
         user=request.user,
         fee_charged=agent.price,
-        status='active'
+        status='active',
+        expires_at=timezone.now() + timedelta(hours=2)
     )
     
     # Deduct fee from wallet (if wallet system is implemented)
@@ -392,6 +396,12 @@ def send_chat_message(request):
         status='active'
     )
     
+    # Check if session is expired
+    if chat_session.is_expired():
+        chat_session.status = 'expired'
+        chat_session.save()
+        return Response({'error': 'Chat session has expired'}, status=status.HTTP_400_BAD_REQUEST)
+    
     # Save user message
     user_message = ChatMessage.objects.create(
         session=chat_session,
@@ -424,19 +434,47 @@ def send_chat_message(request):
         
         if response.status_code == 200:
             response_data = response.json()
-            agent_response = response_data.get('response', 'I received your message but couldn\'t generate a response.')
+            
+            # Try multiple possible response field names from N8N
+            agent_response = None
+            possible_fields = ['output', 'response', 'message', 'reply', 'result', 'text', 'content']
+            
+            # Handle array response first (your N8N case)
+            if isinstance(response_data, list) and len(response_data) > 0:
+                first_item = response_data[0]
+                if isinstance(first_item, dict):
+                    for field in possible_fields:
+                        if field in first_item:
+                            agent_response = first_item[field]
+                            break
+                elif isinstance(first_item, str):
+                    agent_response = first_item
+            
+            # Handle direct object response
+            elif isinstance(response_data, dict):
+                for field in possible_fields:
+                    if field in response_data:
+                        agent_response = response_data[field]
+                        break
+            
+            # If response_data is a string itself
+            elif isinstance(response_data, str):
+                agent_response = response_data
+            
+            # Fallback with full response data for debugging
+            if agent_response is None:
+                agent_response = f"N8N Response received but couldn't parse: {str(response_data)[:200]}..."
             
             # Save agent response
             agent_message = ChatMessage.objects.create(
                 session=chat_session,
                 message_type='agent',
-                content=agent_response,
-                metadata={'webhook_response': response_data}
+                content=str(agent_response),
+                metadata={'webhook_response': response_data, 'raw_response': response.text}
             )
             
-            # Update session timestamp
-            chat_session.updated_at = timezone.now()
-            chat_session.save()
+            # Update session timestamp and extend expiration
+            chat_session.extend_session()
             
             return Response({
                 'user_message': {

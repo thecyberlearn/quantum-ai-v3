@@ -73,6 +73,7 @@ class ChatSession(models.Model):
     STATUS_CHOICES = [
         ('active', 'Active'),
         ('completed', 'Completed'),
+        ('expired', 'Expired'),
         ('abandoned', 'Abandoned'),
         ('failed', 'Failed'),
     ]
@@ -84,9 +85,18 @@ class ChatSession(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     context_data = models.JSONField(default=dict, help_text="Session context and progress tracking")
     fee_charged = models.DecimalField(max_digits=10, decimal_places=2)
+    expires_at = models.DateTimeField(null=True, blank=True, help_text="Session expiration time (2 hours from last activity)")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     completed_at = models.DateTimeField(null=True, blank=True)
+    
+    def save(self, *args, **kwargs):
+        # Set expires_at to 2 hours from now if not set
+        if not self.expires_at:
+            from django.utils import timezone
+            from datetime import timedelta
+            self.expires_at = timezone.now() + timedelta(hours=2)
+        super().save(*args, **kwargs)
     
     class Meta:
         ordering = ['-created_at']
@@ -97,6 +107,20 @@ class ChatSession(models.Model):
     
     def __str__(self):
         return f"{self.agent.name} - {self.user.email} - {self.session_id}"
+    
+    def is_expired(self):
+        from django.utils import timezone
+        if not self.expires_at:
+            return False  # Sessions without expiration date are considered active
+        return timezone.now() > self.expires_at
+    
+    def extend_session(self):
+        """Extend session by 2 hours from now"""
+        from django.utils import timezone
+        from datetime import timedelta
+        self.expires_at = timezone.now() + timedelta(hours=2)
+        self.updated_at = timezone.now()
+        self.save()
 
 class ChatMessage(models.Model):
     MESSAGE_TYPE_CHOICES = [
