@@ -101,8 +101,8 @@ def login_view(request):
         
         user = authenticate(request, username=email, password=password)
         if user is not None:
-            # Check if email is verified
-            if not user.email_verified:
+            # Check if email is verified (only if email verification is required)
+            if settings.REQUIRE_EMAIL_VERIFICATION and not user.email_verified:
                 messages.warning(request, 'Please verify your email address before logging in. Check your inbox for the verification link.')
                 return render(request, 'authentication/login.html')
             
@@ -154,15 +154,28 @@ def register_view(request):
                 email=email,
                 password=password1
             )
-            # Don't automatically login - require email verification first
             
-            # Send verification email
-            if send_verification_email(user):
-                messages.success(request, 'Account created successfully! Please check your email to verify your account.')
+            # Handle email verification based on settings
+            if settings.REQUIRE_EMAIL_VERIFICATION:
+                # Don't automatically login - require email verification first
+                # Send verification email
+                if send_verification_email(user):
+                    messages.success(request, 'Account created successfully! Please check your email to verify your account.')
+                else:
+                    messages.warning(request, 'Account created but verification email could not be sent. You can request a new one after logging in.')
+                
+                return redirect('authentication:login')
             else:
-                messages.warning(request, 'Account created but verification email could not be sent. You can request a new one after logging in.')
-            
-            return redirect('authentication:login')
+                # Skip email verification - auto-verify and login
+                user.email_verified = True
+                user.save()
+                
+                # Add initial wallet balance for new users
+                user.add_balance(50, "Welcome bonus - 50 AED to get started!")
+                
+                login(request, user)
+                messages.success(request, f'Welcome {user.username}! Your account has been created and you\'ve received 50 AED welcome bonus.')
+                return redirect('core:homepage')
         except Exception as e:
             logger.error(f"Error creating account for {email}: {str(e)}")
             messages.error(request, 'Error creating account')

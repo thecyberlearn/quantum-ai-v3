@@ -61,6 +61,10 @@ if config('RAILWAY_ENVIRONMENT', default=''):
 else:
     SITE_URL = config('SITE_URL', default='http://localhost:8000')
 
+# Email verification requirement
+# Set to False for testing environments until final domain is ready
+REQUIRE_EMAIL_VERIFICATION = config('REQUIRE_EMAIL_VERIFICATION', default=True, cast=bool)
+
 
 # Application definition
 
