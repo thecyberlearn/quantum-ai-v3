@@ -6,6 +6,25 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/agent-base.css' %}">
 <link rel="stylesheet" href="{% static 'css/marketplace.css' %}">
+<style>
+/* Special styling for Career Navigator button */
+.career-nav-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    border: none !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+    transition: all 0.3s ease !important;
+}
+
+.career-nav-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+    color: white !important;
+}
+
+/* Career nav card styling removed pulse animation for consistency */
+</style>
 {% endblock %}
 
 {% block content %}
@@ -72,12 +91,23 @@
                     <p class="agent-description">{{ agent.short_description }}</p>
                     <div class="agent-footer">
                         {% if user.is_authenticated %}
-                            <span class="agent-category">{{ agent.category.name }}</span>
-                            <a href="{% url 'agents:detail' agent.slug %}" class="try-btn">Try Now →</a>
+                            {% if agent.slug == 'cybersec-career-navigator' %}
+                                <a href="{% url 'agents:career_navigator_access' %}" class="try-btn career-nav-btn">
+                                    🎓 Try Now → 
+                                </a>
+                            {% else %}
+                                <a href="{% url 'agents:detail' agent.slug %}" class="try-btn">Try Now →</a>
+                            {% endif %}
                         {% else %}
-                            <a href="{% url 'authentication:login' %}?next={% url 'agents:detail' agent.slug %}" class="try-btn login-required" style="width: 100%;">
-                                🔐 Login to Try
-                            </a>
+                            {% if agent.slug == 'cybersec-career-navigator' %}
+                                <a href="{% url 'authentication:login' %}?next={% url 'agents:career_navigator_access' %}" class="try-btn login-required" style="width: 100%;">
+                                    🔐 Login to Try
+                                </a>
+                            {% else %}
+                                <a href="{% url 'authentication:login' %}?next={% url 'agents:detail' agent.slug %}" class="try-btn login-required" style="width: 100%;">
+                                    🔐 Login to Try
+                                </a>
+                            {% endif %}
                         {% endif %}
                     </div>
                 </div>

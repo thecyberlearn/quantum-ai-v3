@@ -7,6 +7,10 @@ urlpatterns = [
     # Web interface
     path('', views.agents_marketplace, name='marketplace'),
     
+    # Direct access routes
+    path('career-navigator/', views.career_navigator_view, name='career_navigator'),
+    path('career-navigator/access/', views.career_navigator_access, name='career_navigator_access'),
+    
     # API endpoints - specific URLs first to avoid slug conflicts
     path('api/execute/', views.execute_agent, name='execute_agent'),
     path('api/executions/', views.execution_list, name='execution_list'),

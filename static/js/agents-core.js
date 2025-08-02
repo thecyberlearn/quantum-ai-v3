@@ -479,6 +479,109 @@ class AgentsCore extends WorkflowsCore {
     }
     
     /**
+     * Handle JotForm agent execution (CyberSec Career Navigator)
+     */
+    async handleJotFormAgent() {
+        // Check authentication and balance
+        if (!this.constructor.checkAuthentication()) return;
+        if (!this.constructor.checkBalance(this.price)) return;
+        
+        const submitBtn = document.getElementById('generateBtn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Processing Payment...';
+        }
+        
+        try {
+            // Create execution record and charge wallet via form API
+            const response = await fetch('/agents/api/form/access/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({
+                    agent_slug: this.agentSlug
+                })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                
+                // Update wallet balance
+                this.constructor.updateWalletBalance(result.new_balance);
+                
+                // Show white-label interface
+                this.showWhiteLabelInterface(result.interface_url);
+                
+                this.constructor.showToast('✅ Payment processed! Access granted to Quantum AI Career Navigator', 'success');
+                
+            } else {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to process payment');
+            }
+            
+        } catch (error) {
+            console.error('Form agent error:', error);
+            this.constructor.showToast(`❌ ${error.message}`, 'error');
+            this.resetSubmitButton();
+        }
+    }
+    
+    /**
+     * Show white-label interface in results container
+     */
+    showWhiteLabelInterface(interfaceUrl) {
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsContent = document.getElementById('resultsContent');
+        
+        if (resultsContainer && resultsContent) {
+            // Update header
+            const widgetTitle = resultsContainer.querySelector('.widget-title');
+            if (widgetTitle) {
+                widgetTitle.innerHTML = '<span class="widget-icon">🎓</span>Quantum AI Career Navigator';
+            }
+            
+            // Create white-label interface
+            resultsContent.innerHTML = `
+                <div class="career-nav-container" style="text-align: center; margin-bottom: 20px;">
+                    <h3 style="color: #0369a1; margin-bottom: 10px;">🎓 Quantum AI Career Navigator</h3>
+                    <p style="color: #6b7280; margin-bottom: 20px;">Meet Jessica, your personal AI cybersecurity career advisor. Share your goals and get expert guidance tailored to your journey.</p>
+                </div>
+                <div class="career-interface-container" style="width: 100%; min-height: 600px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                    <iframe 
+                        src="${interfaceUrl}" 
+                        style="width: 100%; min-height: 600px; border: none; background: white;"
+                        frameborder="0"
+                        scrolling="auto"
+                        title="Quantum AI Career Navigator - Your Personal Career Advisor">
+                    </iframe>
+                </div>
+                <div class="career-footer" style="margin-top: 20px; padding: 15px; background: #f8fafc; border-radius: 8px; text-align: center;">
+                    <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                        💡 <strong>Pro Tip:</strong> Be specific about your experience level and career goals for the most personalized advice from your AI advisor!
+                    </p>
+                </div>
+            `;
+            
+            // Hide action buttons since this is an interactive interface
+            const actionButtons = resultsContainer.querySelector('.results-actions');
+            if (actionButtons) {
+                actionButtons.style.display = 'none';
+            }
+            
+            // Show results container
+            resultsContainer.style.display = 'block';
+            
+            // Scroll to results
+            resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            // Reset submit button
+            this.resetSubmitButton();
+        }
+    }
+    
+    /**
      * Reset submit button to original state
      */
     resetSubmitButton() {

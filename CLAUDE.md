@@ -4,13 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Quantum Tasks AI is a Django-based AI agent marketplace platform. Users can purchase AI agent services through a web interface, with agent execution handled via N8N webhooks and payments processed through Stripe.
+Quantum Tasks AI is a Django-based AI agent marketplace platform. Users can access AI agent services through a web interface, with execution handled via two distinct systems: N8N webhook integrations and direct form access integrations.
 
 **Key Architecture:**
 - **Django Framework**: Main web application using Django 5.2.4
-- **Agent System**: Database-driven agents app with marketplace and N8N webhook execution
+- **Agent System**: Database-driven agents app with dual integration systems:
+  - **Webhook Agents**: N8N integrations for complex processing
+  - **Direct Access Agents**: Form-based integrations (JotForm, etc.)
 - **Authentication**: Custom user model with email verification
-- **Payments**: Stripe integration with wallet system
+- **Payments**: Stripe integration with wallet system (supports free agents)
 - **Database**: SQLite for development, PostgreSQL for production (Railway)
 - **Static Files**: WhiteNoise for production static file serving
 
@@ -101,17 +103,27 @@ gunicorn netcop_hub.wsgi:application
 
 ### Agent System (agents app)
 **Key Files:**
-- `agents/models.py`: Agent, AgentCategory, AgentExecution models
-- `agents/views.py`: REST API and web interface views
-- `agents/templates/agents/`: Dynamic agent templates with form generation
+- `agents/models.py`: Agent, AgentCategory, AgentExecution, ChatSession models
+- `agents/views.py`: Dual integration systems and web interface views
+- `agents/templates/agents/`: Dynamic agent templates and marketplace
 - `agents/management/commands/`: Agent creation and management commands
+- `templates/career_navigator.html`: Direct access form template
 
-**Agent Flow:**
+**Dual Integration Systems:**
+
+**System 1: Webhook Agents (N8N Integration)**
 1. User browses marketplace (`/agents/`)
-2. Selects agent and fills dynamic form (`/agents/{slug}/`)
-3. Form submission creates AgentExecution and calls N8N webhook
-4. N8N processes request and returns response via webhook
-5. Results displayed with file upload support and real-time wallet updates
+2. Clicks "Try Now" → Agent detail page (`/agents/{slug}/`)
+3. Fills dynamic form → Form submission calls `/agents/api/execute/`
+4. N8N webhook processes request and returns response
+5. Results displayed with file upload support
+
+**System 2: Direct Access Agents (Form Integration)**
+1. User browses marketplace (`/agents/`)
+2. Clicks special "Try Now" button → Direct access (`/agents/{slug}/access/`)
+3. Payment processed → Redirect to form page (`/agents/{slug}/`)
+4. Form displays embedded interface (JotForm, etc.)
+5. User interacts directly with external form system
 
 ### Database Models
 **User Management:**
@@ -136,9 +148,10 @@ gunicorn netcop_hub.wsgi:application
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`: Stripe API keys
 - `DATABASE_URL`: PostgreSQL connection string (Railway)
 
-**N8N Webhook URLs:**
-Agent-specific webhook URLs are stored in the database with each agent. Current working agents (all tested and confirmed working):
+**Current Agents:**
+The platform supports both webhook-based agents (N8N integration) and direct access agents (embedded forms):
 
+**Webhook Agents (N8N Integration):**
 1. **Social Ads Generator** (social-ads-generator) - 6.00 AED
    - Creates compelling social media advertisements
    - Form fields: description, social_platform, include_emoji, language
@@ -154,12 +167,27 @@ Agent-specific webhook URLs are stored in the database with each agent. Current 
    - Form fields: pdf_file (file upload with drag-and-drop), summary_type
    - Webhook: N8N endpoint for PDF processing with multipart file support
 
+4. **5 Whys Analyzer** (5-whys-analyzer) - 15.00 AED
+   - Interactive chat-based root cause analysis using 5 Whys methodology
+   - Chat interface with real-time N8N webhook integration
+   - Session timeout: 2 hours
+
+**Direct Access Agents (Embedded Forms):**
+5. **CyberSec Career Navigator** (cybersec-career-navigator) - 0.00 AED
+   - JotForm-based career guidance consultation
+   - Embedded white-label interface
+   - Session duration: 2 hours
+   - Direct access URL: `/agents/career-navigator/`
+
 ### URL Structure
 ```
 /                       # Homepage (core app)
+/digital-branding/      # Digital branding services page
 /auth/                  # Authentication (login, register, etc.)
 /agents/                # Agent marketplace (agents app)
-/agents/{slug}/         # Individual agent pages
+/agents/{slug}/         # Individual agent pages (webhook agents)
+/agents/career-navigator/       # Career navigator form page
+/agents/career-navigator/access/ # Career navigator payment processing
 /wallet/                # Wallet management
 /admin/                 # Django admin
 ```
@@ -271,17 +299,20 @@ class Command(BaseCommand):
 ## System Status
 
 **Current Status: ✅ STABLE WORKING SYSTEM**
-- All 3 agents confirmed working and tested
-- Clean agents-only architecture (workflows app completely removed)
-- Emergency recovery completed from optimization failures
-- System restored to stable commit 657712f
+- All 5 agents confirmed working and tested (4 webhook + 1 direct access)
+- Dual integration architecture with clean separation
+- Digital branding services integration complete
+- Chat-based and form-based agent systems operational
+- White-label integration patterns established
 
 **Latest Changes:**
-- Removed workflows app completely for simplified architecture
-- Enhanced agent marketplace with modern responsive design
-- Fixed all authentication-aware UI components
-- Implemented file upload support for PDF Summarizer
-- Real-time wallet balance updates after agent execution
+- Implemented dual integration architecture (webhook + direct access)
+- Added CyberSec Career Navigator with JotForm integration
+- Enhanced agent marketplace with conditional button logic
+- Added digital branding services page
+- Cleaned up unused form API endpoints
+- Implemented 2-hour session timeout system
+- Fixed persistent success messages and UI consistency
 
 **Future Development:**
 - Optimization work available in feature/optimization-backup branch
@@ -289,4 +320,4 @@ class Command(BaseCommand):
 - Performance optimizations should be applied incrementally with testing
 
 ---
-Last updated: Last updated: Last updated: Last updated: Last updated: 2025-08-01 09:22:55
+Last updated: 2025-08-02 12:30:00

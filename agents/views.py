@@ -3,9 +3,10 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.db import models
 from .models import Agent, AgentExecution, AgentCategory, ChatSession, ChatMessage
 from .serializers import AgentSerializer, AgentExecutionSerializer
@@ -183,6 +184,100 @@ def execute_agent(request):
             'error': 'Failed to execute agent',
             'execution_id': str(execution.id)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def career_navigator_access(request):
+    """Handle Try Now button click - charge wallet and redirect to form"""
+    if not request.user.is_authenticated:
+        # Clear any existing messages to prevent confusion
+        storage = messages.get_messages(request)
+        storage.used = True
+        messages.error(request, 'Please login to access the Career Navigator.')
+        return redirect('authentication:login')
+    
+    # Get the career navigator agent
+    try:
+        agent = Agent.objects.get(slug='cybersec-career-navigator', is_active=True)
+    except Agent.DoesNotExist:
+        messages.error(request, 'Career Navigator is currently unavailable.')
+        return redirect('agents:marketplace')
+    
+    # Check if user has sufficient balance
+    if not request.user.has_sufficient_balance(agent.price):
+        messages.error(request, f'Insufficient balance! You need {agent.price} AED to access the Career Navigator.')
+        return redirect('wallet:wallet')
+    
+    # Deduct fee from user wallet
+    success = request.user.deduct_balance(
+        agent.price, 
+        f'{agent.name} - Direct Access',
+        agent.slug
+    )
+    
+    if not success:
+        messages.error(request, 'Failed to process payment. Please try again.')
+        return redirect('agents:marketplace')
+    
+    # Create execution record for tracking
+    execution = AgentExecution.objects.create(
+        agent=agent,
+        user=request.user,
+        input_data={'action': 'direct_access', 'source': 'try_now_button'},
+        fee_charged=agent.price,
+        status='completed',
+        output_data={
+            'type': 'direct_access',
+            'message': f'Direct access granted to {agent.name}',
+            'access_method': 'try_now_button'
+        },
+        completed_at=timezone.now()
+    )
+    
+    # Success message and redirect to form
+    messages.success(request, f'✅ Payment processed! Welcome to your {agent.name} consultation.')
+    return redirect('agents:career_navigator')
+
+
+def career_navigator_view(request):
+    """Display the career navigator form page"""
+    if not request.user.is_authenticated:
+        # Clear any existing messages to prevent confusion
+        storage = messages.get_messages(request)
+        storage.used = True
+        messages.error(request, 'Please login to access the Career Navigator.')
+        return redirect('authentication:login')
+    
+    # Get the career navigator agent
+    try:
+        agent = Agent.objects.get(slug='cybersec-career-navigator', is_active=True)
+    except Agent.DoesNotExist:
+        messages.error(request, 'Career Navigator is currently unavailable.')
+        return redirect('agents:marketplace')
+    
+    # Check if user has a recent execution (within last 2 hours) or just redirect to payment
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    recent_execution = AgentExecution.objects.filter(
+        agent=agent,
+        user=request.user,
+        status='completed',
+        created_at__gte=timezone.now() - timedelta(hours=2)
+    ).first()
+    
+    if not recent_execution:
+        messages.info(request, 'Please click "Try Now" to access your Career Navigator consultation.')
+        return redirect('agents:marketplace')
+    
+    context = {
+        'agent': agent,
+        'form_url': agent.webhook_url,
+        'user_balance': request.user.wallet_balance,
+        'execution': recent_execution
+    }
+    
+    return render(request, 'career_navigator.html', context)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
