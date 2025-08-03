@@ -8,6 +8,7 @@ gunicorn==21.2.0
 psycopg2-binary==2.9.9
 dj-database-url==2.1.0
 whitenoise==6.8.2
+reportlab==4.2.5
 
 # Optional performance dependencies
 redis==5.2.0
