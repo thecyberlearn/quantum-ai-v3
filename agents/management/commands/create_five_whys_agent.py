@@ -27,18 +27,11 @@ class Command(BaseCommand):
             defaults={
                 'name': '5 Whys Analysis',
                 'short_description': 'Interactive problem-solving using the proven 5 Whys methodology',
-                'description': '''Discover the root cause of any problem through guided conversation using the 5 Whys technique. 
-                
-This interactive agent helps you systematically drill down to the core issue by asking "why" five times. Perfect for:
-• Troubleshooting operational problems
-• Understanding process failures  
-• Identifying systemic issues
-• Improving quality and efficiency
-
-The conversation-based approach ensures you think deeply about each layer of the problem, leading to more effective solutions.''',
+                'description': '''Systematically find root causes through guided 5 Whys methodology. Perfect for troubleshooting operational problems, understanding failures, and identifying systemic issues.''',
                 'category': category,
                 'price': 15.00,
                 'agent_type': 'chat',  # This is a chat-based agent
+                'message_limit': 20,  # Limit messages per session
                 'form_schema': None,  # Chat agents don't use form schemas
                 'webhook_url': 'http://localhost:5678/webhook/5-whys-web',  # N8N webhook URL
                 'is_active': True

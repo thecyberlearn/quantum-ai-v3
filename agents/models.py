@@ -32,6 +32,7 @@ class Agent(models.Model):
     agent_type = models.CharField(max_length=10, choices=AGENT_TYPE_CHOICES, default='form', help_text="Agent interaction type")
     form_schema = models.JSONField(help_text="JSON schema for agent input form", null=True, blank=True)
     webhook_url = models.URLField(help_text="n8n webhook URL for execution")
+    message_limit = models.IntegerField(default=50, help_text="Maximum messages per chat session (for chat agents)")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -85,17 +86,17 @@ class ChatSession(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     context_data = models.JSONField(default=dict, help_text="Session context and progress tracking")
     fee_charged = models.DecimalField(max_digits=10, decimal_places=2)
-    expires_at = models.DateTimeField(null=True, blank=True, help_text="Session expiration time (2 hours from last activity)")
+    expires_at = models.DateTimeField(null=True, blank=True, help_text="Session expiration time (30 minutes from last activity)")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     
     def save(self, *args, **kwargs):
-        # Set expires_at to 2 hours from now if not set
+        # Set expires_at to 30 minutes from now if not set
         if not self.expires_at:
             from django.utils import timezone
             from datetime import timedelta
-            self.expires_at = timezone.now() + timedelta(hours=2)
+            self.expires_at = timezone.now() + timedelta(minutes=30)
         super().save(*args, **kwargs)
     
     class Meta:
@@ -115,10 +116,10 @@ class ChatSession(models.Model):
         return timezone.now() > self.expires_at
     
     def extend_session(self):
-        """Extend session by 2 hours from now"""
+        """Extend session by 30 minutes from now"""
         from django.utils import timezone
         from datetime import timedelta
-        self.expires_at = timezone.now() + timedelta(hours=2)
+        self.expires_at = timezone.now() + timedelta(minutes=30)
         self.updated_at = timezone.now()
         self.save()
 

@@ -89,7 +89,7 @@ html {
 /* Layout - Data Analyzer Exact Copy */
 .agent-container {
     margin: 0 auto;
-    padding: var(--spacing-lg);
+    padding: var(--spacing-sm);
     max-width: 1600px;
 }
 
@@ -99,7 +99,7 @@ html {
     border-radius: var(--radius);
     padding: var(--space-lg);
     border: var(--agent-card-border);
-    margin-bottom: var(--space-lg);
+    margin-bottom: var(--space-md);
     backdrop-filter: var(--agent-backdrop-filter);
     box-shadow: var(--agent-card-shadow);
 }
@@ -1207,7 +1207,7 @@ html {
 /* Agent Grid and Layout System */
 .agent-grid {
     display: flex;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-sm);
     align-items: flex-start;
     flex-wrap: wrap;
 }
@@ -1216,7 +1216,7 @@ html {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--spacing-xl);
+    margin-bottom: 20px;
 }
 
 /* Typography - Data Analyzer Exact Copy */

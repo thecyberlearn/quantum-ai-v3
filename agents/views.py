@@ -16,6 +16,13 @@ import time
 import uuid
 import ipaddress
 from urllib.parse import urlparse
+from django.http import HttpResponse
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.units import inch
+from io import BytesIO
 
 def validate_webhook_url(url):
     """
@@ -337,8 +344,12 @@ def agent_detail_view(request, slug):
         return chat_agent_view(request, agent)
     
     # Handle form-based agents (existing behavior)
+    # Get all other active agents for quick access panel
+    all_agents = Agent.objects.filter(is_active=True).exclude(id=agent.id).select_related('category')
+    
     context = {
         'agent': agent,
+        'all_agents': all_agents,
         'timestamp': int(time.time())  # For cache busting
     }
     
@@ -402,11 +413,68 @@ def chat_agent_view(request, agent):
         if chat_session:
             messages = ChatMessage.objects.filter(session=chat_session).order_by('timestamp')
     
+    # Get all other active agents for quick access panel
+    all_agents = Agent.objects.filter(is_active=True).exclude(id=agent.id).select_related('category')
+    
+    # Get previous sessions for this user and agent (excluding current active session)
+    previous_sessions_query = ChatSession.objects.filter(
+        agent=agent,
+        user=request.user
+    ).exclude(status='active').order_by('-created_at')[:5]  # Last 5 non-active sessions
+    
+    # Add user message count to each session
+    previous_sessions = []
+    for session in previous_sessions_query:
+        session.user_message_count = ChatMessage.objects.filter(
+            session=session, 
+            message_type='user'
+        ).count()
+        previous_sessions.append(session)
+    
+    # Calculate session indicators data
+    session_data = {}
+    if chat_session and messages.exists():
+        from django.utils import timezone
+        import math
+        
+        # Time calculations
+        now = timezone.now()
+        time_elapsed = now - chat_session.created_at
+        time_remaining_seconds = max(0, (chat_session.expires_at - now).total_seconds())
+        time_remaining_minutes = int(time_remaining_seconds // 60)
+        time_remaining_hours = time_remaining_minutes // 60
+        time_remaining_minutes = time_remaining_minutes % 60
+        
+        if time_remaining_hours > 0:
+            time_remaining_str = f"{time_remaining_hours}h {time_remaining_minutes}m"
+        else:
+            time_remaining_str = f"{time_remaining_minutes}m"
+        
+        # Time percentage (how much time is left)
+        total_session_time = 30 * 60  # 30 minutes in seconds
+        time_percentage = max(0, min(100, (time_remaining_seconds / total_session_time) * 100))
+        
+        # Message calculations (only count user messages)
+        user_message_count = messages.filter(message_type='user').count()
+        message_limit = agent.message_limit
+        message_percentage = min(100, (user_message_count / message_limit) * 100)
+        
+        session_data = {
+            'time_remaining': time_remaining_str,
+            'time_percentage': int(time_percentage),
+            'message_count': user_message_count,
+            'message_limit': message_limit,
+            'message_percentage': int(message_percentage),
+        }
+    
     context = {
         'agent': agent,
         'chat_session': chat_session,
         'messages': messages,
-        'timestamp': int(time.time())
+        'all_agents': all_agents,
+        'previous_sessions': previous_sessions,
+        'timestamp': int(time.time()),
+        **session_data  # Unpack session data into context
     }
     
     return render(request, 'agents/agent_chat.html', context)
@@ -452,11 +520,28 @@ def start_chat_session(request):
         user=request.user,
         fee_charged=agent.price,
         status='active',
-        expires_at=timezone.now() + timedelta(hours=2)
+        expires_at=timezone.now() + timedelta(minutes=30)
     )
     
-    # Deduct fee from wallet (if wallet system is implemented)
-    # This would integrate with the existing wallet system
+    # Deduct fee from wallet
+    try:
+        success = request.user.deduct_balance(
+            agent.price, 
+            f'{agent.name} - Chat Session {session_id}',
+            agent.slug
+        )
+        if not success:
+            # Delete the created session if payment fails
+            chat_session.delete()
+            return Response({
+                'error': 'Failed to process payment. Please check your wallet balance.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        # Delete the created session if payment processing fails
+        chat_session.delete()
+        return Response({
+            'error': 'Payment processing error. Please try again.'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     # Send welcome message
     welcome_message = f"Welcome to {agent.name}! I'm here to help you with 5 Whys analysis. What problem would you like to analyze?"
@@ -496,6 +581,18 @@ def send_chat_message(request):
         chat_session.status = 'expired'
         chat_session.save()
         return Response({'error': 'Chat session has expired'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Check message limit (only count user messages)
+    current_user_message_count = ChatMessage.objects.filter(session=chat_session, message_type='user').count()
+    if current_user_message_count >= chat_session.agent.message_limit:
+        # Auto-complete the session when message limit is reached
+        chat_session.status = 'completed'
+        chat_session.completed_at = timezone.now()
+        chat_session.save()
+        
+        return Response({
+            'error': f'Message limit reached ({chat_session.agent.message_limit} messages). Session completed. You can download your conversation or start a new session.'
+        }, status=status.HTTP_400_BAD_REQUEST)
     
     # Save user message
     user_message = ChatMessage.objects.create(
@@ -679,3 +776,185 @@ def end_chat_session(request):
     chat_session.save()
     
     return Response({'message': 'Chat session ended successfully'})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_session_status(request, session_id):
+    """Get real-time session status data"""
+    chat_session = get_object_or_404(
+        ChatSession,
+        session_id=session_id,
+        user=request.user
+    )
+    
+    from django.utils import timezone
+    
+    # Time calculations
+    now = timezone.now()
+    time_remaining_seconds = max(0, (chat_session.expires_at - now).total_seconds())
+    time_remaining_minutes = int(time_remaining_seconds // 60)
+    time_remaining_hours = time_remaining_minutes // 60
+    time_remaining_minutes = time_remaining_minutes % 60
+    
+    if time_remaining_hours > 0:
+        time_remaining_str = f"{time_remaining_hours}h {time_remaining_minutes}m"
+    else:
+        time_remaining_str = f"{time_remaining_minutes}m"
+    
+    # Time percentage (how much time is left)
+    total_session_time = 30 * 60  # 30 minutes in seconds
+    time_percentage = max(0, min(100, (time_remaining_seconds / total_session_time) * 100))
+    
+    # Message calculations (only count user messages)
+    message_count = ChatMessage.objects.filter(session=chat_session, message_type='user').count()
+    message_limit = chat_session.agent.message_limit
+    message_percentage = min(100, (message_count / message_limit) * 100)
+    
+    return Response({
+        'success': True,
+        'session_id': session_id,
+        'status': chat_session.status,
+        'time_remaining_seconds': int(time_remaining_seconds),
+        'time_remaining_str': time_remaining_str,
+        'time_percentage': int(time_percentage),
+        'message_count': message_count,
+        'message_limit': message_limit,
+        'message_percentage': int(message_percentage),
+        'is_expired': chat_session.is_expired()
+    })
+
+
+@login_required
+def export_chat(request, session_id):
+    """Export chat session as PDF or TXT"""
+    format_type = request.GET.get('format', 'pdf').lower()
+    
+    # Get chat session and verify ownership
+    chat_session = get_object_or_404(
+        ChatSession,
+        session_id=session_id,
+        user=request.user
+    )
+    
+    # Get all messages for this session
+    messages = ChatMessage.objects.filter(session=chat_session).order_by('timestamp')
+    
+    if not messages.exists():
+        return HttpResponse('No messages found in this chat session.', status=404)
+    
+    if format_type == 'pdf':
+        return export_chat_pdf(chat_session, messages)
+    elif format_type == 'txt':
+        return export_chat_txt(chat_session, messages)
+    else:
+        return HttpResponse('Invalid format. Use pdf or txt.', status=400)
+
+
+def export_chat_pdf(chat_session, messages):
+    """Generate PDF export of chat session"""
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    styles = getSampleStyleSheet()
+    story = []
+    
+    # Title
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=18,
+        spaceAfter=30,
+        alignment=1  # Center alignment
+    )
+    
+    story.append(Paragraph(f"5 Whys Analysis - {chat_session.agent.name}", title_style))
+    story.append(Spacer(1, 12))
+    
+    # Session info
+    info_style = styles['Normal']
+    story.append(Paragraph(f"<b>Session ID:</b> {chat_session.session_id}", info_style))
+    story.append(Paragraph(f"<b>Date:</b> {chat_session.created_at.strftime('%B %d, %Y at %I:%M %p')}", info_style))
+    story.append(Paragraph(f"<b>Agent:</b> {chat_session.agent.name}", info_style))
+    story.append(Paragraph(f"<b>Total Messages:</b> {messages.count()}", info_style))
+    story.append(Spacer(1, 20))
+    
+    # Messages
+    user_style = ParagraphStyle(
+        'UserMessage',
+        parent=styles['Normal'],
+        leftIndent=0,
+        rightIndent=50,
+        spaceBefore=12,
+        spaceAfter=6,
+        fontSize=10
+    )
+    
+    agent_style = ParagraphStyle(
+        'AgentMessage',
+        parent=styles['Normal'],
+        leftIndent=50,
+        rightIndent=0,
+        spaceBefore=12,
+        spaceAfter=6,
+        fontSize=10
+    )
+    
+    for message in messages:
+        timestamp = message.timestamp.strftime('%I:%M %p')
+        
+        if message.message_type == 'user':
+            story.append(Paragraph(f"<b>You ({timestamp}):</b><br/>{message.content}", user_style))
+        elif message.message_type == 'agent':
+            story.append(Paragraph(f"<b>{chat_session.agent.name} ({timestamp}):</b><br/>{message.content}", agent_style))
+        elif message.message_type == 'system':
+            story.append(Paragraph(f"<i>System ({timestamp}): {message.content}</i>", styles['Normal']))
+    
+    # Build PDF
+    doc.build(story)
+    buffer.seek(0)
+    
+    response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="5whys_chat_{chat_session.session_id}.pdf"'
+    return response
+
+
+def export_chat_txt(chat_session, messages):
+    """Generate TXT export of chat session"""
+    content = []
+    content.append("=" * 60)
+    content.append(f"5 Whys Analysis - {chat_session.agent.name}")
+    content.append("=" * 60)
+    content.append("")
+    content.append(f"Session ID: {chat_session.session_id}")
+    content.append(f"Date: {chat_session.created_at.strftime('%B %d, %Y at %I:%M %p')}")
+    content.append(f"Agent: {chat_session.agent.name}")
+    content.append(f"Total Messages: {messages.count()}")
+    content.append("")
+    content.append("-" * 60)
+    content.append("CONVERSATION")
+    content.append("-" * 60)
+    content.append("")
+    
+    for message in messages:
+        timestamp = message.timestamp.strftime('%I:%M %p')
+        
+        if message.message_type == 'user':
+            content.append(f"You ({timestamp}):")
+            content.append(message.content)
+        elif message.message_type == 'agent':
+            content.append(f"{chat_session.agent.name} ({timestamp}):")
+            content.append(message.content)
+        elif message.message_type == 'system':
+            content.append(f"System ({timestamp}): {message.content}")
+        
+        content.append("")  # Empty line between messages
+    
+    content.append("-" * 60)
+    content.append("End of Conversation")
+    content.append("-" * 60)
+    
+    text_content = "\n".join(content)
+    
+    response = HttpResponse(text_content, content_type='text/plain')
+    response['Content-Disposition'] = f'attachment; filename="5whys_chat_{chat_session.session_id}.txt"'
+    return response

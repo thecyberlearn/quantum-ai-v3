@@ -83,7 +83,7 @@
     border: 1px solid var(--outline);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
-    height: 600px;
+    height: 800px;
     display: flex;
     flex-direction: column;
 }
@@ -94,6 +94,9 @@
     background: var(--gradient-primary);
     color: white;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
 }
 
 .chat-title {
@@ -265,7 +268,7 @@
     }
     
     .chat-widget {
-        height: 500px;
+        height: 650px;
     }
     
     .message-bubble {
@@ -310,6 +313,92 @@
     font-size: 14px;
     opacity: 0.7;
 }
+
+/* Download dropdown styles */
+.download-dropdown {
+    position: relative;
+}
+
+.download-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.download-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.download-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid var(--outline);
+    border-radius: 6px;
+    box-shadow: var(--shadow-lg);
+    min-width: 160px;
+    z-index: 1000;
+    display: none;
+    margin-top: 4px;
+}
+
+.download-menu.show {
+    display: block;
+}
+
+.download-option {
+    display: block;
+    padding: 12px 16px;
+    color: var(--on-surface);
+    text-decoration: none;
+    font-size: 14px;
+    border-bottom: 1px solid var(--outline-variant);
+    transition: background 0.2s ease;
+}
+
+.download-option:last-child {
+    border-bottom: none;
+}
+
+.download-option:hover {
+    background: var(--surface-variant);
+    color: var(--on-surface);
+}
+
+/* Sidebar layout */
+.agent-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    flex: 0 0 auto;
+    min-width: 300px;
+}
+
+/* 5 Whys specific spacing adjustments */
+.agent-container {
+    padding: var(--spacing-sm) !important;
+}
+
+.agent-header {
+    margin-bottom: 20px !important;
+}
+
+.agent-grid {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.agent-widget.widget-large {
+    padding: 20px !important;
+    margin: 0 !important;
+}
 </style>
 {% endblock %}
 
@@ -327,10 +416,12 @@ document.body.setAttribute('data-user-id', '{{ user.id }}');
 {% endif %}
 {% if chat_session %}
 document.body.setAttribute('data-session-id', '{{ chat_session.session_id }}');
+document.body.setAttribute('data-session-created', '{{ chat_session.created_at.isoformat }}');
+document.body.setAttribute('data-session-expires', '{{ chat_session.expires_at.isoformat }}');
 {% endif %}
 </script>
 
-<div class="chat-container">
+<div class="agent-container">
     <!-- Agent Header Component -->
     {% include "components/agent_header.html" with agent_title=agent.name agent_subtitle=agent.short_description %}
 
@@ -343,29 +434,34 @@ document.body.setAttribute('data-session-id', '{{ chat_session.session_id }}');
         <div class="agent-widget widget-large" style="flex: 1; margin-right: clamp(0px, var(--spacing-lg), 2vw);">
     {% if user.is_authenticated %}
         {% if user.wallet_balance >= agent.price or chat_session %}
-            <!-- Session Info -->
-            {% if chat_session %}
-            <div class="session-info">
-                <div class="session-status">
-                    💬 Chat Session: <strong>{{ chat_session.get_status_display }}</strong>
-                    {% if chat_session.status == 'active' %}
-                        <span style="color: #10b981; font-size: 12px;">• Active</span>
-                    {% elif chat_session.status == 'expired' %}
-                        <span style="color: #f59e0b; font-size: 12px;">• Expired</span>
-                    {% endif %}
-                </div>
-                <div class="session-id">ID: {{ chat_session.session_id }}</div>
-            </div>
-            {% endif %}
 
             <!-- Chat Widget -->
             <div class="chat-widget">
                 <div class="chat-header">
-                    <h3 class="chat-title">
-                        <span>{{ agent.category.icon }}</span>
-                        {{ agent.name }}
-                    </h3>
-                    <p class="chat-subtitle">{{ agent.description }}</p>
+                    <div>
+                        <h3 class="chat-title">
+                            <span>{{ agent.category.icon }}</span>
+                            {{ agent.name }}
+                        </h3>
+                        <p class="chat-subtitle">{{ agent.description }}</p>
+                    </div>
+                    {% if chat_session and messages %}
+                    <div class="chat-actions">
+                        <div class="download-dropdown">
+                            <button class="download-btn" onclick="toggleDownloadMenu()" id="downloadBtn">
+                                📥 Download
+                            </button>
+                            <div class="download-menu" id="downloadMenu">
+                                <a href="#" onclick="downloadChat('pdf')" class="download-option">
+                                    📄 Download PDF
+                                </a>
+                                <a href="#" onclick="downloadChat('txt')" class="download-option">
+                                    📝 Download TXT
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
 
                 <div class="chat-messages" id="chatMessages">
@@ -463,15 +559,19 @@ document.body.setAttribute('data-session-id', '{{ chat_session.session_id }}');
     {% endif %}
         </div>
 
-        <!-- Sidebar with Wallet and How It Works -->
+        <!-- Sidebar -->
         <div class="agent-sidebar">
-            {% if user.is_authenticated %}
-                <!-- Wallet Card -->
-                {% include "components/wallet_card.html" %}
-            {% endif %}
-            
             <!-- How It Works Widget -->
             {% include "components/how_it_works_widget.html" with steps="agents" %}
+            
+            <!-- Current Session Info -->
+            {% include "components/current_session_widget.html" %}
+            
+            <!-- Session Indicators -->
+            {% include "components/session_indicators.html" %}
+            
+            <!-- Previous Sessions Widget -->
+            {% include "components/previous_sessions_widget.html" %}
         </div>
     </div>
 {% endblock %}
@@ -585,6 +685,10 @@ class ChatInterface {
             if (response.ok) {
                 // Add agent response
                 this.addMessage('agent', data.agent_message.content);
+                // Update message count indicators
+                if (typeof updateMessageCount === 'function') {
+                    updateMessageCount();
+                }
             } else {
                 this.showError(data.error || 'Failed to send message');
             }
@@ -657,7 +761,205 @@ class ChatInterface {
 // Initialize chat interface when page loads
 document.addEventListener('DOMContentLoaded', function() {
     new ChatInterface();
+    
+    // Clear any old localStorage data for sessions
+    const sessionId = document.body.getAttribute('data-session-id');
+    if (sessionId) {
+        // Clear old session start time cache
+        localStorage.removeItem(`session_start_${sessionId}`);
+    }
+    
+    // Initialize session indicators updates
+    if (document.getElementById('timeRemaining')) {
+        updateSessionIndicators();
+        setInterval(updateSessionIndicators, 30000); // Update every 30 seconds for better accuracy
+    }
 });
+
+// Download functionality
+function toggleDownloadMenu() {
+    const menu = document.getElementById('downloadMenu');
+    menu.classList.toggle('show');
+}
+
+function downloadChat(format) {
+    const sessionId = document.body.getAttribute('data-session-id');
+    if (!sessionId) {
+        alert('No active session found');
+        return;
+    }
+    
+    // Hide the dropdown menu
+    document.getElementById('downloadMenu').classList.remove('show');
+    
+    // Show loading state
+    const downloadBtn = document.getElementById('downloadBtn');
+    const originalText = downloadBtn.textContent;
+    downloadBtn.textContent = '⏳ Preparing...';
+    downloadBtn.disabled = true;
+    
+    // Create download URL
+    const downloadUrl = `/agents/api/chat/export/${sessionId}/?format=${format}`;
+    
+    // Create a temporary link and trigger download
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = `5whys_chat_${sessionId}.${format}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Reset button state after a short delay
+    setTimeout(() => {
+        downloadBtn.textContent = originalText;
+        downloadBtn.disabled = false;
+    }, 2000);
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const dropdown = document.querySelector('.download-dropdown');
+    const menu = document.getElementById('downloadMenu');
+    
+    if (dropdown && !dropdown.contains(event.target)) {
+        menu.classList.remove('show');
+    }
+});
+
+// Session indicators real-time updates
+function updateSessionIndicators() {
+    const sessionId = document.body.getAttribute('data-session-id');
+    if (!sessionId) return;
+    
+    // Fetch real session data from server
+    fetch(`/agents/api/chat/session/${sessionId}/status/`, {
+        method: 'GET',
+        headers: {
+            'X-CSRFToken': getCSRFToken(),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateTimeIndicator(data.time_remaining_seconds, data.time_remaining_str);
+            updateMessageIndicator(data.message_count, data.message_limit);
+            updateWarnings(data.time_percentage, data.message_percentage);
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching session status:', error);
+        // Fallback to approximate calculation
+        updateSessionIndicatorsApproximate();
+    });
+}
+
+function updateSessionIndicatorsApproximate() {
+    const sessionId = document.body.getAttribute('data-session-id');
+    if (!sessionId) return;
+    
+    // Use actual session expiration time from server
+    const sessionExpiresStr = document.body.getAttribute('data-session-expires');
+    
+    if (sessionExpiresStr) {
+        const sessionExpires = new Date(sessionExpiresStr);
+        const now = new Date();
+        const timeRemaining = Math.max(0, sessionExpires - now);
+        
+        const minutesRemaining = Math.floor(timeRemaining / (1000 * 60));
+        const timeRemainingStr = `${minutesRemaining}m`;
+        
+        const sessionDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
+        const timePercentage = Math.max(0, (timeRemaining / sessionDuration) * 100);
+        
+        updateTimeIndicator(timeRemaining / 1000, timeRemainingStr);
+        
+        // For messages, count current user messages
+        const messageElements = document.querySelectorAll('.message.user');
+        const currentCount = messageElements.length;
+        const maxMessages = 20;
+        updateMessageIndicator(currentCount, maxMessages);
+        
+        updateWarnings(timePercentage, (currentCount / maxMessages) * 100);
+    } else {
+        console.warn('No session expiration data available');
+    }
+}
+
+function updateTimeIndicator(timeRemainingSeconds, timeRemainingStr) {
+    const timeElement = document.getElementById('timeRemaining');
+    const timeProgressElement = document.getElementById('timeProgress');
+    
+    if (timeElement) {
+        timeElement.textContent = timeRemainingStr;
+    }
+    
+    if (timeProgressElement) {
+        const totalTime = 30 * 60; // 30 minutes in seconds
+        const percentage = Math.max(0, (timeRemainingSeconds / totalTime) * 100);
+        timeProgressElement.style.width = percentage + '%';
+        
+        // Update color based on time remaining
+        if (percentage <= 20) {
+            timeProgressElement.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
+        } else if (percentage <= 40) {
+            timeProgressElement.style.background = 'linear-gradient(90deg, #f59e0b, #d97706)';
+        } else {
+            timeProgressElement.style.background = 'linear-gradient(90deg, #10b981, #059669)';
+        }
+    }
+}
+
+function updateMessageIndicator(currentCount, maxMessages) {
+    const messageCountElement = document.getElementById('messageCount');
+    const messageProgressElement = document.getElementById('messageProgress');
+    
+    if (messageCountElement) {
+        messageCountElement.textContent = `${currentCount}/${maxMessages} used`;
+    }
+    
+    if (messageProgressElement) {
+        const percentage = (currentCount / maxMessages) * 100;
+        messageProgressElement.style.width = percentage + '%';
+        
+        // Update color based on usage
+        if (percentage >= 95) {
+            messageProgressElement.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
+        } else if (percentage >= 80) {
+            messageProgressElement.style.background = 'linear-gradient(90deg, #f59e0b, #d97706)';
+        } else {
+            messageProgressElement.style.background = 'linear-gradient(90deg, #3b82f6, #2563eb)';
+        }
+    }
+}
+
+function updateWarnings(timePercentage, messagePercentage) {
+    const warningsElement = document.getElementById('sessionWarnings');
+    if (warningsElement) {
+        let warningHTML = '';
+        
+        if (messagePercentage >= 80) {
+            warningHTML += '<div class="warning-item message-warning">⚠️ Approaching message limit!</div>';
+        }
+        
+        if (timePercentage <= 20) {
+            warningHTML += '<div class="warning-item time-warning">⚠️ Session expires soon!</div>';
+        }
+        
+        warningsElement.innerHTML = warningHTML;
+    }
+}
+
+function getCSRFToken() {
+    const token = document.querySelector('[name=csrfmiddlewaretoken]');
+    return token ? token.value : '';
+}
+
+// Update message count after sending a message
+function updateMessageCount() {
+    // Update session indicators to refresh all counters
+    updateSessionIndicators();
+}
 
 // Handle wallet balance check
 document.addEventListener('DOMContentLoaded', function() {

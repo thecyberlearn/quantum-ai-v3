@@ -20,7 +20,9 @@ urlpatterns = [
     path('api/chat/start/', views.start_chat_session, name='start_chat_session'),
     path('api/chat/send/', views.send_chat_message, name='send_chat_message'),
     path('api/chat/history/<str:session_id>/', views.get_chat_history, name='get_chat_history'),
+    path('api/chat/session/<str:session_id>/status/', views.get_session_status, name='get_session_status'),
     path('api/chat/end/', views.end_chat_session, name='end_chat_session'),
+    path('api/chat/export/<str:session_id>/', views.export_chat, name='export_chat'),
     
     path('api/', views.agent_list, name='agent_list'),
     path('api/<slug:slug>/', views.agent_detail, name='agent_detail_api'),

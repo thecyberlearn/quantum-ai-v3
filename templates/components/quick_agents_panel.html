@@ -7,29 +7,23 @@
     </div>
 
     <div class="quick-agents-grid">
-        <a href="/agents/social-ads-generator/" class="quick-agent-card">
-            <div class="agent-icon">📢</div>
-            <div class="agent-info">
-                <h4>Social Ads Generator</h4>
-                <p>Create social media ads</p>
-            </div>
-        </a>
-
-        <a href="/agents/job-posting-generator/" class="quick-agent-card">
-            <div class="agent-icon">💼</div>
-            <div class="agent-info">
-                <h4>Job Posting Generator</h4>
-                <p>Create professional job posts</p>
-            </div>
-        </a>
-
-        <a href="/agents/pdf-summarizer/" class="quick-agent-card">
-            <div class="agent-icon">📄</div>
-            <div class="agent-info">
-                <h4>PDF Summarizer</h4>
-                <p>Analyze and summarize PDFs</p>
-            </div>
-        </a>
+        {% for agent in all_agents %}
+            {% if agent.slug == 'cybersec-career-navigator' %}
+                <a href="{% url 'agents:career_navigator_access' %}" class="quick-agent-card">
+            {% else %}
+                <a href="{% url 'agents:detail' agent.slug %}" class="quick-agent-card">
+            {% endif %}
+                <div class="agent-icon">{{ agent.category.icon }}</div>
+                <div class="agent-info">
+                    <h4>{{ agent.name }}</h4>
+                    <div class="agent-price">{{ agent.price }} AED</div>
+                </div>
+            </a>
+        {% empty %}
+            <p style="text-align: center; color: var(--on-surface-variant); padding: 20px;">
+                No other agents available
+            </p>
+        {% endfor %}
     </div>
 
     <div class="quick-agents-footer">
