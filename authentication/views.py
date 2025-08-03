@@ -170,11 +170,8 @@ def register_view(request):
                 user.email_verified = True
                 user.save()
                 
-                # Add initial wallet balance for new users
-                user.add_balance(50, "Welcome bonus - 50 AED to get started!")
-                
                 login(request, user)
-                messages.success(request, f'Welcome {user.username}! Your account has been created and you\'ve received 50 AED welcome bonus.')
+                messages.success(request, f'Welcome {user.username}! Your account has been created successfully.')
                 return redirect('core:homepage')
         except Exception as e:
             logger.error(f"Error creating account for {email}: {str(e)}")
