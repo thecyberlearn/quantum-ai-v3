@@ -39,30 +39,9 @@ def homepage_view(request):
         return render(request, 'core/homepage.html', {'featured_agents': [], 'user_balance': 0})
 @ratelimit(key='ip', rate='60/m', method='GET', block=False)
 def pricing_view(request):
-    """Pricing page for non-logged-in users with rate limiting"""
-    # Check if rate limited
-    if getattr(request, 'limited', False):
-        logger.warning(f"Pricing page rate limit exceeded for IP {request.META.get('REMOTE_ADDR')}")
-        messages.warning(request, 'Too many requests. Please wait a moment before refreshing.')
-    
-    # If user is already logged in, redirect to wallet top-up
-    if request.user.is_authenticated:
-        return redirect('wallet:wallet_topup')
-    
-    try:
-        # Get sample agents to show pricing context from database
-        sample_agents = Agent.objects.filter(is_active=True).select_related('category')[:4]
-        
-        context = {
-            'sample_agents': sample_agents,
-        }
-        
-        return render(request, 'core/pricing.html', context)
-        
-    except Exception as e:
-        logger.error(f"Pricing view error: {e}")
-        messages.error(request, 'Unable to load pricing page. Please try again.')
-        return render(request, 'core/pricing.html', {'sample_agents': []})
+    """Pricing page - redirect to marketplace"""
+    # Redirect all pricing page access to the AI marketplace
+    return redirect('agents:marketplace')
 
 
 @ratelimit(key='ip', rate='60/m', method='GET', block=False)
