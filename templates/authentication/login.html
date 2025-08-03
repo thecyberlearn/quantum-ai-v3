@@ -132,7 +132,7 @@
         {% if messages %}
             <div class="messages">
                 {% for message in messages %}
-                    <div class="message {{ message.tags }}">{{ message }}</div>
+                    <div class="message {{ message.tags }}">{{ message|safe }}</div>
                 {% endfor %}
             </div>
         {% endif %}
@@ -176,7 +176,6 @@
         
         <div class="login-auth-links">
             <p><a href="{% url 'authentication:forgot_password' %}">Forgot your password?</a></p>
-            <p><a href="{% url 'authentication:resend_verification' %}">Resend email verification</a></p>
             <p>Don't have an account? <a href="{% url 'authentication:register' %}">Create account</a></p>
         </div>
     </div>

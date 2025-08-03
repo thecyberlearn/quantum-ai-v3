@@ -103,7 +103,9 @@ def login_view(request):
         if user is not None:
             # Check if email is verified (only if email verification is required)
             if settings.REQUIRE_EMAIL_VERIFICATION and not user.email_verified:
-                messages.warning(request, 'Please verify your email address before logging in. Check your inbox for the verification link.')
+                from django.urls import reverse
+                resend_url = reverse('authentication:resend_verification')
+                messages.warning(request, f'Please verify your email address before logging in. Check your inbox for the verification link, or <a href="{resend_url}">resend verification email</a>.')
                 return render(request, 'authentication/login.html')
             
             login(request, user)
