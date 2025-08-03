@@ -544,7 +544,22 @@ def start_chat_session(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     # Send welcome message
-    welcome_message = f"Welcome to {agent.name}! I'm here to help you with 5 Whys analysis. What problem would you like to analyze?"
+    welcome_message = f"""## Welcome to {agent.name}! 🔍
+
+I'm here to guide you through the **5 Whys methodology** - a powerful problem-solving technique to uncover root causes.
+
+### How It Works:
+• **Ask "Why" 5 times** to drill down from symptoms to root causes
+• **Systematic analysis** of Occurrence, Detection, and Prevention
+• **Actionable insights** for effective solutions
+
+### Getting Started:
+Please describe the **specific problem** you'd like to analyze. Include:
+- What happened?
+- When did it occur?
+- What are the immediate impacts?
+
+Let's discover the root cause together! 💪"""
     
     ChatMessage.objects.create(
         session=chat_session,
@@ -604,7 +619,25 @@ def send_chat_message(request):
     # Prepare webhook payload
     webhook_payload = {
         "message": {
-            "text": f"Chat message: {message_content}. Provide helpful guidance about 5 Whys analysis. Do not generate the final report - just chat and help the user understand their problem."
+            "text": f"""User message: "{message_content}"
+
+Provide helpful 5 Whys analysis guidance with professional formatting:
+
+FORMATTING REQUIREMENTS:
+- Use markdown headers (##, ###) for sections
+- Use **bold** for key terms and emphasis
+- Use bullet points (•) for lists
+- Use numbered lists (1., 2., 3.) for steps
+- Structure responses with clear sections
+- Add relevant emojis for engagement
+
+CONTENT GUIDELINES:
+- Guide through 5 Whys methodology systematically
+- Ask probing questions about Occurrence, Detection, Prevention
+- Help user drill down from symptoms to root causes
+- Keep responses conversational but structured
+- Do not generate final reports - focus on interactive guidance
+- Encourage deeper thinking with follow-up questions"""
         },
         "sessionId": session_id,
         "userId": str(request.user.id),

@@ -28,6 +28,31 @@
 .message-bubble h3 { font-size: 15px; color: var(--on-surface); }
 .message-bubble h4 { font-size: 14px; color: var(--on-surface); }
 
+/* Handle markdown-style headers in plain text */
+.message-bubble p:has(strong):first-child,
+.message-bubble p:contains("##"),
+.message-bubble p:contains("###") {
+    font-weight: 600;
+    color: var(--primary);
+    margin-top: 16px;
+    margin-bottom: 8px;
+}
+
+/* Enhanced styling for better visual hierarchy */
+.message-bubble {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Better spacing for structured content */
+.message-bubble p:first-child {
+    margin-top: 0;
+}
+
+.message-bubble p:last-child {
+    margin-bottom: 0;
+}
+
 .message-bubble ul,
 .message-bubble ol {
     margin: 12px 0;
@@ -468,7 +493,7 @@ document.body.setAttribute('data-session-expires', '{{ chat_session.expires_at.i
                     {% if messages %}
                         {% for message in messages %}
                         <div class="message {{ message.message_type }}">
-                            <div class="message-bubble">
+                            <div class="message-bubble" data-raw-content="{{ message.content|escape }}">
                                 {{ message.content|linebreaks }}
                                 <div class="message-time">{{ message.timestamp|date:"H:i" }}</div>
                             </div>
@@ -709,8 +734,8 @@ class ChatInterface {
         const bubbleDiv = document.createElement('div');
         bubbleDiv.className = 'message-bubble';
         
-        // Convert line breaks to <br> tags
-        const formattedContent = content.replace(/\n/g, '<br>');
+        // Use the shared formatting function
+        const formattedContent = formatMarkdownContent(content);
         bubbleDiv.innerHTML = formattedContent;
         
         // Add timestamp
@@ -762,6 +787,9 @@ class ChatInterface {
 document.addEventListener('DOMContentLoaded', function() {
     new ChatInterface();
     
+    // Format existing messages with markdown
+    formatExistingMessages();
+    
     // Clear any old localStorage data for sessions
     const sessionId = document.body.getAttribute('data-session-id');
     if (sessionId) {
@@ -775,6 +803,42 @@ document.addEventListener('DOMContentLoaded', function() {
         setInterval(updateSessionIndicators, 30000); // Update every 30 seconds for better accuracy
     }
 });
+
+// Format existing messages on page load
+function formatExistingMessages() {
+    const messageBubbles = document.querySelectorAll('.message-bubble[data-raw-content]');
+    messageBubbles.forEach(bubble => {
+        const rawContent = bubble.getAttribute('data-raw-content');
+        if (rawContent) {
+            const formattedContent = formatMarkdownContent(rawContent);
+            // Only replace the content part, preserve the timestamp
+            const timeElement = bubble.querySelector('.message-time');
+            const timeHTML = timeElement ? timeElement.outerHTML : '';
+            bubble.innerHTML = formattedContent + timeHTML;
+        }
+    });
+}
+
+// Helper function to format markdown content
+function formatMarkdownContent(content) {
+    return content
+        // Convert headers
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        // Convert bold text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        // Convert bullet points
+        .replace(/^• (.*$)/gim, '<li>$1</li>')
+        .replace(/^- (.*$)/gim, '<li>$1</li>')
+        // Convert line breaks
+        .replace(/\n/g, '<br>')
+        // Wrap consecutive list items in ul tags
+        .replace(/(<li>.*?<\/li>(<br>)*)+/gs, '<ul>$&</ul>')
+        // Clean up extra breaks around lists
+        .replace(/<ul>(<li>.*?<\/li>)(<br>)*(<li>.*?<\/li>)*<\/ul>/gs, function(match) {
+            return match.replace(/<br>/g, '');
+        });
+}
 
 // Download functionality
 function toggleDownloadMenu() {

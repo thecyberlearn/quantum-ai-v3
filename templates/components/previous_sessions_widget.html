@@ -22,7 +22,7 @@
                 </div>
             </div>
             
-            {% if session.status == 'completed' and session.user_message_count > 0 %}
+            {% if session.user_message_count > 0 and session.status != 'active' %}
             <div class="session-actions">
                 <div class="download-actions">
                     <a href="{% url 'agents:export_chat' session.session_id %}?format=pdf" 
