@@ -337,6 +337,10 @@ document.body.setAttribute('data-session-id', '{{ chat_session.session_id }}');
     <!-- Quick Agent Access Panel Component -->
     {% include "components/quick_agents_panel.html" %}
 
+    <!-- Main Agent Grid -->
+    <div class="agent-grid">
+        <!-- Chat Widget -->
+        <div class="agent-widget widget-large" style="flex: 1; margin-right: clamp(0px, var(--spacing-lg), 2vw);">
     {% if user.is_authenticated %}
         {% if user.wallet_balance >= agent.price or chat_session %}
             <!-- Session Info -->
@@ -457,10 +461,19 @@ document.body.setAttribute('data-session-id', '{{ chat_session.session_id }}');
             </div>
         </div>
     {% endif %}
+        </div>
 
-    <!-- How It Works Widget -->
-    {% include "components/how_it_works_widget.html" with steps="agents" %}
-</div>
+        <!-- Sidebar with Wallet and How It Works -->
+        <div class="agent-sidebar">
+            {% if user.is_authenticated %}
+                <!-- Wallet Card -->
+                {% include "components/wallet_card.html" %}
+            {% endif %}
+            
+            <!-- How It Works Widget -->
+            {% include "components/how_it_works_widget.html" with steps="agents" %}
+        </div>
+    </div>
 {% endblock %}
 
 {% block extra_js %}
