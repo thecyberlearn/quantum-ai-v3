@@ -30,7 +30,7 @@ def validate_password_strength(password):
     is_common = password.lower() in common_passwords
     
     if not (has_length and has_lower and has_upper and has_digit and has_special) or is_common:
-        return ["Password must be at least 8 characters with uppercase, lowercase, number, and special character"]
+        return ["Password must have 8+ characters, uppercase, lowercase, number, and special character"]
     
     return []
 
@@ -162,9 +162,9 @@ def register_view(request):
                 # Don't automatically login - require email verification first
                 # Send verification email
                 if send_verification_email(user):
-                    messages.success(request, 'Account created successfully! Please check your email to verify your account.')
+                    messages.success(request, 'Account created. Check your email to verify.')
                 else:
-                    messages.warning(request, 'Account created but verification email could not be sent. You can request a new one after logging in.')
+                    messages.warning(request, 'Account created. Email verification failed - try again later.')
                 
                 return redirect('authentication:login')
             else:
@@ -173,7 +173,7 @@ def register_view(request):
                 user.save()
                 
                 login(request, user)
-                messages.success(request, f'Welcome {user.username}! Your account has been created successfully.')
+                messages.success(request, f'Welcome {user.username}!')
                 return redirect('core:homepage')
         except Exception as e:
             logger.error(f"Error creating account for {email}: {str(e)}")
@@ -185,7 +185,6 @@ def register_view(request):
 def logout_view(request):
     """User logout view"""
     logout(request)
-    messages.success(request, 'You have been logged out successfully')
     return redirect('core:homepage')
 
 
@@ -337,7 +336,7 @@ def reset_password_view(request, token):
         # Mark token as used
         reset_token.mark_as_used()
         
-        messages.success(request, 'Your password has been reset successfully. You can now log in.')
+        messages.success(request, 'Password reset. You can now log in.')
         return redirect('authentication:login')
     
     return render(request, 'authentication/reset_password.html', {'token': token})
@@ -359,7 +358,7 @@ def verify_email_view(request, token):
     # Mark token as used
     verification_token.mark_as_used()
     
-    messages.success(request, 'Email verified successfully! You can now log in.')
+    messages.success(request, 'Email verified. You can now log in.')
     return redirect('authentication:login')
 
 
@@ -384,7 +383,7 @@ def resend_verification_view(request):
             
             # Send new verification email
             if send_verification_email(user):
-                messages.success(request, 'Verification email sent. Please check your inbox.')
+                messages.success(request, 'Verification email sent.')
             else:
                 messages.error(request, 'Unable to send verification email at this time.')
             

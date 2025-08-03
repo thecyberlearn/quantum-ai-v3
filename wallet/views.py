@@ -79,16 +79,22 @@ def wallet_topup_view(request):
             return redirect('wallet:wallet_topup')
         except Exception as e:
             logger.error(f"Checkout session creation failed for user {request.user.id}: {e}")
-            messages.error(request, 'Unable to process payment at this time. Please try again.')
+            messages.error(request, 'Payment failed. Try again.')
             return redirect('wallet:wallet_topup')
     
     return render(request, 'wallet/wallet_topup.html')
 
 
-@login_required
 @ratelimit(key='user', rate='10/m', method='GET', block=False)
 def wallet_topup_success_view(request):
     """Payment success page with automatic payment verification"""
+    # Check authentication first and clear any messages if redirecting to login
+    if not request.user.is_authenticated:
+        # Clear any existing messages to prevent them from showing on login page
+        storage = messages.get_messages(request)
+        storage.used = True
+        return redirect('authentication:login')
+    
     # Check if rate limited
     if getattr(request, 'limited', False):
         logger.warning(f"Payment success page rate limit exceeded for user {request.user.id}")
@@ -99,7 +105,7 @@ def wallet_topup_success_view(request):
     
     if not session_id:
         logger.warning(f"No session ID provided for user {request.user.id}")
-        messages.error(request, 'No payment session found. Please contact support if you completed a payment.')
+        messages.error(request, 'Payment session not found.')
         return redirect('wallet:wallet')
     
     # Verify payment directly with Stripe API
@@ -111,10 +117,10 @@ def wallet_topup_success_view(request):
         
         if result['success']:
             if result['processed']:
-                messages.success(request, f'Payment successful! {result["amount"]} AED has been added to your wallet.')
+                messages.success(request, f'{result["amount"]} AED added to wallet.')
                 logger.info(f"Payment verified and wallet updated for user {request.user.id}")
             else:
-                messages.info(request, 'Payment already processed. Your wallet balance is up to date.')
+                messages.info(request, 'Payment already processed.')
                 logger.info(f"Payment already processed for session {session_id}")
         else:
             messages.warning(request, 'Payment verification failed. Please contact support.')
@@ -122,15 +128,21 @@ def wallet_topup_success_view(request):
         
     except Exception as e:
         logger.error(f"Error verifying payment for user {request.user.id}: {e}")
-        messages.error(request, 'Unable to verify payment. Please contact support if you completed a payment.')
+        messages.error(request, 'Payment verification failed.')
     
     return redirect('wallet:wallet')
 
 
-@login_required
 def wallet_topup_cancel_view(request):
     """Payment cancel page"""
-    messages.info(request, 'Payment was cancelled. No charges were made.')
+    # Check authentication first and clear any messages if redirecting to login
+    if not request.user.is_authenticated:
+        # Clear any existing messages to prevent them from showing on login page
+        storage = messages.get_messages(request)
+        storage.used = True
+        return redirect('authentication:login')
+    
+    messages.info(request, 'Payment cancelled.')
     return redirect('wallet:wallet_topup')
 
 

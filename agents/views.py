@@ -241,7 +241,10 @@ def career_navigator_access(request):
     )
     
     # Success message and redirect to form
-    messages.success(request, f'✅ Payment processed! Welcome to your {agent.name} consultation.')
+    if agent.price > 0:
+        messages.success(request, f'Welcome to your {agent.name} consultation.')
+    else:
+        messages.success(request, f'Welcome to your {agent.name} consultation.')
     return redirect('agents:career_navigator')
 
 
