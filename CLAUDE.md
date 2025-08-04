@@ -175,9 +175,15 @@ The platform supports both webhook-based agents (N8N integration) and direct acc
 **Direct Access Agents (Embedded Forms):**
 5. **CyberSec Career Navigator** (cybersec-career-navigator) - 0.00 AED
    - JotForm-based career guidance consultation
-   - Embedded white-label interface
+   - Embedded white-label interface with Quantum Tasks header
    - Session duration: 2 hours
    - Direct access URL: `/agents/career-navigator/`
+
+6. **AI Brand Strategist** (ai-brand-strategist) - 0.00 AED
+   - JotForm-based brand strategy consultation
+   - Embedded white-label interface with Quantum Tasks header
+   - Session duration: 2 hours
+   - Direct access URL: `/agents/ai-brand-strategist/`
 
 ### URL Structure
 ```
@@ -188,6 +194,8 @@ The platform supports both webhook-based agents (N8N integration) and direct acc
 /agents/{slug}/         # Individual agent pages (webhook agents)
 /agents/career-navigator/       # Career navigator form page
 /agents/career-navigator/access/ # Career navigator payment processing
+/agents/ai-brand-strategist/    # AI Brand Strategist form page
+/agents/ai-brand-strategist/access/ # AI Brand Strategist payment processing
 /wallet/                # Wallet management
 /admin/                 # Django admin
 ```
@@ -205,53 +213,277 @@ The platform supports both webhook-based agents (N8N integration) and direct acc
 
 ## Adding New Agents
 
-1. **Create management command** (recommended approach):
+**CRITICAL**: The platform has **TWO DISTINCT AGENT SYSTEMS**. Choose the correct system based on your requirements.
+
+### **System 1: Webhook Agents (N8N Integration)**
+
+**Use for:** Dynamic forms, server-side processing, file uploads, complex workflows
+**Examples:** Social Ads Generator, PDF Summarizer, Job Posting Generator
+
+**Flow:** Marketplace → Agent detail page → Dynamic form → N8N webhook → Results
+
+**Implementation Steps:**
+1. **Create management command** (e.g., `create_content_optimizer.py`):
 ```python
-# agents/management/commands/create_new_agent.py
 from django.core.management.base import BaseCommand
 from agents.models import AgentCategory, Agent
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
         category, _ = AgentCategory.objects.get_or_create(
-            slug='category-slug',
-            defaults={'name': 'Category Name', 'icon': '🤖'}
+            slug='content-tools',
+            defaults={'name': 'Content Tools', 'icon': '📝'}
         )
         
         Agent.objects.get_or_create(
-            slug='agent-slug',
+            slug='content-optimizer',
             defaults={
-                'name': 'Agent Name',
-                'short_description': 'Brief description',
-                'description': 'Full description',
+                'name': 'Content Optimizer',
+                'short_description': 'AI-powered content optimization',
+                'description': 'Enhance your content for better engagement',
                 'category': category,
-                'price': 10.0,
+                'price': 5.0,
+                'agent_type': 'form',
                 'form_schema': {
                     'fields': [
                         {
-                            'name': 'input_field',
-                            'type': 'text',
-                            'label': 'Input Field',
+                            'name': 'content',
+                            'type': 'textarea',
+                            'label': 'Content to Optimize',
                             'required': True
+                        },
+                        {
+                            'name': 'content_type',
+                            'type': 'select',
+                            'label': 'Content Type',
+                            'required': True,
+                            'options': [
+                                {'value': 'blog', 'label': 'Blog Post'},
+                                {'value': 'social', 'label': 'Social Media'}
+                            ]
                         }
                     ]
                 },
-                'webhook_url': 'http://your-n8n-webhook-url'
+                'webhook_url': 'http://localhost:5678/webhook/content-optimizer',
+                'access_url_name': '',  # Empty for webhook agents
+                'display_url_name': ''  # Empty for webhook agents
             }
         )
 ```
 
-2. **Run the command**: `python manage.py create_new_agent`
-3. **Update N8N workflow** to handle the new agent
-4. **Agent will automatically appear** in marketplace with dynamic form generation
+2. **Run command**: `python manage.py create_content_optimizer`
+3. **Create N8N workflow** at the webhook URL
+4. **Agent automatically appears** in marketplace with dynamic form
 
-**Supported Form Field Types:**
-- `text`: Text input
-- `textarea`: Multi-line text
-- `select`: Dropdown with options
+### **System 2: Direct Access Agents (Embedded External Forms)**
+
+**Use for:** External form services (JotForm, Google Forms), consultation interfaces, embedded tools
+**Examples:** CyberSec Career Navigator, AI Brand Strategist
+
+**Flow:** Marketplace → Payment processing → Quantum Tasks header + embedded external form
+
+**Implementation Steps:**
+1. **Create management command** (e.g., `create_business_consultant.py`):
+```python
+from django.core.management.base import BaseCommand
+from agents.models import AgentCategory, Agent
+
+class Command(BaseCommand):
+    def handle(self, *args, **options):
+        category, _ = AgentCategory.objects.get_or_create(
+            slug='consulting',
+            defaults={'name': 'Business Consulting', 'icon': '💼'}
+        )
+        
+        Agent.objects.get_or_create(
+            slug='business-consultant',
+            defaults={
+                'name': 'Business Consultant',
+                'short_description': 'Expert business consultation',
+                'description': 'Get professional business advice and strategy',
+                'category': category,
+                'price': 0.0,
+                'agent_type': 'form',
+                'form_schema': {'fields': []},  # Empty - using external form
+                'webhook_url': 'https://form.jotform.com/your-form-id',
+                'access_url_name': 'agents:direct_access_handler',
+                'display_url_name': 'agents:direct_access_display'
+            }
+        )
+```
+
+2. **Create dedicated template** (`templates/business_consultant.html`):
+```html
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Business Consultant - Quantum Tasks AI{% endblock %}
+
+{% block extra_css %}
+<style>
+.main-container {
+    max-width: none;
+    padding: 0;
+    height: calc(100vh - 80px);
+}
+.iframe-container {
+    width: 100%;
+    height: 100%;
+}
+.iframe-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+}
+.footer {
+    display: none !important;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="iframe-container">
+    <iframe 
+        src="{{ form_url }}"
+        frameborder="0"
+        scrolling="auto"
+        title="Business Consultant">
+    </iframe>
+</div>
+{% endblock %}
+```
+
+3. **Add dedicated view functions** (in `agents/views.py`):
+```python
+def business_consultant_view(request):
+    """Display the Business Consultant form page"""
+    if not request.user.is_authenticated:
+        storage = messages.get_messages(request)
+        storage.used = True
+        messages.error(request, 'Please login to access the Business Consultant.')
+        return redirect('authentication:login')
+    
+    try:
+        agent = Agent.objects.get(slug='business-consultant', is_active=True)
+    except Agent.DoesNotExist:
+        messages.error(request, 'Business Consultant is currently unavailable.')
+        return redirect('agents:marketplace')
+    
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    recent_execution = AgentExecution.objects.filter(
+        agent=agent,
+        user=request.user,
+        status='completed',
+        created_at__gte=timezone.now() - timedelta(hours=2)
+    ).first()
+    
+    if not recent_execution:
+        messages.info(request, 'Please click "Try Now" to access your Business Consultant.')
+        return redirect('agents:marketplace')
+    
+    context = {
+        'agent': agent,
+        'form_url': agent.webhook_url,
+        'user_balance': request.user.wallet_balance,
+        'execution': recent_execution
+    }
+    
+    return render(request, 'business_consultant.html', context)
+
+def business_consultant_access(request):
+    """Handle Try Now button click - charge wallet and redirect to form"""
+    if not request.user.is_authenticated:
+        storage = messages.get_messages(request)
+        storage.used = True
+        messages.error(request, 'Please login to access the Business Consultant.')
+        return redirect('authentication:login')
+    
+    try:
+        agent = Agent.objects.get(slug='business-consultant', is_active=True)
+    except Agent.DoesNotExist:
+        messages.error(request, 'Business Consultant is currently unavailable.')
+        return redirect('agents:marketplace')
+    
+    if not request.user.has_sufficient_balance(agent.price):
+        messages.error(request, f'Insufficient balance! You need {agent.price} AED.')
+        return redirect('wallet:wallet')
+    
+    success = request.user.deduct_balance(
+        agent.price, 
+        f'{agent.name} - Direct Access',
+        agent.slug
+    )
+    
+    if not success:
+        messages.error(request, 'Failed to process payment. Please try again.')
+        return redirect('agents:marketplace')
+    
+    AgentExecution.objects.create(
+        agent=agent,
+        user=request.user,
+        input_data={'action': 'direct_access', 'source': 'try_now_button'},
+        fee_charged=agent.price,
+        status='completed',
+        output_data={
+            'type': 'direct_access',
+            'message': f'Direct access granted to {agent.name}',
+            'access_method': 'try_now_button'
+        },
+        completed_at=timezone.now()
+    )
+    
+    messages.success(request, f'Welcome to your {agent.name} consultation.')
+    return redirect('agents:business_consultant')
+```
+
+4. **Add URL routes** (in `agents/urls.py`):
+```python
+# Add to direct access routes section
+path('business-consultant/', views.business_consultant_view, name='business_consultant'),
+path('business-consultant/access/', views.business_consultant_access, name='business_consultant_access'),
+```
+
+5. **Update marketplace template** (in `agents/templates/agents/marketplace.html`):
+```html
+# Add to marketplace button logic
+{% elif agent.slug == 'business-consultant' %}
+    <a href="{% url 'agents:business_consultant_access' %}" class="try-btn">
+        💼 Try Now → 
+    </a>
+```
+
+6. **Run command**: `python manage.py create_business_consultant`
+7. **Create external form** (JotForm, Google Forms, etc.)
+8. **Agent appears** in marketplace with embedded form interface
+
+### **Key Differences Summary:**
+
+| Aspect | Webhook Agents | Direct Access Agents |
+|--------|----------------|---------------------|
+| **Form Processing** | Server-side (Django + N8N) | External service (JotForm) |
+| **Form Display** | Dynamic Django forms | Embedded external forms |
+| **Results** | Displayed in Quantum Tasks | Handled by external service |
+| **Templates** | Uses generic `agent_detail.html` | Requires dedicated template |
+| **View Functions** | Uses generic `agent_detail_view` | Requires dedicated view functions |
+| **URL Routes** | Uses generic `/{slug}/` | Requires dedicated routes |
+| **Marketplace Integration** | Automatic | Requires template updates |
+
+### **Supported Form Field Types (Webhook Agents Only):**
+- `text`: Single-line text input
+- `textarea`: Multi-line text input
+- `select`: Dropdown with options array
 - `file`: File upload with drag-and-drop
 - `url`: URL input with validation
 - `checkbox`: Boolean checkbox
+
+### **Common Mistakes to Avoid:**
+1. **Don't mix systems** - webhook agents should have empty `access_url_name` fields
+2. **Don't forget marketplace updates** - direct access agents need template updates
+3. **Don't skip dedicated templates** - direct access agents need their own HTML files
+4. **Don't use generic routes** - direct access agents need dedicated URL patterns
 
 ## Production Deployment
 
@@ -298,26 +530,35 @@ class Command(BaseCommand):
 
 ## System Status
 
-**Current Status: ✅ STABLE WORKING SYSTEM**
-- All 5 agents confirmed working and tested (4 webhook + 1 direct access)
-- Dual integration architecture with clean separation
-- Digital branding services integration complete
-- Chat-based and form-based agent systems operational
-- White-label integration patterns established
+**Current Status: ✅ STABLE COMPREHENSIVE SYSTEM**
+- **6 agents** confirmed working and tested (4 webhook + 2 direct access)
+- **Dual integration architecture** with clear separation and documentation
+- **Embedded form interfaces** with Quantum Tasks headers working correctly
+- **Chat-based and form-based** agent systems operational
+- **Scalable architecture** ready for 100+ agents
+
+**Current Agents:**
+- **Webhook Agents (4)**: Social Ads Generator, Job Posting Generator, PDF Summarizer, 5 Whys Analyzer
+- **Direct Access Agents (2)**: CyberSec Career Navigator, AI Brand Strategist
 
 **Latest Changes:**
-- Implemented dual integration architecture (webhook + direct access)
-- Added CyberSec Career Navigator with JotForm integration
-- Enhanced agent marketplace with conditional button logic
-- Added digital branding services page
-- Cleaned up unused form API endpoints
-- Implemented 2-hour session timeout system
-- Fixed persistent success messages and UI consistency
+- **Added AI Brand Strategist** with embedded JotForm interface and Quantum Tasks header
+- **Documented complete agent creation process** with clear system distinctions
+- **Established patterns** for both webhook and direct access agent development
+- **Fixed architecture inconsistencies** between different agent types
+- **Updated comprehensive documentation** to prevent future agent creation issues
+
+**Architecture Clarity:**
+- **Two distinct systems** clearly documented with implementation examples
+- **Common mistakes** section added to prevent development issues
+- **Step-by-step guides** for both agent types with complete code examples
+- **Key differences table** for quick reference during development
 
 **Future Development:**
-- Optimization work available in feature/optimization-backup branch
-- Safe to add new agents via database-driven approach
-- Performance optimizations should be applied incrementally with testing
+- **New agents** should follow documented patterns in "Adding New Agents" section
+- **Direct access agents** require dedicated templates, views, and URL routes
+- **Webhook agents** use generic dynamic form generation system
+- **No more architecture confusion** - clear documentation prevents implementation issues
 
 ---
-Last updated: 2025-08-02 12:30:00
+Last updated: 2025-08-04 20:00:00
