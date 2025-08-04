@@ -34,8 +34,8 @@ class Command(BaseCommand):
                     'fields': []  # Empty since we're using JotForm directly
                 },
                 'webhook_url': 'https://agent.jotform.com/019865a942ab7fa5b5b743a5fd2abe09e345',
-                'access_url_name': '',
-                'display_url_name': ''
+                'access_url_name': 'agents:direct_access_handler',
+                'display_url_name': 'agents:direct_access_display'
             }
         )
         

@@ -994,3 +994,62 @@ def export_chat_txt(chat_session, messages):
     response = HttpResponse(text_content, content_type='text/plain')
     response['Content-Disposition'] = f'attachment; filename="5whys_chat_{chat_session.session_id}.txt"'
     return response
+
+
+# Generic Direct Access Views for External Form Agents
+@login_required
+def direct_access_handler(request, slug):
+    """
+    Generic handler for direct access agents (external forms like JotForm).
+    Handles payment processing and grants access to external form.
+    """
+    agent = get_object_or_404(Agent, slug=slug, is_active=True)
+    
+    # Verify this is a direct access agent
+    if not agent.access_url_name or not agent.display_url_name:
+        messages.error(request, 'This agent does not support direct access.')
+        return redirect('agents:marketplace')
+    
+    # Handle payment for paid agents
+    if agent.price > 0:
+        user_balance = request.user.wallet_balance
+        if user_balance < agent.price:
+            messages.error(request, f'Insufficient balance. You need {agent.price} AED but have {user_balance} AED.')
+            return redirect('wallet:wallet')
+        
+        # Process payment
+        try:
+            from wallet.models import WalletTransaction
+            WalletTransaction.objects.create(
+                user=request.user,
+                amount=-agent.price,
+                type='agent_usage',
+                description=f'Payment for {agent.name}',
+                agent_slug=agent.slug
+            )
+            messages.success(request, f'Payment of {agent.price} AED processed successfully.')
+        except Exception as e:
+            messages.error(request, 'Payment processing failed. Please try again.')
+            return redirect('agents:agent_detail', slug=slug)
+    
+    # Grant access - redirect to display page
+    messages.success(request, f'Access granted to {agent.name}. Redirecting to consultation form...')
+    return redirect('agents:direct_access_display', slug=slug)
+
+
+@login_required  
+def direct_access_display(request, slug):
+    """
+    Generic display handler for direct access agents.
+    Shows external form (JotForm, Google Forms, etc.) in iframe or redirects directly.
+    """
+    agent = get_object_or_404(Agent, slug=slug, is_active=True)
+    
+    # Verify this is a direct access agent
+    if not agent.access_url_name or not agent.display_url_name:
+        messages.error(request, 'This agent does not support direct access.')
+        return redirect('agents:marketplace')
+    
+    # For now, redirect directly to external form
+    # Future: Can render iframe template or custom display logic
+    return redirect(agent.webhook_url)

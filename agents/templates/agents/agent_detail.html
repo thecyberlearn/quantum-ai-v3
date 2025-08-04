@@ -39,7 +39,42 @@ document.body.setAttribute('data-user-balance', '{{ user.wallet_balance }}');
                 </h3>
             </div>
             <div class="widget-content">
-                <form id="agentForm" method="POST" enctype="multipart/form-data" data-agent-id="{{ agent.id }}">
+                {% if agent.access_url_name and agent.display_url_name %}
+                    <!-- Direct Access Agent - External Form -->
+                    <div class="direct-access-info">
+                        <div class="section-container">
+                            <h4 class="section-subtitle">{{ agent.category.icon }} {{ agent.name }} - External Consultation</h4>
+                            <p style="color: #6b7280; margin-bottom: var(--spacing-lg);">
+                                This consultation will redirect you to our specialized external form for personalized guidance.
+                            </p>
+                            
+                            {% if user.is_authenticated %}
+                                {% if agent.price == 0 %}
+                                    <a href="{% url 'agents:direct_access_handler' agent.slug %}" class="btn btn-primary btn-full">
+                                        {{ agent.category.icon }} Start {{ agent.name }} Consultation (FREE)
+                                    </a>
+                                {% elif user.wallet_balance >= agent.price %}
+                                    <a href="{% url 'agents:direct_access_handler' agent.slug %}" class="btn btn-primary btn-full">
+                                        {{ agent.category.icon }} Start {{ agent.name }} Consultation ({{ agent.price }} AED)
+                                    </a>
+                                {% else %}
+                                    <div style="background: #fef2f2; color: #dc2626; padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-md); font-size: 14px; font-weight: 500; text-align: center;">
+                                        Insufficient balance! You need {{ agent.price }} AED.
+                                    </div>
+                                    <a href="{% url 'wallet:wallet' %}" class="btn btn-primary btn-full" style="text-decoration: none;">
+                                        💰 Top Up Wallet
+                                    </a>
+                                {% endif %}
+                            {% else %}
+                                <a href="{% url 'authentication:login' %}" class="btn btn-primary btn-full">
+                                    🔐 Login to Continue
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- Webhook Agent - Dynamic Form -->
+                    <form id="agentForm" method="POST" enctype="multipart/form-data" data-agent-id="{{ agent.id }}">
                     {% csrf_token %}
                     
                     <!-- Dynamic Form Fields -->
@@ -167,6 +202,7 @@ document.body.setAttribute('data-user-balance', '{{ user.wallet_balance }}');
                         {% endif %}
                     </div>
                 </form>
+                {% endif %}
             </div>
         </div>
 

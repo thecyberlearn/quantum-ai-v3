@@ -27,6 +27,10 @@ urlpatterns = [
     path('api/', views.agent_list, name='agent_list'),
     path('api/<slug:slug>/', views.agent_detail, name='agent_detail_api'),
     
+    # Generic direct access routes (must be before agent detail)
+    path('<slug:slug>/access/', views.direct_access_handler, name='direct_access_handler'),
+    path('<slug:slug>/display/', views.direct_access_display, name='direct_access_display'),
+    
     # Agent detail page (must be last to avoid conflicts)
     path('<slug:slug>/', views.agent_detail_view, name='detail'),
 ]
