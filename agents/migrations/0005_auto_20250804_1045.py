@@ -3,6 +3,42 @@
 from django.db import migrations, models
 
 
+def check_and_add_fields(apps, schema_editor):
+    """Add fields only if they don't already exist"""
+    db_alias = schema_editor.connection.alias
+    
+    # Check if columns already exist in the database
+    with schema_editor.connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'agents_agent' 
+            AND column_name IN ('access_url_name', 'display_url_name')
+        """)
+        existing_columns = [row[0] for row in cursor.fetchall()]
+        
+        # Add access_url_name if it doesn't exist
+        if 'access_url_name' not in existing_columns:
+            cursor.execute("""
+                ALTER TABLE agents_agent 
+                ADD COLUMN access_url_name VARCHAR(100) DEFAULT '' NOT NULL
+            """)
+            
+        # Add display_url_name if it doesn't exist  
+        if 'display_url_name' not in existing_columns:
+            cursor.execute("""
+                ALTER TABLE agents_agent 
+                ADD COLUMN display_url_name VARCHAR(100) DEFAULT '' NOT NULL
+            """)
+
+
+def reverse_check_and_add_fields(apps, schema_editor):
+    """Remove fields if they exist"""
+    with schema_editor.connection.cursor() as cursor:
+        cursor.execute("ALTER TABLE agents_agent DROP COLUMN IF EXISTS access_url_name")
+        cursor.execute("ALTER TABLE agents_agent DROP COLUMN IF EXISTS display_url_name")
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -10,14 +46,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='agent',
-            name='access_url_name',
-            field=models.CharField(max_length=100, blank=True, default=''),
-        ),
-        migrations.AddField(
-            model_name='agent',
-            name='display_url_name',
-            field=models.CharField(max_length=100, blank=True, default=''),
-        ),
+        migrations.RunPython(check_and_add_fields, reverse_check_and_add_fields),
     ]
