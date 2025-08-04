@@ -95,12 +95,20 @@
                                 <a href="{% url 'agents:career_navigator_access' %}" class="try-btn career-nav-btn">
                                     🎓 Try Now → 
                                 </a>
+                            {% elif agent.slug == 'ai-brand-strategist' %}
+                                <a href="{% url 'agents:ai_brand_strategist_access' %}" class="try-btn">
+                                    🧠 Try Now → 
+                                </a>
                             {% else %}
                                 <a href="{% url 'agents:detail' agent.slug %}" class="try-btn">Try Now →</a>
                             {% endif %}
                         {% else %}
                             {% if agent.slug == 'cybersec-career-navigator' %}
                                 <a href="{% url 'authentication:login' %}?next={% url 'agents:career_navigator_access' %}" class="try-btn login-required" style="width: 100%;">
+                                    🔐 Login to Try
+                                </a>
+                            {% elif agent.slug == 'ai-brand-strategist' %}
+                                <a href="{% url 'authentication:login' %}?next={% url 'agents:ai_brand_strategist_access' %}" class="try-btn login-required" style="width: 100%;">
                                     🔐 Login to Try
                                 </a>
                             {% else %}

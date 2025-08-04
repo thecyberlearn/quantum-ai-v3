@@ -10,6 +10,8 @@ urlpatterns = [
     # Direct access routes
     path('career-navigator/', views.career_navigator_view, name='career_navigator'),
     path('career-navigator/access/', views.career_navigator_access, name='career_navigator_access'),
+    path('ai-brand-strategist/', views.ai_brand_strategist_view, name='ai_brand_strategist'),
+    path('ai-brand-strategist/access/', views.ai_brand_strategist_access, name='ai_brand_strategist_access'),
     
     # API endpoints - specific URLs first to avoid slug conflicts
     path('api/execute/', views.execute_agent, name='execute_agent'),

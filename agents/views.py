@@ -289,6 +289,102 @@ def career_navigator_view(request):
     return render(request, 'career_navigator.html', context)
 
 
+def ai_brand_strategist_view(request):
+    """Display the AI Brand Strategist form page"""
+    if not request.user.is_authenticated:
+        # Clear any existing messages to prevent confusion
+        storage = messages.get_messages(request)
+        storage.used = True
+        messages.error(request, 'Please login to access the AI Brand Strategist.')
+        return redirect('authentication:login')
+    
+    # Get the AI Brand Strategist agent
+    try:
+        agent = Agent.objects.get(slug='ai-brand-strategist', is_active=True)
+    except Agent.DoesNotExist:
+        messages.error(request, 'AI Brand Strategist is currently unavailable.')
+        return redirect('agents:marketplace')
+    
+    # Check if user has a recent execution (within last 2 hours) or just redirect to payment
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    recent_execution = AgentExecution.objects.filter(
+        agent=agent,
+        user=request.user,
+        status='completed',
+        created_at__gte=timezone.now() - timedelta(hours=2)
+    ).first()
+    
+    if not recent_execution:
+        messages.info(request, 'Please click "Try Now" to access your AI Brand Strategist consultation.')
+        return redirect('agents:marketplace')
+    
+    context = {
+        'agent': agent,
+        'form_url': agent.webhook_url,
+        'user_balance': request.user.wallet_balance,
+        'execution': recent_execution
+    }
+    
+    return render(request, 'ai_brand_strategist.html', context)
+
+
+def ai_brand_strategist_access(request):
+    """Handle Try Now button click - charge wallet and redirect to form"""
+    if not request.user.is_authenticated:
+        # Clear any existing messages to prevent confusion
+        storage = messages.get_messages(request)
+        storage.used = True
+        messages.error(request, 'Please login to access the AI Brand Strategist.')
+        return redirect('authentication:login')
+    
+    # Get the AI Brand Strategist agent
+    try:
+        agent = Agent.objects.get(slug='ai-brand-strategist', is_active=True)
+    except Agent.DoesNotExist:
+        messages.error(request, 'AI Brand Strategist is currently unavailable.')
+        return redirect('agents:marketplace')
+    
+    # Check if user has sufficient balance
+    if not request.user.has_sufficient_balance(agent.price):
+        messages.error(request, f'Insufficient balance! You need {agent.price} AED to access the AI Brand Strategist.')
+        return redirect('wallet:wallet')
+    
+    # Deduct fee from user wallet
+    success = request.user.deduct_balance(
+        agent.price, 
+        f'{agent.name} - Direct Access',
+        agent.slug
+    )
+    
+    if not success:
+        messages.error(request, 'Failed to process payment. Please try again.')
+        return redirect('agents:marketplace')
+    
+    # Create execution record for tracking
+    execution = AgentExecution.objects.create(
+        agent=agent,
+        user=request.user,
+        input_data={'action': 'direct_access', 'source': 'try_now_button'},
+        fee_charged=agent.price,
+        status='completed',
+        output_data={
+            'type': 'direct_access',
+            'message': f'Direct access granted to {agent.name}',
+            'access_method': 'try_now_button'
+        },
+        completed_at=timezone.now()
+    )
+    
+    # Success message and redirect to form
+    if agent.price > 0:
+        messages.success(request, f'Welcome to your {agent.name} consultation.')
+    else:
+        messages.success(request, f'Welcome to your {agent.name} consultation.')
+    return redirect('agents:ai_brand_strategist')
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def execution_list(request):
