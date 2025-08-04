@@ -33,6 +33,8 @@ class Agent(models.Model):
     form_schema = models.JSONField(help_text="JSON schema for agent input form", null=True, blank=True)
     webhook_url = models.URLField(help_text="n8n webhook URL for execution")
     message_limit = models.IntegerField(default=50, help_text="Maximum messages per chat session (for chat agents)")
+    access_url_name = models.CharField(max_length=100, blank=True, default='', help_text="URL name for direct access agents")
+    display_url_name = models.CharField(max_length=100, blank=True, default='', help_text="URL name for agent display page")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
