@@ -33,7 +33,9 @@ class Command(BaseCommand):
                 'form_schema': {
                     'fields': []  # Empty since we're using JotForm directly
                 },
-                'webhook_url': 'https://agent.jotform.com/019865a942ab7fa5b5b743a5fd2abe09e345'
+                'webhook_url': 'https://agent.jotform.com/019865a942ab7fa5b5b743a5fd2abe09e345',
+                'access_url_name': '',
+                'display_url_name': ''
             }
         )
         

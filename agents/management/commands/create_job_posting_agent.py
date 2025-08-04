@@ -115,7 +115,9 @@ class Command(BaseCommand):
                         }
                     ]
                 },
-                'webhook_url': 'http://localhost:5678/webhook/43f84411-eaaa-488c-9b1f-856e90d0aaf6'
+                'webhook_url': 'http://localhost:5678/webhook/43f84411-eaaa-488c-9b1f-856e90d0aaf6',
+                'access_url_name': '',
+                'display_url_name': ''
             }
         )
         

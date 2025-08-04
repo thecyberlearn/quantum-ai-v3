@@ -34,7 +34,9 @@ class Command(BaseCommand):
                 'message_limit': 20,  # Limit messages per session
                 'form_schema': None,  # Chat agents don't use form schemas
                 'webhook_url': 'http://localhost:5678/webhook/5-whys-web',  # N8N webhook URL
-                'is_active': True
+                'is_active': True,
+                'access_url_name': '',
+                'display_url_name': ''
             }
         )
         

@@ -89,7 +89,9 @@ class Command(BaseCommand):
                         }
                     ]
                 },
-                'webhook_url': 'http://localhost:5678/webhook/simple-pdf-processor'
+                'webhook_url': 'http://localhost:5678/webhook/simple-pdf-processor',
+                'access_url_name': '',
+                'display_url_name': ''
             }
         )
         
