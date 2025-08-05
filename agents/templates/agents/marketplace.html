@@ -52,12 +52,11 @@
     <!-- Stats -->
     <div class="marketplace-stats">
         {% if search_query %}
-            Search results for "{{ search_query }}" • 
+            Search results for "{{ search_query }}"
+            {% if selected_category %} • {{ selected_category|capfirst }} category{% endif %}
+        {% elif selected_category %}
+            {{ selected_category|capfirst }} category
         {% endif %}
-        {% if selected_category %}
-            {{ selected_category|capfirst }} category • 
-        {% endif %}
-        {{ agents.count }} agent{{ agents.count|pluralize }} available
     </div>
 
     <!-- Agents Grid -->
