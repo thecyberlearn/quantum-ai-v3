@@ -89,10 +89,17 @@ def handle_ratelimited(request, exception):
 @ratelimit(key='ip', rate='5/m', method=UNSAFE, block=False)
 def login_view(request):
     """User login view with rate limiting (5 attempts per minute per IP)"""
+    # Handle post-login session messages
+    if 'post_login_message' in request.session:
+        messages.info(request, request.session.pop('post_login_message'))
+    
     # Check if rate limited
     if getattr(request, 'limited', False):
-        logger.warning(f"Login rate limit exceeded for IP {request.META.get('REMOTE_ADDR')}")
-        messages.error(request, 'Too many login attempts. Please try again in a few minutes.')
+        # Use session to avoid repeated rate limit messages
+        if not request.session.get('rate_limit_shown'):
+            logger.warning(f"Login rate limit exceeded for IP {request.META.get('REMOTE_ADDR')}")
+            messages.error(request, 'Too many login attempts. Please wait before trying again.')
+            request.session['rate_limit_shown'] = True
         return render(request, 'authentication/login.html')
     
     if request.method == 'POST':
@@ -103,12 +110,14 @@ def login_view(request):
         if user is not None:
             # Check if email is verified (only if email verification is required)
             if settings.REQUIRE_EMAIL_VERIFICATION and not user.email_verified:
-                from django.urls import reverse
-                resend_url = reverse('authentication:resend_verification')
-                messages.warning(request, f'Please verify your email address before logging in. Check your inbox for the verification link, or <a href="{resend_url}">resend verification email</a>.')
-                return render(request, 'authentication/login.html')
+                messages.warning(request, 'Please verify your email address before logging in. Check your inbox for the verification link.')
+                # Store resend URL in context for template
+                context = {'show_resend_verification': True}
+                return render(request, 'authentication/login.html', context)
             
             login(request, user)
+            # Clear rate limit flag on successful login
+            request.session.pop('rate_limit_shown', None)
             # Redirect to 'next' parameter if provided, otherwise homepage
             next_url = request.GET.get('next') or request.POST.get('next')
             if next_url:
@@ -116,6 +125,8 @@ def login_view(request):
             return redirect('core:homepage')
         else:
             messages.error(request, 'Invalid email or password')
+            # Clear rate limit flag on any POST attempt (failed login)
+            request.session.pop('rate_limit_shown', None)
     
     return render(request, 'authentication/login.html')
 

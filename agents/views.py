@@ -196,10 +196,12 @@ def execute_agent(request):
 def career_navigator_access(request):
     """Handle Try Now button click - charge wallet and redirect to form"""
     if not request.user.is_authenticated:
-        # Clear any existing messages to prevent confusion
+        # Clear all existing messages before adding login message
         storage = messages.get_messages(request)
-        storage.used = True
-        messages.error(request, 'Please login to access the Career Navigator.')
+        for _ in storage:
+            pass  # Consume all messages
+        # Add login message to session for after login redirect
+        request.session['post_login_message'] = 'Please complete your login to access the Career Navigator.'
         return redirect('authentication:login')
     
     # Get the career navigator agent
@@ -240,21 +242,19 @@ def career_navigator_access(request):
         completed_at=timezone.now()
     )
     
-    # Success message and redirect to form
-    if agent.price > 0:
-        messages.success(request, f'Welcome to your {agent.name} consultation.')
-    else:
-        messages.success(request, f'Welcome to your {agent.name} consultation.')
+    # Redirect directly to form - no message needed
     return redirect('agents:career_navigator')
 
 
 def career_navigator_view(request):
     """Display the career navigator form page"""
     if not request.user.is_authenticated:
-        # Clear any existing messages to prevent confusion
+        # Clear all existing messages before adding login message
         storage = messages.get_messages(request)
-        storage.used = True
-        messages.error(request, 'Please login to access the Career Navigator.')
+        for _ in storage:
+            pass  # Consume all messages
+        # Add login message to session for after login redirect
+        request.session['post_login_message'] = 'Please complete your login to access the Career Navigator.'
         return redirect('authentication:login')
     
     # Get the career navigator agent
@@ -292,10 +292,12 @@ def career_navigator_view(request):
 def ai_brand_strategist_view(request):
     """Display the AI Brand Strategist form page"""
     if not request.user.is_authenticated:
-        # Clear any existing messages to prevent confusion
+        # Clear all existing messages before adding login message
         storage = messages.get_messages(request)
-        storage.used = True
-        messages.error(request, 'Please login to access the AI Brand Strategist.')
+        for _ in storage:
+            pass  # Consume all messages
+        # Add login message to session for after login redirect
+        request.session['post_login_message'] = 'Please complete your login to access the AI Brand Strategist.'
         return redirect('authentication:login')
     
     # Get the AI Brand Strategist agent
@@ -333,10 +335,12 @@ def ai_brand_strategist_view(request):
 def ai_brand_strategist_access(request):
     """Handle Try Now button click - charge wallet and redirect to form"""
     if not request.user.is_authenticated:
-        # Clear any existing messages to prevent confusion
+        # Clear all existing messages before adding login message
         storage = messages.get_messages(request)
-        storage.used = True
-        messages.error(request, 'Please login to access the AI Brand Strategist.')
+        for _ in storage:
+            pass  # Consume all messages
+        # Add login message to session for after login redirect
+        request.session['post_login_message'] = 'Please complete your login to access the AI Brand Strategist.'
         return redirect('authentication:login')
     
     # Get the AI Brand Strategist agent
@@ -377,11 +381,7 @@ def ai_brand_strategist_access(request):
         completed_at=timezone.now()
     )
     
-    # Success message and redirect to form
-    if agent.price > 0:
-        messages.success(request, f'Welcome to your {agent.name} consultation.')
-    else:
-        messages.success(request, f'Welcome to your {agent.name} consultation.')
+    # Redirect directly to form - no message needed
     return redirect('agents:ai_brand_strategist')
 
 
@@ -1123,13 +1123,11 @@ def direct_access_handler(request, slug):
                 description=f'Payment for {agent.name}',
                 agent_slug=agent.slug
             )
-            messages.success(request, f'Payment of {agent.price} AED processed successfully.')
         except Exception as e:
             messages.error(request, 'Payment processing failed. Please try again.')
             return redirect('agents:agent_detail', slug=slug)
     
-    # Grant access - redirect to display page
-    messages.success(request, f'Access granted to {agent.name}. Redirecting to consultation form...')
+    # Grant access - redirect directly to display page
     return redirect('agents:direct_access_display', slug=slug)
 
 

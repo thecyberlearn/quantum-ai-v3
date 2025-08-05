@@ -104,6 +104,37 @@
         text-decoration: underline;
     }
     
+    .verification-actions {
+        text-align: center;
+        margin-bottom: var(--spacing-lg);
+        padding: var(--spacing-md);
+        background: var(--surface-variant);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--outline);
+    }
+    
+    .verification-text {
+        margin: 0 0 var(--spacing-sm) 0;
+        color: var(--on-surface-variant);
+        font-size: 14px;
+    }
+    
+    .btn-outline {
+        background: transparent;
+        border: 1px solid var(--primary);
+        color: var(--primary);
+    }
+    
+    .btn-outline:hover {
+        background: var(--primary);
+        color: var(--on-primary);
+    }
+    
+    .btn-sm {
+        padding: var(--spacing-xs) var(--spacing-md);
+        font-size: 14px;
+    }
+    
     /* Responsive */
     @media (max-width: 480px) {
         .login-page {
@@ -132,8 +163,15 @@
         {% if messages %}
             <div class="messages">
                 {% for message in messages %}
-                    <div class="message {{ message.tags }}">{{ message|safe }}</div>
+                    <div class="message {{ message.tags }}">{{ message }}</div>
                 {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% if show_resend_verification %}
+            <div class="verification-actions">
+                <p class="verification-text">Need to resend verification email?</p>
+                <a href="{% url 'authentication:resend_verification' %}" class="btn btn-outline btn-sm">Resend Verification</a>
             </div>
         {% endif %}
         
