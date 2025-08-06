@@ -12,6 +12,8 @@ urlpatterns = [
     path('career-navigator/access/', views.career_navigator_access, name='career_navigator_access'),
     path('ai-brand-strategist/', views.ai_brand_strategist_view, name='ai_brand_strategist'),
     path('ai-brand-strategist/access/', views.ai_brand_strategist_access, name='ai_brand_strategist_access'),
+    path('lean-six-sigma-expert/', views.lean_six_sigma_expert_view, name='lean_six_sigma_expert'),
+    path('lean-six-sigma-expert/access/', views.lean_six_sigma_expert_access, name='lean_six_sigma_expert_access'),
     
     # API endpoints - specific URLs first to avoid slug conflicts
     path('api/execute/', views.execute_agent, name='execute_agent'),

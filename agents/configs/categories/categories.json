@@ -28,5 +28,11 @@
     "name": "Marketing & Advertising",
     "description": "AI-powered marketing tools and advertising solutions",
     "icon": "📢"
+  },
+  {
+    "slug": "consulting",
+    "name": "Business Consulting",
+    "description": "Professional business consultation and strategy services",
+    "icon": "💼"
   }
 ]
