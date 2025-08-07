@@ -290,4 +290,13 @@ When you commit changes to the repository:
 
 ---
 
+## 🚀 Quick Agent Request
+
+**For fast agent creation**, use the **Agent Request Template**:
+👉 **See `docs/AGENT_REQUEST_TEMPLATE.md`** for a simple template to request new agents
+
+Simply fill out the template and provide it to Claude Code for instant agent creation!
+
+---
+
 *Last updated: 2025-01-08*

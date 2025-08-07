@@ -269,5 +269,6 @@ The platform supports 2 agent types:
 Last updated: 2025-01-08
 
 ## Documentation
-- **Agent Creation**: See `docs/AGENT_CREATION.md` for comprehensive agent creation guide
+- **Quick Agent Requests**: See `docs/AGENT_REQUEST_TEMPLATE.md` for simple agent request template
+- **Agent Creation**: See `docs/AGENT_CREATION.md` for comprehensive agent creation guide  
 - **Project Overview**: This file (CLAUDE.md) for Django development and architecture
