@@ -1243,3 +1243,99 @@ def lean_six_sigma_expert_access(request):
     
     # Redirect directly to form - no message needed
     return redirect('agents:lean_six_sigma_expert')
+
+
+def swot_analysis_expert_view(request):
+    """Display the SWOT Analysis Expert form page"""
+    if not request.user.is_authenticated:
+        # Clear all existing messages before adding login message
+        storage = messages.get_messages(request)
+        for _ in storage:
+            pass  # Consume all messages
+        # Add login message to session for after login redirect
+        request.session['post_login_message'] = 'Please complete your login to access the SWOT Analysis Expert.'
+        return redirect('authentication:login')
+    
+    # Get the SWOT Analysis Expert agent
+    try:
+        agent = Agent.objects.get(slug='swot-analysis-expert', is_active=True)
+    except Agent.DoesNotExist:
+        messages.error(request, 'SWOT Analysis Expert is currently unavailable.')
+        return redirect('agents:marketplace')
+    
+    # Check if user has a recent execution (within last 2 hours) or just redirect to payment
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    recent_execution = AgentExecution.objects.filter(
+        agent=agent,
+        user=request.user,
+        status='completed',
+        created_at__gte=timezone.now() - timedelta(hours=2)
+    ).first()
+    
+    if not recent_execution:
+        messages.info(request, 'Please click "Try Now" to access your SWOT Analysis Expert consultation.')
+        return redirect('agents:marketplace')
+    
+    context = {
+        'agent': agent,
+        'form_url': agent.webhook_url,
+        'user_balance': request.user.wallet_balance,
+        'execution': recent_execution
+    }
+    
+    return render(request, 'swot_analysis_expert.html', context)
+
+
+def swot_analysis_expert_access(request):
+    """Handle Try Now button click - charge wallet and redirect to form"""
+    if not request.user.is_authenticated:
+        # Clear all existing messages before adding login message
+        storage = messages.get_messages(request)
+        for _ in storage:
+            pass  # Consume all messages
+        # Add login message to session for after login redirect
+        request.session['post_login_message'] = 'Please complete your login to access the SWOT Analysis Expert.'
+        return redirect('authentication:login')
+    
+    # Get the SWOT Analysis Expert agent
+    try:
+        agent = Agent.objects.get(slug='swot-analysis-expert', is_active=True)
+    except Agent.DoesNotExist:
+        messages.error(request, 'SWOT Analysis Expert is currently unavailable.')
+        return redirect('agents:marketplace')
+    
+    # Check if user has sufficient balance
+    if not request.user.has_sufficient_balance(agent.price):
+        messages.error(request, f'Insufficient balance! You need {agent.price} AED to access the SWOT Analysis Expert.')
+        return redirect('wallet:wallet')
+    
+    # Deduct fee from user wallet
+    success = request.user.deduct_balance(
+        agent.price, 
+        f'{agent.name} - Direct Access',
+        agent.slug
+    )
+    
+    if not success:
+        messages.error(request, 'Failed to process payment. Please try again.')
+        return redirect('agents:marketplace')
+    
+    # Create execution record for tracking
+    execution = AgentExecution.objects.create(
+        agent=agent,
+        user=request.user,
+        input_data={'action': 'direct_access', 'source': 'try_now_button'},
+        fee_charged=agent.price,
+        status='completed',
+        output_data={
+            'type': 'direct_access',
+            'message': f'Direct access granted to {agent.name}',
+            'access_method': 'try_now_button'
+        },
+        completed_at=timezone.now()
+    )
+    
+    # Redirect directly to form - no message needed
+    return redirect('agents:swot_analysis_expert')

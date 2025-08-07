@@ -86,6 +86,10 @@
                                 <a href="{% url 'agents:lean_six_sigma_expert_access' %}" class="try-btn">
                                     Try Now →
                                 </a>
+                            {% elif agent.slug == 'swot-analysis-expert' %}
+                                <a href="{% url 'agents:swot_analysis_expert_access' %}" class="try-btn">
+                                    📊 Try Now →
+                                </a>
                             {% else %}
                                 <a href="{% url 'agents:detail' agent.slug %}" class="try-btn">Try Now →</a>
                             {% endif %}
@@ -100,6 +104,10 @@
                                 </a>
                             {% elif agent.slug == 'lean-six-sigma-expert' %}
                                 <a href="{% url 'authentication:login' %}?next={% url 'agents:lean_six_sigma_expert_access' %}" class="try-btn login-required" style="width: 100%;">
+                                    🔐 Login to Try
+                                </a>
+                            {% elif agent.slug == 'swot-analysis-expert' %}
+                                <a href="{% url 'authentication:login' %}?next={% url 'agents:swot_analysis_expert_access' %}" class="try-btn login-required" style="width: 100%;">
                                     🔐 Login to Try
                                 </a>
                             {% else %}

@@ -213,277 +213,189 @@ The platform supports both webhook-based agents (N8N integration) and direct acc
 
 ## Adding New Agents
 
-**CRITICAL**: The platform has **TWO DISTINCT AGENT SYSTEMS**. Choose the correct system based on your requirements.
+**⚡ RECOMMENDED APPROACH:** Use JSON configuration + `populate_agents` command for error-free, Railway-ready agent creation.
 
-### **System 1: Webhook Agents (N8N Integration)**
+### **🏷️ Choose Existing Category First**
 
-**Use for:** Dynamic forms, server-side processing, file uploads, complex workflows
-**Examples:** Social Ads Generator, PDF Summarizer, Job Posting Generator
+**IMPORTANT:** Always use existing categories before creating new ones to avoid category proliferation.
 
-**Flow:** Marketplace → Agent detail page → Dynamic form → N8N webhook → Results
+**Available Categories:**
+- 🧠 **`analysis`** - Problem-solving, SWOT analysis, strategic analysis tools
+- 🎓 **`career-education`** - Career guidance, educational resources, professional development
+- 📄 **`document-processing`** - PDF analysis, file processing, document tools
+- 💼 **`human-resources`** - Job postings, HR automation, talent management
+- 📢 **`marketing`** - Social ads, branding, content marketing, advertising
+- 💼 **`consulting`** - Business consultation, strategy services, expert advice
 
-**Implementation Steps:**
-1. **Create management command** (e.g., `create_content_optimizer.py`):
-```python
-from django.core.management.base import BaseCommand
-from agents.models import AgentCategory, Agent
+**Only create new categories when absolutely necessary and logically distinct.**
 
-class Command(BaseCommand):
-    def handle(self, *args, **options):
-        category, _ = AgentCategory.objects.get_or_create(
-            slug='content-tools',
-            defaults={'name': 'Content Tools', 'icon': '📝'}
-        )
-        
-        Agent.objects.get_or_create(
-            slug='content-optimizer',
-            defaults={
-                'name': 'Content Optimizer',
-                'short_description': 'AI-powered content optimization',
-                'description': 'Enhance your content for better engagement',
-                'category': category,
-                'price': 5.0,
-                'agent_type': 'form',
-                'form_schema': {
-                    'fields': [
-                        {
-                            'name': 'content',
-                            'type': 'textarea',
-                            'label': 'Content to Optimize',
-                            'required': True
-                        },
-                        {
-                            'name': 'content_type',
-                            'type': 'select',
-                            'label': 'Content Type',
-                            'required': True,
-                            'options': [
-                                {'value': 'blog', 'label': 'Blog Post'},
-                                {'value': 'social', 'label': 'Social Media'}
-                            ]
-                        }
-                    ]
-                },
-                'webhook_url': 'http://localhost:5678/webhook/content-optimizer',
-                'access_url_name': '',  # Empty for webhook agents
-                'display_url_name': ''  # Empty for webhook agents
-            }
-        )
+---
+
+### **🚀 Agent Creation Workflow**
+
+The platform has **TWO DISTINCT AGENT SYSTEMS**:
+
+#### **System 1: Webhook Agents (N8N Integration)**
+- **Use for:** Dynamic forms, server-side processing, file uploads, complex workflows
+- **Examples:** Social Ads Generator, PDF Summarizer, Job Posting Generator
+- **Flow:** Marketplace → Agent detail page → Dynamic form → N8N webhook → Results
+
+#### **System 2: Direct Access Agents (External Forms)**
+- **Use for:** External form services (JotForm, Google Forms), consultation interfaces
+- **Examples:** SWOT Analysis Expert, CyberSec Career Navigator, AI Brand Strategist
+- **Flow:** Marketplace → Payment processing → Quantum Tasks header + embedded external form
+
+---
+
+### **📝 Implementation Steps (All Agent Types)**
+
+#### **Step 1: Create JSON Configuration**
+
+Create a new file in `agents/configs/agents/your-agent-name.json`:
+
+**Webhook Agent Example:**
+```json
+{
+  "slug": "content-optimizer",
+  "name": "Content Optimizer",
+  "short_description": "AI-powered content optimization and enhancement",
+  "description": "Enhance your content for better engagement with AI-powered optimization suggestions, tone analysis, and improvement recommendations.",
+  "category": "marketing",
+  "price": 5.0,
+  "agent_type": "form",
+  "system_type": "webhook",
+  "form_schema": {
+    "fields": [
+      {
+        "name": "content",
+        "type": "textarea",
+        "label": "Content to Optimize",
+        "required": true
+      },
+      {
+        "name": "content_type",
+        "type": "select",
+        "label": "Content Type",
+        "required": true,
+        "options": [
+          {"value": "blog", "label": "Blog Post"},
+          {"value": "social", "label": "Social Media"},
+          {"value": "email", "label": "Email Marketing"}
+        ]
+      }
+    ]
+  },
+  "webhook_url": "http://localhost:5678/webhook/content-optimizer",
+  "access_url_name": "",
+  "display_url_name": ""
+}
 ```
 
-2. **Run command**: `python manage.py create_content_optimizer`
-3. **Create N8N workflow** at the webhook URL
-4. **Agent automatically appears** in marketplace with dynamic form
-
-### **System 2: Direct Access Agents (Embedded External Forms)**
-
-**Use for:** External form services (JotForm, Google Forms), consultation interfaces, embedded tools
-**Examples:** CyberSec Career Navigator, AI Brand Strategist
-
-**Flow:** Marketplace → Payment processing → Quantum Tasks header + embedded external form
-
-**Implementation Steps:**
-1. **Create management command** (e.g., `create_business_consultant.py`):
-```python
-from django.core.management.base import BaseCommand
-from agents.models import AgentCategory, Agent
-
-class Command(BaseCommand):
-    def handle(self, *args, **options):
-        category, _ = AgentCategory.objects.get_or_create(
-            slug='consulting',
-            defaults={'name': 'Business Consulting', 'icon': '💼'}
-        )
-        
-        Agent.objects.get_or_create(
-            slug='business-consultant',
-            defaults={
-                'name': 'Business Consultant',
-                'short_description': 'Expert business consultation',
-                'description': 'Get professional business advice and strategy',
-                'category': category,
-                'price': 0.0,
-                'agent_type': 'form',
-                'form_schema': {'fields': []},  # Empty - using external form
-                'webhook_url': 'https://form.jotform.com/your-form-id',
-                'access_url_name': 'agents:direct_access_handler',
-                'display_url_name': 'agents:direct_access_display'
-            }
-        )
+**Direct Access Agent Example:**
+```json
+{
+  "slug": "business-strategist",
+  "name": "Business Strategist",
+  "short_description": "Expert business strategy consultation",
+  "description": "Get professional business strategy insights and recommendations from experienced consultants to grow your business effectively.",
+  "category": "consulting",
+  "price": 0.0,
+  "agent_type": "form",
+  "system_type": "direct_access",
+  "form_schema": {
+    "fields": []
+  },
+  "webhook_url": "https://agent.jotform.com/your-form-id",
+  "access_url_name": "agents:direct_access_handler",
+  "display_url_name": "agents:direct_access_display"
+}
 ```
 
-2. **Create dedicated template** (`templates/business_consultant.html`):
+#### **Step 2: Run populate_agents Command**
+
+```bash
+# Development
+source venv/bin/activate
+python manage.py populate_agents
+
+# Production (Railway)
+python manage.py populate_agents  # Runs automatically on deployment
+```
+
+#### **Step 3: Additional Setup (Direct Access Agents Only)**
+
+For direct access agents that need custom templates or marketplace integration:
+
+**3a. Create Custom Template** (optional):
 ```html
+<!-- templates/your_agent_name.html -->
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Business Consultant - Quantum Tasks AI{% endblock %}
+{% block title %}Your Agent Name - Quantum Tasks AI{% endblock %}
 
 {% block extra_css %}
 <style>
-.main-container {
-    max-width: none;
-    padding: 0;
-    height: calc(100vh - 80px);
-}
-.iframe-container {
-    width: 100%;
-    height: 100%;
-}
-.iframe-container iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    display: block;
-}
-.footer {
-    display: none !important;
-}
+.main-container { max-width: none; padding: 0; height: calc(100vh - 80px); }
+.iframe-container { width: 100%; height: 100%; }
+.iframe-container iframe { width: 100%; height: 100%; border: none; display: block; }
+.footer { display: none !important; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="iframe-container">
-    <iframe 
-        src="{{ form_url }}"
-        frameborder="0"
-        scrolling="auto"
-        title="Business Consultant">
-    </iframe>
+    <iframe src="{{ form_url }}" frameborder="0" scrolling="auto" title="Your Agent Name"></iframe>
 </div>
 {% endblock %}
 ```
 
-3. **Add dedicated view functions** (in `agents/views.py`):
-```python
-def business_consultant_view(request):
-    """Display the Business Consultant form page"""
-    if not request.user.is_authenticated:
-        storage = messages.get_messages(request)
-        storage.used = True
-        messages.error(request, 'Please login to access the Business Consultant.')
-        return redirect('authentication:login')
-    
-    try:
-        agent = Agent.objects.get(slug='business-consultant', is_active=True)
-    except Agent.DoesNotExist:
-        messages.error(request, 'Business Consultant is currently unavailable.')
-        return redirect('agents:marketplace')
-    
-    from django.utils import timezone
-    from datetime import timedelta
-    
-    recent_execution = AgentExecution.objects.filter(
-        agent=agent,
-        user=request.user,
-        status='completed',
-        created_at__gte=timezone.now() - timedelta(hours=2)
-    ).first()
-    
-    if not recent_execution:
-        messages.info(request, 'Please click "Try Now" to access your Business Consultant.')
-        return redirect('agents:marketplace')
-    
-    context = {
-        'agent': agent,
-        'form_url': agent.webhook_url,
-        'user_balance': request.user.wallet_balance,
-        'execution': recent_execution
-    }
-    
-    return render(request, 'business_consultant.html', context)
+**3b. Add Custom Views** (if needed):
+Add view functions to `agents/views.py` following the pattern of existing direct access agents.
 
-def business_consultant_access(request):
-    """Handle Try Now button click - charge wallet and redirect to form"""
-    if not request.user.is_authenticated:
-        storage = messages.get_messages(request)
-        storage.used = True
-        messages.error(request, 'Please login to access the Business Consultant.')
-        return redirect('authentication:login')
-    
-    try:
-        agent = Agent.objects.get(slug='business-consultant', is_active=True)
-    except Agent.DoesNotExist:
-        messages.error(request, 'Business Consultant is currently unavailable.')
-        return redirect('agents:marketplace')
-    
-    if not request.user.has_sufficient_balance(agent.price):
-        messages.error(request, f'Insufficient balance! You need {agent.price} AED.')
-        return redirect('wallet:wallet')
-    
-    success = request.user.deduct_balance(
-        agent.price, 
-        f'{agent.name} - Direct Access',
-        agent.slug
-    )
-    
-    if not success:
-        messages.error(request, 'Failed to process payment. Please try again.')
-        return redirect('agents:marketplace')
-    
-    AgentExecution.objects.create(
-        agent=agent,
-        user=request.user,
-        input_data={'action': 'direct_access', 'source': 'try_now_button'},
-        fee_charged=agent.price,
-        status='completed',
-        output_data={
-            'type': 'direct_access',
-            'message': f'Direct access granted to {agent.name}',
-            'access_method': 'try_now_button'
-        },
-        completed_at=timezone.now()
-    )
-    
-    messages.success(request, f'Welcome to your {agent.name} consultation.')
-    return redirect('agents:business_consultant')
-```
+**3c. Add URL Routes** (if needed):
+Add routes to `agents/urls.py` following the pattern of existing direct access agents.
 
-4. **Add URL routes** (in `agents/urls.py`):
-```python
-# Add to direct access routes section
-path('business-consultant/', views.business_consultant_view, name='business_consultant'),
-path('business-consultant/access/', views.business_consultant_access, name='business_consultant_access'),
-```
+**3d. Update Marketplace Template** (if needed):
+Add button logic to `agents/templates/agents/marketplace.html` for custom marketplace behavior.
 
-5. **Update marketplace template** (in `agents/templates/agents/marketplace.html`):
-```html
-# Add to marketplace button logic
-{% elif agent.slug == 'business-consultant' %}
-    <a href="{% url 'agents:business_consultant_access' %}" class="try-btn">
-        💼 Try Now → 
-    </a>
-```
+#### **Step 4: Setup External Services**
 
-6. **Run command**: `python manage.py create_business_consultant`
-7. **Create external form** (JotForm, Google Forms, etc.)
-8. **Agent appears** in marketplace with embedded form interface
+**For Webhook Agents:**
+- Create N8N workflow at the webhook URL
+- Configure webhook to accept JSON payload with `sessionId`, `message`, etc.
 
-### **Key Differences Summary:**
+**For Direct Access Agents:**
+- Create external form (JotForm, Google Forms, etc.)
+- Ensure form URL is accessible and properly configured
 
-| Aspect | Webhook Agents | Direct Access Agents |
-|--------|----------------|---------------------|
-| **Form Processing** | Server-side (Django + N8N) | External service (JotForm) |
-| **Form Display** | Dynamic Django forms | Embedded external forms |
-| **Results** | Displayed in Quantum Tasks | Handled by external service |
-| **Templates** | Uses generic `agent_detail.html` | Requires dedicated template |
-| **View Functions** | Uses generic `agent_detail_view` | Requires dedicated view functions |
-| **URL Routes** | Uses generic `/{slug}/` | Requires dedicated routes |
-| **Marketplace Integration** | Automatic | Requires template updates |
+---
 
-### **Supported Form Field Types (Webhook Agents Only):**
-- `text`: Single-line text input
-- `textarea`: Multi-line text input
-- `select`: Dropdown with options array
-- `file`: File upload with drag-and-drop
-- `url`: URL input with validation
-- `checkbox`: Boolean checkbox
+### **✅ Benefits of This Approach**
 
-### **Common Mistakes to Avoid:**
-1. **Don't mix systems** - webhook agents should have empty `access_url_name` fields
-2. **Don't forget marketplace updates** - direct access agents need template updates
-3. **Don't skip dedicated templates** - direct access agents need their own HTML files
-4. **Don't use generic routes** - direct access agents need dedicated URL patterns
+- ✅ **Single source of truth** - JSON configs define everything
+- ✅ **Railway-ready immediately** - No manual database setup needed
+- ✅ **Error-free** - No category creation mistakes or typos
+- ✅ **Consistent** - All agents use same reliable creation process
+- ✅ **Scalable** - Easy to add 100+ agents
+- ✅ **Version controlled** - Configs are tracked in git
+
+### **🔧 Supported Form Field Types (Webhook Agents)**
+
+- `text` - Single-line text input
+- `textarea` - Multi-line text input  
+- `select` - Dropdown with options array
+- `file` - File upload with drag-and-drop
+- `url` - URL input with validation
+- `checkbox` - Boolean checkbox
+
+### **⚠️ Common Mistakes to Avoid**
+
+1. **Creating unnecessary categories** - Use existing ones first
+2. **Missing system_type** - Include "webhook" or "direct_access" 
+3. **Wrong access_url_name** - Empty for webhook agents, populated for direct access
+4. **Forgetting populate_agents** - Run after creating JSON config
+5. **Complex custom commands** - Use JSON + populate_agents instead
 
 ## Production Deployment
 
