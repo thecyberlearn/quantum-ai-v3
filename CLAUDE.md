@@ -359,6 +359,8 @@ Add routes to `agents/urls.py` following the pattern of existing direct access a
 **3d. Update Marketplace Template** (if needed):
 Add button logic to `agents/templates/agents/marketplace.html` for custom marketplace behavior.
 
+**⚠️ Important**: Keep all "Try Now" buttons consistent with the format `Try Now →` (no icons or emojis).
+
 #### **Step 4: Setup External Services**
 
 **For Webhook Agents:**
@@ -396,6 +398,7 @@ Add button logic to `agents/templates/agents/marketplace.html` for custom market
 3. **Wrong access_url_name** - Empty for webhook agents, populated for direct access
 4. **Forgetting populate_agents** - Run after creating JSON config
 5. **Complex custom commands** - Use JSON + populate_agents instead
+6. **Adding icons to Try Now buttons** - Keep all marketplace buttons consistent with "Try Now →" format
 
 ## Production Deployment
 
