@@ -148,42 +148,12 @@ gunicorn netcop_hub.wsgi:application
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`: Stripe API keys
 - `DATABASE_URL`: PostgreSQL connection string (Railway)
 
-**Current Agents:**
-The platform supports both webhook-based agents (N8N integration) and direct access agents (embedded forms):
+**Current System:**
+The platform supports **8 total agents** across **6 categories**:
+- **4 Webhook Agents** (N8N integration): Social Ads Generator, Job Posting Generator, PDF Summarizer, 5 Whys Analyzer
+- **4 Direct Access Agents** (External forms): CyberSec Career Navigator, AI Brand Strategist, Lean Six Sigma Expert, SWOT Analysis Expert
 
-**Webhook Agents (N8N Integration):**
-1. **Social Ads Generator** (social-ads-generator) - 6.00 AED
-   - Creates compelling social media advertisements
-   - Form fields: description, social_platform, include_emoji, language
-   - Webhook: N8N endpoint for social media ad generation
-
-2. **Job Posting Generator** (job-posting-generator) - 10.00 AED  
-   - Creates professional job postings
-   - Form fields: job_title, company_name, job_description, seniority_level, contract_type, location, language
-   - Webhook: N8N endpoint for job posting generation
-
-3. **PDF Summarizer** (pdf-summarizer) - 8.00 AED
-   - Analyzes and summarizes PDF documents with file upload
-   - Form fields: pdf_file (file upload with drag-and-drop), summary_type
-   - Webhook: N8N endpoint for PDF processing with multipart file support
-
-4. **5 Whys Analyzer** (5-whys-analyzer) - 15.00 AED
-   - Interactive chat-based root cause analysis using 5 Whys methodology
-   - Chat interface with real-time N8N webhook integration
-   - Session timeout: 2 hours
-
-**Direct Access Agents (Embedded Forms):**
-5. **CyberSec Career Navigator** (cybersec-career-navigator) - 0.00 AED
-   - JotForm-based career guidance consultation
-   - Embedded white-label interface with Quantum Tasks header
-   - Session duration: 2 hours
-   - Direct access URL: `/agents/career-navigator/`
-
-6. **AI Brand Strategist** (ai-brand-strategist) - 0.00 AED
-   - JotForm-based brand strategy consultation
-   - Embedded white-label interface with Quantum Tasks header
-   - Session duration: 2 hours
-   - Direct access URL: `/agents/ai-brand-strategist/`
+For detailed agent information and creation instructions, see `docs/AGENT_CREATION.md`.
 
 ### URL Structure
 ```
@@ -192,10 +162,7 @@ The platform supports both webhook-based agents (N8N integration) and direct acc
 /auth/                  # Authentication (login, register, etc.)
 /agents/                # Agent marketplace (agents app)
 /agents/{slug}/         # Individual agent pages (webhook agents)
-/agents/career-navigator/       # Career navigator form page
-/agents/career-navigator/access/ # Career navigator payment processing
-/agents/ai-brand-strategist/    # AI Brand Strategist form page
-/agents/ai-brand-strategist/access/ # AI Brand Strategist payment processing
+/agents/{slug}/access/  # Direct access agent payment processing
 /wallet/                # Wallet management
 /admin/                 # Django admin
 ```
@@ -213,192 +180,16 @@ The platform supports both webhook-based agents (N8N integration) and direct acc
 
 ## Adding New Agents
 
-**⚡ RECOMMENDED APPROACH:** Use JSON configuration + `populate_agents` command for error-free, Railway-ready agent creation.
+For comprehensive agent creation instructions, see **`docs/AGENT_CREATION.md`**.
 
-### **🏷️ Choose Existing Category First**
+**Quick Summary:**
+1. Create JSON config in `agents/configs/agents/your-agent-name.json`
+2. Run `python manage.py populate_agents`
+3. Agent appears in marketplace automatically
 
-**IMPORTANT:** Always use existing categories before creating new ones to avoid category proliferation.
-
-**Available Categories:**
-- 🧠 **`analysis`** - Problem-solving, SWOT analysis, strategic analysis tools
-- 🎓 **`career-education`** - Career guidance, educational resources, professional development
-- 📄 **`document-processing`** - PDF analysis, file processing, document tools
-- 💼 **`human-resources`** - Job postings, HR automation, talent management
-- 📢 **`marketing`** - Social ads, branding, content marketing, advertising
-- 💼 **`consulting`** - Business consultation, strategy services, expert advice
-
-**Only create new categories when absolutely necessary and logically distinct.**
-
----
-
-### **🚀 Agent Creation Workflow**
-
-The platform has **TWO DISTINCT AGENT SYSTEMS**:
-
-#### **System 1: Webhook Agents (N8N Integration)**
-- **Use for:** Dynamic forms, server-side processing, file uploads, complex workflows
-- **Examples:** Social Ads Generator, PDF Summarizer, Job Posting Generator
-- **Flow:** Marketplace → Agent detail page → Dynamic form → N8N webhook → Results
-
-#### **System 2: Direct Access Agents (External Forms)**
-- **Use for:** External form services (JotForm, Google Forms), consultation interfaces
-- **Examples:** SWOT Analysis Expert, CyberSec Career Navigator, AI Brand Strategist
-- **Flow:** Marketplace → Payment processing → Quantum Tasks header + embedded external form
-
----
-
-### **📝 Implementation Steps (All Agent Types)**
-
-#### **Step 1: Create JSON Configuration**
-
-Create a new file in `agents/configs/agents/your-agent-name.json`:
-
-**Webhook Agent Example:**
-```json
-{
-  "slug": "content-optimizer",
-  "name": "Content Optimizer",
-  "short_description": "AI-powered content optimization and enhancement",
-  "description": "Enhance your content for better engagement with AI-powered optimization suggestions, tone analysis, and improvement recommendations.",
-  "category": "marketing",
-  "price": 5.0,
-  "agent_type": "form",
-  "system_type": "webhook",
-  "form_schema": {
-    "fields": [
-      {
-        "name": "content",
-        "type": "textarea",
-        "label": "Content to Optimize",
-        "required": true
-      },
-      {
-        "name": "content_type",
-        "type": "select",
-        "label": "Content Type",
-        "required": true,
-        "options": [
-          {"value": "blog", "label": "Blog Post"},
-          {"value": "social", "label": "Social Media"},
-          {"value": "email", "label": "Email Marketing"}
-        ]
-      }
-    ]
-  },
-  "webhook_url": "http://localhost:5678/webhook/content-optimizer",
-  "access_url_name": "",
-  "display_url_name": ""
-}
-```
-
-**Direct Access Agent Example:**
-```json
-{
-  "slug": "business-strategist",
-  "name": "Business Strategist",
-  "short_description": "Expert business strategy consultation",
-  "description": "Get professional business strategy insights and recommendations from experienced consultants to grow your business effectively.",
-  "category": "consulting",
-  "price": 0.0,
-  "agent_type": "form",
-  "system_type": "direct_access",
-  "form_schema": {
-    "fields": []
-  },
-  "webhook_url": "https://agent.jotform.com/your-form-id",
-  "access_url_name": "agents:direct_access_handler",
-  "display_url_name": "agents:direct_access_display"
-}
-```
-
-#### **Step 2: Run populate_agents Command**
-
-```bash
-# Development
-source venv/bin/activate
-python manage.py populate_agents
-
-# Production (Railway)
-python manage.py populate_agents  # Runs automatically on deployment
-```
-
-#### **Step 3: Additional Setup (Direct Access Agents Only)**
-
-For direct access agents that need custom templates or marketplace integration:
-
-**3a. Create Custom Template** (optional):
-```html
-<!-- templates/your_agent_name.html -->
-{% extends 'base.html' %}
-{% load static %}
-
-{% block title %}Your Agent Name - Quantum Tasks AI{% endblock %}
-
-{% block extra_css %}
-<style>
-.main-container { max-width: none; padding: 0; height: calc(100vh - 80px); }
-.iframe-container { width: 100%; height: 100%; }
-.iframe-container iframe { width: 100%; height: 100%; border: none; display: block; }
-.footer { display: none !important; }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="iframe-container">
-    <iframe src="{{ form_url }}" frameborder="0" scrolling="auto" title="Your Agent Name"></iframe>
-</div>
-{% endblock %}
-```
-
-**3b. Add Custom Views** (if needed):
-Add view functions to `agents/views.py` following the pattern of existing direct access agents.
-
-**3c. Add URL Routes** (if needed):
-Add routes to `agents/urls.py` following the pattern of existing direct access agents.
-
-**3d. Update Marketplace Template** (if needed):
-Add button logic to `agents/templates/agents/marketplace.html` for custom marketplace behavior.
-
-**⚠️ Important**: Keep all "Try Now" buttons consistent with the format `Try Now →` (no icons or emojis).
-
-#### **Step 4: Setup External Services**
-
-**For Webhook Agents:**
-- Create N8N workflow at the webhook URL
-- Configure webhook to accept JSON payload with `sessionId`, `message`, etc.
-
-**For Direct Access Agents:**
-- Create external form (JotForm, Google Forms, etc.)
-- Ensure form URL is accessible and properly configured
-
----
-
-### **✅ Benefits of This Approach**
-
-- ✅ **Single source of truth** - JSON configs define everything
-- ✅ **Railway-ready immediately** - No manual database setup needed
-- ✅ **Error-free** - No category creation mistakes or typos
-- ✅ **Consistent** - All agents use same reliable creation process
-- ✅ **Scalable** - Easy to add 100+ agents
-- ✅ **Version controlled** - Configs are tracked in git
-
-### **🔧 Supported Form Field Types (Webhook Agents)**
-
-- `text` - Single-line text input
-- `textarea` - Multi-line text input  
-- `select` - Dropdown with options array
-- `file` - File upload with drag-and-drop
-- `url` - URL input with validation
-- `checkbox` - Boolean checkbox
-
-### **⚠️ Common Mistakes to Avoid**
-
-1. **Creating unnecessary categories** - Use existing ones first
-2. **Missing system_type** - Include "webhook" or "direct_access" 
-3. **Wrong access_url_name** - Empty for webhook agents, populated for direct access
-4. **Forgetting populate_agents** - Run after creating JSON config
-5. **Complex custom commands** - Use JSON + populate_agents instead
-6. **Adding icons to Try Now buttons** - Keep all marketplace buttons consistent with "Try Now →" format
+The platform supports 2 agent types:
+- **Webhook Agents** - N8N integration with dynamic forms
+- **Direct Access Agents** - External forms (JotForm, etc.) with embedded interfaces
 
 ## Production Deployment
 
@@ -446,34 +237,37 @@ Add button logic to `agents/templates/agents/marketplace.html` for custom market
 ## System Status
 
 **Current Status: ✅ STABLE COMPREHENSIVE SYSTEM**
-- **6 agents** confirmed working and tested (4 webhook + 2 direct access)
+- **8 agents** confirmed working and tested (4 webhook + 4 direct access)
+- **6 categories** with clean, logical organization
 - **Dual integration architecture** with clear separation and documentation
-- **Embedded form interfaces** with Quantum Tasks headers working correctly
-- **Chat-based and form-based** agent systems operational
+- **Streamlined agent creation** via JSON configs + `populate_agents` command
 - **Scalable architecture** ready for 100+ agents
 
 **Current Agents:**
 - **Webhook Agents (4)**: Social Ads Generator, Job Posting Generator, PDF Summarizer, 5 Whys Analyzer
-- **Direct Access Agents (2)**: CyberSec Career Navigator, AI Brand Strategist
+- **Direct Access Agents (4)**: CyberSec Career Navigator, AI Brand Strategist, Lean Six Sigma Expert, SWOT Analysis Expert
 
 **Latest Changes:**
-- **Added AI Brand Strategist** with embedded JotForm interface and Quantum Tasks header
-- **Documented complete agent creation process** with clear system distinctions
-- **Established patterns** for both webhook and direct access agent development
-- **Fixed architecture inconsistencies** between different agent types
-- **Updated comprehensive documentation** to prevent future agent creation issues
+- **Added SWOT Analysis Expert** with proper category assignment (analysis)
+- **Streamlined agent creation process** to use only JSON + `populate_agents`
+- **Separated documentation** into focused files (`docs/AGENT_CREATION.md`)
+- **Removed 10+ redundant management commands** for cleaner codebase
+- **Fixed marketplace consistency** and updated documentation
 
-**Architecture Clarity:**
-- **Two distinct systems** clearly documented with implementation examples
-- **Common mistakes** section added to prevent development issues
-- **Step-by-step guides** for both agent types with complete code examples
-- **Key differences table** for quick reference during development
+**Architecture Status:**
+- **Error-free agent creation** via JSON configuration approach
+- **Railway-ready deployment** with automatic agent population
+- **Consistent UI standards** across all marketplace components
+- **Comprehensive documentation** prevents common development mistakes
 
 **Future Development:**
-- **New agents** should follow documented patterns in "Adding New Agents" section
-- **Direct access agents** require dedicated templates, views, and URL routes
-- **Webhook agents** use generic dynamic form generation system
-- **No more architecture confusion** - clear documentation prevents implementation issues
+- **New agents** should follow patterns in `docs/AGENT_CREATION.md`
+- **Use existing categories first** to avoid unnecessary proliferation
+- **JSON + populate_agents** is the only supported creation method
 
 ---
-Last updated: 2025-08-04 20:00:00
+Last updated: 2025-01-08
+
+## Documentation
+- **Agent Creation**: See `docs/AGENT_CREATION.md` for comprehensive agent creation guide
+- **Project Overview**: This file (CLAUDE.md) for Django development and architecture
