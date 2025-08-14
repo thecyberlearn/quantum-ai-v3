@@ -8,8 +8,9 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import models
-from .models import Agent, AgentExecution, AgentCategory, ChatSession, ChatMessage
-from .serializers import AgentSerializer, AgentExecutionSerializer
+from .models import Agent, AgentExecution, ChatSession, ChatMessage
+from .serializers import AgentExecutionSerializer
+from .services import AgentFileService
 import requests
 import json
 import time
@@ -66,29 +67,30 @@ def validate_webhook_url(url):
 @permission_classes([IsAuthenticated])
 def agent_list(request):
     """List all active agents with optional category filtering"""
-    agents = Agent.objects.filter(is_active=True)
+    agents = AgentFileService.get_active_agents()
     
     category = request.GET.get('category')
     if category:
-        agents = agents.filter(category__slug=category)
+        agents = AgentFileService.get_agents_by_category(category)
     
     search = request.GET.get('search')
     if search:
-        agents = agents.filter(name__icontains=search)
+        agents = AgentFileService.search_agents(search)
     
     paginator = PageNumberPagination()
     paginator.page_size = 20
     result_page = paginator.paginate_queryset(agents, request)
-    serializer = AgentSerializer(result_page, many=True)
-    return paginator.get_paginated_response(serializer.data)
+    # Return the data directly since we're working with dictionaries
+    return paginator.get_paginated_response(result_page)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def agent_detail(request, slug):
     """Get detailed agent information"""
-    agent = get_object_or_404(Agent, slug=slug, is_active=True)
-    serializer = AgentSerializer(agent)
-    return Response(serializer.data)
+    agent = AgentFileService.get_agent_by_slug(slug)
+    if not agent or not agent.get('is_active', True):
+        return Response({'error': 'Agent not found'}, status=status.HTTP_404_NOT_FOUND)
+    return Response(agent)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -100,15 +102,31 @@ def execute_agent(request):
     if not agent_slug:
         return Response({'error': 'agent_slug is required'}, status=status.HTTP_400_BAD_REQUEST)
     
-    agent = get_object_or_404(Agent, slug=agent_slug, is_active=True)
+    agent_data = AgentFileService.get_agent_by_slug(agent_slug)
+    if not agent_data or not agent_data.get('is_active', True):
+        return Response({'error': 'Agent not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Convert agent data to a simple object for compatibility
+    class AgentCompat:
+        def __init__(self, data):
+            self.slug = data['slug']
+            self.name = data['name']
+            self.price = float(data['price'])
+            self.webhook_url = data['webhook_url']
+            self.id = data['slug']  # Use slug as ID for file-based agents
+    
+    agent = AgentCompat(agent_data)
     
     # Check if user has sufficient balance (using existing wallet system)
     if hasattr(request.user, 'has_sufficient_balance') and not request.user.has_sufficient_balance(agent.price):
         return Response({'error': 'Insufficient wallet balance'}, status=status.HTTP_400_BAD_REQUEST)
     
+    # Get or create database record for foreign key compatibility
+    agent_db_record = AgentFileService.get_or_create_agent_db_record(agent_data)
+    
     # Create execution record
     execution = AgentExecution.objects.create(
-        agent=agent,
+        agent=agent_db_record,
         user=request.user,
         input_data=input_data,
         fee_charged=agent.price,
@@ -205,11 +223,21 @@ def career_navigator_access(request):
         return redirect('authentication:login')
     
     # Get the career navigator agent
-    try:
-        agent = Agent.objects.get(slug='cybersec-career-navigator', is_active=True)
-    except Agent.DoesNotExist:
+    agent_data = AgentFileService.get_agent_by_slug('cybersec-career-navigator')
+    if not agent_data or not agent_data.get('is_active', True):
         messages.error(request, 'Career Navigator is currently unavailable.')
         return redirect('agents:marketplace')
+    
+    # Convert to compatible object
+    class AgentCompat:
+        def __init__(self, data):
+            self.slug = data['slug']
+            self.name = data['name']
+            self.price = float(data['price'])
+            self.webhook_url = data['webhook_url']
+            self.id = data['slug']
+    
+    agent = AgentCompat(agent_data)
     
     # Check if user has sufficient balance
     if not request.user.has_sufficient_balance(agent.price):
@@ -227,9 +255,12 @@ def career_navigator_access(request):
         messages.error(request, 'Failed to process payment. Please try again.')
         return redirect('agents:marketplace')
     
+    # Get or create database record for foreign key compatibility
+    agent_db_record = AgentFileService.get_or_create_agent_db_record(agent_data)
+    
     # Create execution record for tracking
     execution = AgentExecution.objects.create(
-        agent=agent,
+        agent=agent_db_record,
         user=request.user,
         input_data={'action': 'direct_access', 'source': 'try_now_button'},
         fee_charged=agent.price,
@@ -258,18 +289,28 @@ def career_navigator_view(request):
         return redirect('authentication:login')
     
     # Get the career navigator agent
-    try:
-        agent = Agent.objects.get(slug='cybersec-career-navigator', is_active=True)
-    except Agent.DoesNotExist:
+    agent_data = AgentFileService.get_agent_by_slug('cybersec-career-navigator')
+    if not agent_data or not agent_data.get('is_active', True):
         messages.error(request, 'Career Navigator is currently unavailable.')
         return redirect('agents:marketplace')
+    
+    # Convert to compatible object
+    class AgentCompat:
+        def __init__(self, data):
+            self.slug = data['slug']
+            self.name = data['name']
+            self.price = float(data['price'])
+            self.webhook_url = data['webhook_url']
+            self.id = data['slug']
+    
+    agent = AgentCompat(agent_data)
     
     # Check if user has a recent execution (within last 2 hours) or just redirect to payment
     from django.utils import timezone
     from datetime import timedelta
     
     recent_execution = AgentExecution.objects.filter(
-        agent=agent,
+        agent__slug=agent.slug,  # Changed to slug-based lookup
         user=request.user,
         status='completed',
         created_at__gte=timezone.now() - timedelta(hours=2)
@@ -301,18 +342,28 @@ def ai_brand_strategist_view(request):
         return redirect('authentication:login')
     
     # Get the AI Brand Strategist agent
-    try:
-        agent = Agent.objects.get(slug='ai-brand-strategist', is_active=True)
-    except Agent.DoesNotExist:
+    agent_data = AgentFileService.get_agent_by_slug('ai-brand-strategist')
+    if not agent_data or not agent_data.get('is_active', True):
         messages.error(request, 'AI Brand Strategist is currently unavailable.')
         return redirect('agents:marketplace')
+    
+    # Convert to compatible object
+    class AgentCompat:
+        def __init__(self, data):
+            self.slug = data['slug']
+            self.name = data['name']
+            self.price = float(data['price'])
+            self.webhook_url = data['webhook_url']
+            self.id = data['slug']
+    
+    agent = AgentCompat(agent_data)
     
     # Check if user has a recent execution (within last 2 hours) or just redirect to payment
     from django.utils import timezone
     from datetime import timedelta
     
     recent_execution = AgentExecution.objects.filter(
-        agent=agent,
+        agent__slug=agent.slug,  # Changed to slug-based lookup
         user=request.user,
         status='completed',
         created_at__gte=timezone.now() - timedelta(hours=2)
@@ -344,11 +395,21 @@ def ai_brand_strategist_access(request):
         return redirect('authentication:login')
     
     # Get the AI Brand Strategist agent
-    try:
-        agent = Agent.objects.get(slug='ai-brand-strategist', is_active=True)
-    except Agent.DoesNotExist:
+    agent_data = AgentFileService.get_agent_by_slug('ai-brand-strategist')
+    if not agent_data or not agent_data.get('is_active', True):
         messages.error(request, 'AI Brand Strategist is currently unavailable.')
         return redirect('agents:marketplace')
+    
+    # Convert to compatible object
+    class AgentCompat:
+        def __init__(self, data):
+            self.slug = data['slug']
+            self.name = data['name']
+            self.price = float(data['price'])
+            self.webhook_url = data['webhook_url']
+            self.id = data['slug']
+    
+    agent = AgentCompat(agent_data)
     
     # Check if user has sufficient balance
     if not request.user.has_sufficient_balance(agent.price):
@@ -366,9 +427,12 @@ def ai_brand_strategist_access(request):
         messages.error(request, 'Failed to process payment. Please try again.')
         return redirect('agents:marketplace')
     
+    # Get or create database record for foreign key compatibility
+    agent_db_record = AgentFileService.get_or_create_agent_db_record(agent_data)
+    
     # Create execution record for tracking
     execution = AgentExecution.objects.create(
-        agent=agent,
+        agent=agent_db_record,
         user=request.user,
         input_data={'action': 'direct_access', 'source': 'try_now_button'},
         fee_charged=agent.price,
@@ -436,15 +500,18 @@ def format_agent_message(agent_slug, input_data):
 @login_required
 def agent_detail_view(request, slug):
     """Render agent detail page with dynamic form or chat interface"""
-    agent = get_object_or_404(Agent, slug=slug, is_active=True)
+    agent = AgentFileService.get_agent_by_slug(slug)
+    if not agent or not agent.get('is_active', True):
+        from django.http import Http404
+        raise Http404("Agent not found")
     
     # Handle chat-based agents
-    if agent.agent_type == 'chat':
+    if agent.get('agent_type') == 'chat':
         return chat_agent_view(request, agent)
     
     # Handle form-based agents (existing behavior)
     # Get all other active agents for quick access panel
-    all_agents = Agent.objects.filter(is_active=True).exclude(id=agent.id).select_related('category')
+    all_agents = [a for a in AgentFileService.get_active_agents() if a['slug'] != slug]
     
     context = {
         'agent': agent,
@@ -457,22 +524,19 @@ def agent_detail_view(request, slug):
 
 def agents_marketplace(request):
     """Agent marketplace view"""
-    agents = Agent.objects.filter(is_active=True).select_related('category')
-    categories = AgentCategory.objects.filter(is_active=True)
+    # Get agents from file service
+    agents = AgentFileService.get_active_agents()
+    categories = AgentFileService.get_all_categories()
     
     # Filter by category
     category_slug = request.GET.get('category')
     if category_slug:
-        agents = agents.filter(category__slug=category_slug)
+        agents = AgentFileService.get_agents_by_category(category_slug)
     
     # Search functionality
     search_query = request.GET.get('search', '').strip()
     if search_query:
-        agents = agents.filter(
-            models.Q(name__icontains=search_query) |
-            models.Q(short_description__icontains=search_query) |
-            models.Q(description__icontains=search_query)
-        )
+        agents = AgentFileService.search_agents(search_query)
     
     context = {
         'agents': agents,
@@ -491,10 +555,25 @@ def chat_agent_view(request, agent):
     chat_session = None
     messages = []
     
+    # Convert file-based agent data to compatible object if needed
+    if isinstance(agent, dict):
+        class AgentCompat:
+            def __init__(self, data):
+                self.slug = data['slug']
+                self.name = data['name']
+                self.price = float(data['price'])
+                self.webhook_url = data['webhook_url']
+                self.id = data['slug']  # Use slug as ID for file-based agents
+                self.message_limit = data.get('message_limit', 50)
+        
+        agent_compat = AgentCompat(agent)
+    else:
+        agent_compat = agent
+    
     if request.user.is_authenticated:
-        # Get or create active chat session
+        # Get or create active chat session (using slug-based filter for file agents)
         chat_session = ChatSession.objects.filter(
-            agent=agent,
+            agent__slug=agent_compat.slug,  # Changed to slug-based lookup
             user=request.user,
             status='active'
         ).first()
@@ -504,7 +583,7 @@ def chat_agent_view(request, agent):
         if session_id and not chat_session:
             chat_session = ChatSession.objects.filter(
                 session_id=session_id,
-                agent=agent,
+                agent__slug=agent_compat.slug,  # Changed to slug-based lookup
                 user=request.user
             ).first()
         
@@ -513,11 +592,11 @@ def chat_agent_view(request, agent):
             messages = ChatMessage.objects.filter(session=chat_session).order_by('timestamp')
     
     # Get all other active agents for quick access panel
-    all_agents = Agent.objects.filter(is_active=True).exclude(id=agent.id).select_related('category')
+    all_agents = [a for a in AgentFileService.get_active_agents() if a['slug'] != agent_compat.slug]
     
     # Get previous sessions for this user and agent (excluding current active session)
     previous_sessions_query = ChatSession.objects.filter(
-        agent=agent,
+        agent__slug=agent_compat.slug,  # Changed to slug-based lookup
         user=request.user
     ).exclude(status='active').order_by('-created_at')[:5]  # Last 5 non-active sessions
     
@@ -555,7 +634,7 @@ def chat_agent_view(request, agent):
         
         # Message calculations (only count user messages)
         user_message_count = messages.filter(message_type='user').count()
-        message_limit = agent.message_limit
+        message_limit = agent_compat.message_limit
         message_percentage = min(100, (user_message_count / message_limit) * 100)
         
         session_data = {
@@ -567,7 +646,7 @@ def chat_agent_view(request, agent):
         }
     
     context = {
-        'agent': agent,
+        'agent': agent,  # Keep original agent data for template compatibility
         'chat_session': chat_session,
         'messages': messages,
         'all_agents': all_agents,
@@ -588,15 +667,28 @@ def start_chat_session(request):
     if not agent_slug:
         return Response({'error': 'agent_slug is required'}, status=status.HTTP_400_BAD_REQUEST)
     
-    agent = get_object_or_404(Agent, slug=agent_slug, is_active=True, agent_type='chat')
+    agent_data = AgentFileService.get_agent_by_slug(agent_slug)
+    if not agent_data or not agent_data.get('is_active', True) or agent_data.get('agent_type') != 'chat':
+        return Response({'error': 'Chat agent not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Convert to compatible object
+    class AgentCompat:
+        def __init__(self, data):
+            self.slug = data['slug']
+            self.name = data['name']
+            self.price = float(data['price'])
+            self.webhook_url = data['webhook_url']
+            self.id = data['slug']
+    
+    agent = AgentCompat(agent_data)
     
     # Check wallet balance
     if hasattr(request.user, 'wallet_balance') and request.user.wallet_balance < agent.price:
         return Response({'error': 'Insufficient wallet balance'}, status=status.HTTP_400_BAD_REQUEST)
     
-    # Check for existing active session
+    # Check for existing active session (using slug-based lookup)
     existing_session = ChatSession.objects.filter(
-        agent=agent,
+        agent__slug=agent.slug,
         user=request.user,
         status='active'
     ).first()
@@ -613,9 +705,12 @@ def start_chat_session(request):
     from django.utils import timezone
     from datetime import timedelta
     
+    # Get or create database record for foreign key compatibility
+    agent_db_record = AgentFileService.get_or_create_agent_db_record(agent_data)
+    
     chat_session = ChatSession.objects.create(
         session_id=session_id,
-        agent=agent,
+        agent=agent_db_record,
         user=request.user,
         fee_charged=agent.price,
         status='active',
@@ -1099,7 +1194,23 @@ def direct_access_handler(request, slug):
     Generic handler for direct access agents (external forms like JotForm).
     Handles payment processing and grants access to external form.
     """
-    agent = get_object_or_404(Agent, slug=slug, is_active=True)
+    agent_data = AgentFileService.get_agent_by_slug(slug)
+    if not agent_data or not agent_data.get('is_active', True):
+        from django.http import Http404
+        raise Http404("Agent not found")
+    
+    # Convert to compatible object
+    class AgentCompat:
+        def __init__(self, data):
+            self.slug = data['slug']
+            self.name = data['name']
+            self.price = float(data['price'])
+            self.webhook_url = data['webhook_url']
+            self.access_url_name = data.get('access_url_name', '')
+            self.display_url_name = data.get('display_url_name', '')
+            self.id = data['slug']
+    
+    agent = AgentCompat(agent_data)
     
     # Verify this is a direct access agent
     if not agent.access_url_name or not agent.display_url_name:
@@ -1137,7 +1248,23 @@ def direct_access_display(request, slug):
     Generic display handler for direct access agents.
     Shows external form (JotForm, Google Forms, etc.) in iframe or redirects directly.
     """
-    agent = get_object_or_404(Agent, slug=slug, is_active=True)
+    agent_data = AgentFileService.get_agent_by_slug(slug)
+    if not agent_data or not agent_data.get('is_active', True):
+        from django.http import Http404
+        raise Http404("Agent not found")
+    
+    # Convert to compatible object
+    class AgentCompat:
+        def __init__(self, data):
+            self.slug = data['slug']
+            self.name = data['name']
+            self.price = float(data['price'])
+            self.webhook_url = data['webhook_url']
+            self.access_url_name = data.get('access_url_name', '')
+            self.display_url_name = data.get('display_url_name', '')
+            self.id = data['slug']
+    
+    agent = AgentCompat(agent_data)
     
     # Verify this is a direct access agent
     if not agent.access_url_name or not agent.display_url_name:
@@ -1161,18 +1288,28 @@ def lean_six_sigma_expert_view(request):
         return redirect('authentication:login')
     
     # Get the Lean Six Sigma Expert agent
-    try:
-        agent = Agent.objects.get(slug='lean-six-sigma-expert', is_active=True)
-    except Agent.DoesNotExist:
+    agent_data = AgentFileService.get_agent_by_slug('lean-six-sigma-expert')
+    if not agent_data or not agent_data.get('is_active', True):
         messages.error(request, 'Lean Six Sigma Expert is currently unavailable.')
         return redirect('agents:marketplace')
+    
+    # Convert to compatible object
+    class AgentCompat:
+        def __init__(self, data):
+            self.slug = data['slug']
+            self.name = data['name']
+            self.price = float(data['price'])
+            self.webhook_url = data['webhook_url']
+            self.id = data['slug']
+    
+    agent = AgentCompat(agent_data)
     
     # Check if user has a recent execution (within last 2 hours) or just redirect to payment
     from django.utils import timezone
     from datetime import timedelta
     
     recent_execution = AgentExecution.objects.filter(
-        agent=agent,
+        agent__slug=agent.slug,  # Changed to slug-based lookup
         user=request.user,
         status='completed',
         created_at__gte=timezone.now() - timedelta(hours=2)
@@ -1204,11 +1341,21 @@ def lean_six_sigma_expert_access(request):
         return redirect('authentication:login')
     
     # Get the Lean Six Sigma Expert agent
-    try:
-        agent = Agent.objects.get(slug='lean-six-sigma-expert', is_active=True)
-    except Agent.DoesNotExist:
+    agent_data = AgentFileService.get_agent_by_slug('lean-six-sigma-expert')
+    if not agent_data or not agent_data.get('is_active', True):
         messages.error(request, 'Lean Six Sigma Expert is currently unavailable.')
         return redirect('agents:marketplace')
+    
+    # Convert to compatible object
+    class AgentCompat:
+        def __init__(self, data):
+            self.slug = data['slug']
+            self.name = data['name']
+            self.price = float(data['price'])
+            self.webhook_url = data['webhook_url']
+            self.id = data['slug']
+    
+    agent = AgentCompat(agent_data)
     
     # Check if user has sufficient balance
     if not request.user.has_sufficient_balance(agent.price):
@@ -1226,9 +1373,12 @@ def lean_six_sigma_expert_access(request):
         messages.error(request, 'Failed to process payment. Please try again.')
         return redirect('agents:marketplace')
     
+    # Get or create database record for foreign key compatibility
+    agent_db_record = AgentFileService.get_or_create_agent_db_record(agent_data)
+    
     # Create execution record for tracking
     execution = AgentExecution.objects.create(
-        agent=agent,
+        agent=agent_db_record,
         user=request.user,
         input_data={'action': 'direct_access', 'source': 'try_now_button'},
         fee_charged=agent.price,
@@ -1257,18 +1407,28 @@ def swot_analysis_expert_view(request):
         return redirect('authentication:login')
     
     # Get the SWOT Analysis Expert agent
-    try:
-        agent = Agent.objects.get(slug='swot-analysis-expert', is_active=True)
-    except Agent.DoesNotExist:
+    agent_data = AgentFileService.get_agent_by_slug('swot-analysis-expert')
+    if not agent_data or not agent_data.get('is_active', True):
         messages.error(request, 'SWOT Analysis Expert is currently unavailable.')
         return redirect('agents:marketplace')
+    
+    # Convert to compatible object
+    class AgentCompat:
+        def __init__(self, data):
+            self.slug = data['slug']
+            self.name = data['name']
+            self.price = float(data['price'])
+            self.webhook_url = data['webhook_url']
+            self.id = data['slug']
+    
+    agent = AgentCompat(agent_data)
     
     # Check if user has a recent execution (within last 2 hours) or just redirect to payment
     from django.utils import timezone
     from datetime import timedelta
     
     recent_execution = AgentExecution.objects.filter(
-        agent=agent,
+        agent__slug=agent.slug,  # Changed to slug-based lookup
         user=request.user,
         status='completed',
         created_at__gte=timezone.now() - timedelta(hours=2)
@@ -1300,11 +1460,21 @@ def swot_analysis_expert_access(request):
         return redirect('authentication:login')
     
     # Get the SWOT Analysis Expert agent
-    try:
-        agent = Agent.objects.get(slug='swot-analysis-expert', is_active=True)
-    except Agent.DoesNotExist:
+    agent_data = AgentFileService.get_agent_by_slug('swot-analysis-expert')
+    if not agent_data or not agent_data.get('is_active', True):
         messages.error(request, 'SWOT Analysis Expert is currently unavailable.')
         return redirect('agents:marketplace')
+    
+    # Convert to compatible object
+    class AgentCompat:
+        def __init__(self, data):
+            self.slug = data['slug']
+            self.name = data['name']
+            self.price = float(data['price'])
+            self.webhook_url = data['webhook_url']
+            self.id = data['slug']
+    
+    agent = AgentCompat(agent_data)
     
     # Check if user has sufficient balance
     if not request.user.has_sufficient_balance(agent.price):
@@ -1322,9 +1492,12 @@ def swot_analysis_expert_access(request):
         messages.error(request, 'Failed to process payment. Please try again.')
         return redirect('agents:marketplace')
     
+    # Get or create database record for foreign key compatibility
+    agent_db_record = AgentFileService.get_or_create_agent_db_record(agent_data)
+    
     # Create execution record for tracking
     execution = AgentExecution.objects.create(
-        agent=agent,
+        agent=agent_db_record,
         user=request.user,
         input_data={'action': 'direct_access', 'source': 'try_now_button'},
         fee_charged=agent.price,
