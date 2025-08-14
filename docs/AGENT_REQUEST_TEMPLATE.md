@@ -1,13 +1,13 @@
 # Agent Request Template
 
-Use this template when requesting new agents to ensure all necessary information is provided for quick, error-free agent creation.
+Use this template when requesting new agents for quick, error-free creation using the modern file-based system.
 
 ## How to Use This Template
 
 1. **Copy the template below**
-2. **Fill in all required fields**  
-3. **Provide to Claude Code** with the request "Create agent using this template"
-4. **Claude will handle** JSON config creation, populate_agents execution, and deployment
+2. **Fill in all required fields**
+3. **Provide to Claude Code** with the request "Create agent using this template"  
+4. **Claude will handle** JSON config creation and deployment
 
 ---
 
@@ -24,9 +24,9 @@ Use this template when requesting new agents to ensure all necessary information
 **Full Description**: [Detailed description of what the agent does and its benefits]
 
 ### For Webhook Agents Only:
-**Form Fields**: 
+**Form Fields**:
 - Field 1: [name: field_name, type: text/textarea/select/file/url/checkbox, label: "Display Label", required: true/false]
-- Field 2: [name: field_name, type: text/textarea/select/file/url/checkbox, label: "Display Label", required: true/false]
+- Field 2: [name: field_name, type: text/textarea/select/file/url/checkbox, label: "Display Label", required: true/false]  
 - [Add more fields as needed]
 
 **N8N Webhook URL**: [Your N8N webhook endpoint URL]
@@ -48,8 +48,8 @@ Use this template when requesting new agents to ensure all necessary information
 **Choose from these existing categories** (avoid creating new ones):
 
 - 🧠 **`analysis`** - Problem-solving, SWOT analysis, strategic analysis tools
-- 🎓 **`career-education`** - Career guidance, educational resources, professional development  
-- 📄 **`document-processing`** - PDF analysis, file processing, document tools
+- 🎓 **`career-education`** - Career guidance, educational resources, professional development
+- 📄 **`document-processing`** - PDF analysis, file processing, document tools  
 - 💼 **`human-resources`** - Job postings, HR automation, talent management
 - 📢 **`marketing`** - Social ads, branding, content marketing, advertising
 - 💼 **`consulting`** - Business consultation, strategy services, expert advice
@@ -75,7 +75,7 @@ Use this template when requesting new agents to ensure all necessary information
 
 **Agent Name**: Email Campaign Optimizer
 **Type**: Webhook
-**Category**: marketing  
+**Category**: marketing
 **Price**: 4.0 AED
 **Short Description**: AI-powered email campaign optimization and A/B testing
 **Full Description**: Optimize your email campaigns with AI analysis of subject lines, content, and send times. Get recommendations for better open rates and conversions.
@@ -90,9 +90,9 @@ Use this template when requesting new agents to ensure all necessary information
 
 ### Example 2: Direct Access Agent
 ```markdown
-## New Agent Request  
+## New Agent Request
 
-**Agent Name**: Financial Planning Consultant
+**Agent Name**: Financial Planning Consultant  
 **Type**: Direct Access
 **Category**: consulting
 **Price**: 0.0 AED
@@ -100,7 +100,7 @@ Use this template when requesting new agents to ensure all necessary information
 **Full Description**: Get expert financial advice tailored to your goals. Our certified financial planners provide personalized investment strategies and retirement planning.
 
 ### For Direct Access Agents:
-**External Form URL**: https://agent.jotform.com/financial-planning-form-id
+**External Form URL**: https://form.jotform.com/financial-planning-form-id
 **Custom Template Needed**: No
 **Custom Views Needed**: No
 ```
@@ -112,23 +112,40 @@ Use this template when requesting new agents to ensure all necessary information
 After you provide the completed template:
 
 1. ✅ **Claude creates JSON config** in `agents/configs/agents/`
-2. ✅ **Runs populate_agents command** to add agent to database  
-3. ✅ **Agent appears in marketplace** automatically
-4. ✅ **Creates any needed templates/views** (for Direct Access agents)
+2. ✅ **Agent configuration is committed to git**
+3. ✅ **Agent appears in marketplace** automatically via file-based system
+4. ✅ **Creates any needed templates/views** (for advanced Direct Access agents)
 5. ✅ **Updates marketplace integration** if needed
-6. ✅ **Commits changes** and makes them Railway-ready
+6. ✅ **Railway deployment ready** - no manual database commands
 
-**No additional work needed on your part!** 🚀
+**Simple Process:** JSON file → git commit → agent appears! 🚀
+
+---
+
+## Current Agents (8 Total)
+
+### Webhook Agents (4)
+- **Social Ads Generator** - 6.00 AED - Social media ad creation
+- **Job Posting Generator** - 10.00 AED - Professional job postings  
+- **PDF Summarizer** - 8.00 AED - Document analysis and summarization
+- **5 Whys Analyzer** - 15.00 AED - Interactive root cause analysis
+
+### Direct Access Agents (4)
+- **CyberSec Career Navigator** - FREE - Career guidance
+- **AI Brand Strategist** - FREE - Brand strategy consultation
+- **Lean Six Sigma Expert** - FREE - Process improvement
+- **SWOT Analysis Expert** - FREE - Strategic analysis
 
 ---
 
 ## Tips for Better Requests
 
 - ✅ **Use existing categories** - Avoid creating new ones unless absolutely necessary
-- ✅ **Be specific** - Clear descriptions help users understand the agent's value
+- ✅ **Be specific** - Clear descriptions help users understand the agent's value  
 - ✅ **Test external forms** - Ensure JotForm/external URLs are working before requesting
 - ✅ **Consider pricing** - Free agents get more usage, paid agents need clear value proposition
 - ✅ **Think about fields** - For webhook agents, plan your form fields carefully
+- ✅ **Simple is better** - The file-based system makes creation effortless
 
 ---
 

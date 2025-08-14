@@ -1,6 +1,6 @@
 # Agent Configuration System
 
-This directory contains JSON configuration files for dynamically creating agents and categories in the Quantum Tasks AI platform.
+This directory contains JSON configuration files for the Quantum Tasks AI platform's file-based agent system.
 
 ## Directory Structure
 
@@ -10,31 +10,34 @@ agents/configs/
 │   └── categories.json          # All agent categories
 ├── agents/
 │   ├── ai-brand-strategist.json        # Direct access agent
-│   ├── cybersec-career-navigator.json  # Direct access agent
+│   ├── cybersec-career-navigator.json  # Direct access agent  
 │   ├── five-whys-analysis.json         # Chat webhook agent
 │   ├── job-posting-generator.json      # Form webhook agent
+│   ├── lean-six-sigma-expert.json      # Direct access agent
 │   ├── pdf-summarizer.json             # File upload webhook agent
-│   └── social-ads-generator.json       # Form webhook agent
+│   ├── social-ads-generator.json       # Form webhook agent
+│   └── swot-analysis-expert.json       # Direct access agent
 └── README.md                    # This file
 ```
 
 ## How It Works
 
+**Simple File-Based System:**
 1. **Categories** are defined in `categories/categories.json`
 2. **Agents** are defined in individual JSON files in `agents/`
-3. Run `python manage.py populate_agents` to create all agents from configs
+3. **File changes** are automatically loaded by the Django application
 4. **Adding new agents** is as simple as creating a new JSON file
 
 ## Adding New Agents
 
 ### Step 1: Create JSON Configuration File
 
-Create a new file in `agents/` directory, e.g., `email-writer.json`:
+Create a new file in the `agents/` directory, e.g., `email-writer.json`:
 
 ```json
 {
   "slug": "email-writer",
-  "name": "Email Writer",
+  "name": "Email Writer", 
   "short_description": "AI-powered professional email writing assistant",
   "description": "Generate professional emails for any purpose with AI assistance.",
   "category": "marketing",
@@ -61,15 +64,18 @@ Create a new file in `agents/` directory, e.g., `email-writer.json`:
 }
 ```
 
-### Step 2: Run Population Command
+### Step 2: Commit to Git
 
 ```bash
-python manage.py populate_agents
+git add agents/configs/agents/email-writer.json
+git commit -m "Add Email Writer agent"
+git push
 ```
 
 ### Step 3: Agent Appears Automatically
 
-The agent will now appear in the marketplace with the configured settings.
+- **Development:** Restart server to see the new agent
+- **Production:** Railway auto-deploys and agent appears in marketplace
 
 ## Agent Types
 
@@ -86,28 +92,52 @@ The agent will now appear in the marketplace with the configured settings.
 - Set `access_url_name`: `"agents:direct_access_handler"`
 - Set `display_url_name`: `"agents:direct_access_display"`
 
+## Current Agents (8 Total)
+
+### Webhook Agents (4)
+- **Social Ads Generator** - 6.00 AED
+- **Job Posting Generator** - 10.00 AED  
+- **PDF Summarizer** - 8.00 AED
+- **5 Whys Analyzer** - 15.00 AED
+
+### Direct Access Agents (4)
+- **CyberSec Career Navigator** - FREE
+- **AI Brand Strategist** - FREE
+- **Lean Six Sigma Expert** - FREE  
+- **SWOT Analysis Expert** - FREE
+
 ## Field Types for Webhook Agents
 
 - `text`: Single-line text input
-- `textarea`: Multi-line text input  
+- `textarea`: Multi-line text input
 - `select`: Dropdown with options array
 - `file`: File upload with drag-and-drop
 - `url`: URL input with validation
 - `checkbox`: Boolean checkbox
 
+## Categories (6 Available)
+
+- **`analysis`** 🧠 - Problem-solving, strategic analysis
+- **`career-education`** 🎓 - Career guidance, professional development
+- **`document-processing`** 📄 - PDF analysis, file processing
+- **`human-resources`** 💼 - Job postings, HR automation
+- **`marketing`** 📢 - Social ads, content marketing
+- **`consulting`** 💼 - Business consultation, expert advice
+
 ## Benefits
 
-✅ **Scalable**: Add 100+ agents without code changes
-✅ **Version Controlled**: All agent definitions in git
-✅ **Consistent**: Ensures local and Railway databases match
-✅ **Simple**: Just create JSON file and run command
-✅ **Validated**: Built-in validation and error handling
+✅ **Instant Creation**: Add JSON file → agent appears automatically  
+✅ **Version Controlled**: All agent definitions tracked in git  
+✅ **Railway Ready**: Automatic deployment with git push  
+✅ **No Database Work**: File-based system handles everything  
+✅ **Scalable**: Add hundreds of agents without complexity
 
 ## Railway Deployment
 
-On Railway, just run:
-```bash
-python manage.py populate_agents
-```
+**Automatic Process:**
+1. ✅ Git push triggers Railway deployment
+2. ✅ Agent files are processed automatically
+3. ✅ New agents appear in production marketplace
+4. ✅ No manual database commands required
 
-All agents defined in JSON files will be created automatically, ensuring Railway marketplace shows all agents consistently.
+For complete documentation, see `docs/AGENT_CREATION.md`.
