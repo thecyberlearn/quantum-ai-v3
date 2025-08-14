@@ -189,46 +189,35 @@ def career_navigator_access(request):
         messages.error(request, 'Career Navigator is currently unavailable.')
         return redirect('agents:marketplace')
     
-    # Convert to compatible object
-    class AgentCompat:
-        def __init__(self, data):
-            self.slug = data['slug']
-            self.name = data['name']
-            self.price = float(data['price'])
-            self.webhook_url = data['webhook_url']
-            self.id = data['slug']
-    
-    agent = AgentCompat(agent_data)
+    agent_price = float(agent_data['price'])
     
     # Check if user has sufficient balance
-    if not request.user.has_sufficient_balance(agent.price):
-        messages.error(request, f'Insufficient balance! You need {agent.price} AED to access the Career Navigator.')
+    if not request.user.has_sufficient_balance(agent_price):
+        messages.error(request, f'Insufficient balance! You need {agent_price} AED to access the Career Navigator.')
         return redirect('wallet:wallet')
     
     # Deduct fee from user wallet
     success = request.user.deduct_balance(
-        agent.price, 
-        f'{agent.name} - Direct Access',
-        agent.slug
+        agent_price, 
+        f'{agent_data["name"]} - Direct Access',
+        agent_data['slug']
     )
     
     if not success:
         messages.error(request, 'Failed to process payment. Please try again.')
         return redirect('agents:marketplace')
     
-    # Get or create database record for foreign key compatibility
-    agent_db_record = AgentFileService.get_or_create_agent_db_record(agent_data)
-    
     # Create execution record for tracking
     execution = AgentExecution.objects.create(
-        agent=agent_db_record,
+        agent_slug=agent_data['slug'],
+        agent_name=agent_data['name'],
         user=request.user,
         input_data={'action': 'direct_access', 'source': 'try_now_button'},
-        fee_charged=agent.price,
+        fee_charged=agent_price,
         status='completed',
         output_data={
             'type': 'direct_access',
-            'message': f'Direct access granted to {agent.name}',
+            'message': f'Direct access granted to {agent_data["name"]}',
             'access_method': 'try_now_button'
         },
         completed_at=timezone.now()
@@ -271,7 +260,7 @@ def career_navigator_view(request):
     from datetime import timedelta
     
     recent_execution = AgentExecution.objects.filter(
-        agent__slug=agent.slug,  # Changed to slug-based lookup
+        agent_slug=agent.slug,  # Changed to slug-based lookup
         user=request.user,
         status='completed',
         created_at__gte=timezone.now() - timedelta(hours=2)
@@ -324,7 +313,7 @@ def ai_brand_strategist_view(request):
     from datetime import timedelta
     
     recent_execution = AgentExecution.objects.filter(
-        agent__slug=agent.slug,  # Changed to slug-based lookup
+        agent_slug=agent.slug,  # Changed to slug-based lookup
         user=request.user,
         status='completed',
         created_at__gte=timezone.now() - timedelta(hours=2)
@@ -361,46 +350,35 @@ def ai_brand_strategist_access(request):
         messages.error(request, 'AI Brand Strategist is currently unavailable.')
         return redirect('agents:marketplace')
     
-    # Convert to compatible object
-    class AgentCompat:
-        def __init__(self, data):
-            self.slug = data['slug']
-            self.name = data['name']
-            self.price = float(data['price'])
-            self.webhook_url = data['webhook_url']
-            self.id = data['slug']
-    
-    agent = AgentCompat(agent_data)
+    agent_price = float(agent_data['price'])
     
     # Check if user has sufficient balance
-    if not request.user.has_sufficient_balance(agent.price):
-        messages.error(request, f'Insufficient balance! You need {agent.price} AED to access the AI Brand Strategist.')
+    if not request.user.has_sufficient_balance(agent_price):
+        messages.error(request, f'Insufficient balance! You need {agent_price} AED to access the AI Brand Strategist.')
         return redirect('wallet:wallet')
     
     # Deduct fee from user wallet
     success = request.user.deduct_balance(
-        agent.price, 
-        f'{agent.name} - Direct Access',
-        agent.slug
+        agent_price, 
+        f'{agent_data["name"]} - Direct Access',
+        agent_data['slug']
     )
     
     if not success:
         messages.error(request, 'Failed to process payment. Please try again.')
         return redirect('agents:marketplace')
     
-    # Get or create database record for foreign key compatibility
-    agent_db_record = AgentFileService.get_or_create_agent_db_record(agent_data)
-    
     # Create execution record for tracking
     execution = AgentExecution.objects.create(
-        agent=agent_db_record,
+        agent_slug=agent_data['slug'],
+        agent_name=agent_data['name'],
         user=request.user,
         input_data={'action': 'direct_access', 'source': 'try_now_button'},
-        fee_charged=agent.price,
+        fee_charged=agent_price,
         status='completed',
         output_data={
             'type': 'direct_access',
-            'message': f'Direct access granted to {agent.name}',
+            'message': f'Direct access granted to {agent_data["name"]}',
             'access_method': 'try_now_button'
         },
         completed_at=timezone.now()
@@ -534,7 +512,7 @@ def chat_agent_view(request, agent):
     if request.user.is_authenticated:
         # Get or create active chat session (using slug-based filter for file agents)
         chat_session = ChatSession.objects.filter(
-            agent__slug=agent_compat.slug,  # Changed to slug-based lookup
+            agent_slug=agent_compat.slug,  # Changed to slug-based lookup
             user=request.user,
             status='active'
         ).first()
@@ -544,7 +522,7 @@ def chat_agent_view(request, agent):
         if session_id and not chat_session:
             chat_session = ChatSession.objects.filter(
                 session_id=session_id,
-                agent__slug=agent_compat.slug,  # Changed to slug-based lookup
+                agent_slug=agent_compat.slug,  # Changed to slug-based lookup
                 user=request.user
             ).first()
         
@@ -557,7 +535,7 @@ def chat_agent_view(request, agent):
     
     # Get previous sessions for this user and agent (excluding current active session)
     previous_sessions_query = ChatSession.objects.filter(
-        agent__slug=agent_compat.slug,  # Changed to slug-based lookup
+        agent_slug=agent_compat.slug,  # Changed to slug-based lookup
         user=request.user
     ).exclude(status='active').order_by('-created_at')[:5]  # Last 5 non-active sessions
     
@@ -632,24 +610,15 @@ def start_chat_session(request):
     if not agent_data or not agent_data.get('is_active', True) or agent_data.get('agent_type') != 'chat':
         return Response({'error': 'Chat agent not found'}, status=status.HTTP_404_NOT_FOUND)
     
-    # Convert to compatible object
-    class AgentCompat:
-        def __init__(self, data):
-            self.slug = data['slug']
-            self.name = data['name']
-            self.price = float(data['price'])
-            self.webhook_url = data['webhook_url']
-            self.id = data['slug']
-    
-    agent = AgentCompat(agent_data)
+    agent_price = float(agent_data['price'])
     
     # Check wallet balance
-    if hasattr(request.user, 'wallet_balance') and request.user.wallet_balance < agent.price:
+    if hasattr(request.user, 'wallet_balance') and request.user.wallet_balance < agent_price:
         return Response({'error': 'Insufficient wallet balance'}, status=status.HTTP_400_BAD_REQUEST)
     
     # Check for existing active session (using slug-based lookup)
     existing_session = ChatSession.objects.filter(
-        agent__slug=agent.slug,
+        agent_slug=agent_data['slug'],
         user=request.user,
         status='active'
     ).first()
@@ -666,14 +635,12 @@ def start_chat_session(request):
     from django.utils import timezone
     from datetime import timedelta
     
-    # Get or create database record for foreign key compatibility
-    agent_db_record = AgentFileService.get_or_create_agent_db_record(agent_data)
-    
     chat_session = ChatSession.objects.create(
         session_id=session_id,
-        agent=agent_db_record,
+        agent_slug=agent_data['slug'],
+        agent_name=agent_data['name'],
         user=request.user,
-        fee_charged=agent.price,
+        fee_charged=agent_price,
         status='active',
         expires_at=timezone.now() + timedelta(minutes=30)
     )
@@ -681,9 +648,9 @@ def start_chat_session(request):
     # Deduct fee from wallet
     try:
         success = request.user.deduct_balance(
-            agent.price, 
-            f'{agent.name} - Chat Session {session_id}',
-            agent.slug
+            agent_price, 
+            f'{agent_data["name"]} - Chat Session {session_id}',
+            agent_data['slug']
         )
         if not success:
             # Delete the created session if payment fails
@@ -699,7 +666,7 @@ def start_chat_session(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     # Send welcome message
-    welcome_message = f"""## Welcome to {agent.name}! 🔍
+    welcome_message = f"""## Welcome to {agent_data["name"]}! 🔍
 
 I'm here to guide you through the **5 Whys methodology** - a powerful problem-solving technique to uncover root causes.
 
@@ -752,16 +719,20 @@ def send_chat_message(request):
         chat_session.save()
         return Response({'error': 'Chat session has expired'}, status=status.HTTP_400_BAD_REQUEST)
     
+    # Get agent data for message limit
+    agent_data = AgentFileService.get_agent_by_slug(chat_session.agent_slug)
+    message_limit = agent_data.get('message_limit', 50) if agent_data else 50
+    
     # Check message limit (only count user messages)
     current_user_message_count = ChatMessage.objects.filter(session=chat_session, message_type='user').count()
-    if current_user_message_count >= chat_session.agent.message_limit:
+    if current_user_message_count >= message_limit:
         # Auto-complete the session when message limit is reached
         chat_session.status = 'completed'
         chat_session.completed_at = timezone.now()
         chat_session.save()
         
         return Response({
-            'error': f'Message limit reached ({chat_session.agent.message_limit} messages). Session completed. You can download your conversation or start a new session.'
+            'error': f'Message limit reached ({message_limit} messages). Session completed. You can download your conversation or start a new session.'
         }, status=status.HTTP_400_BAD_REQUEST)
     
     # Save user message
@@ -796,17 +767,22 @@ CONTENT GUIDELINES:
         },
         "sessionId": session_id,
         "userId": str(request.user.id),
-        "agentId": chat_session.agent.slug,
+        "agentId": chat_session.agent_slug,
         "messageType": "chat"
     }
     
     try:
+        # Get webhook URL from agent data
+        webhook_url = agent_data['webhook_url'] if agent_data else None
+        if not webhook_url:
+            raise ValueError("Agent webhook URL not found")
+            
         # Validate webhook URL
-        validate_webhook_url(chat_session.agent.webhook_url)
+        validate_webhook_url(webhook_url)
         
         # Send to webhook
         response = requests.post(
-            chat_session.agent.webhook_url,
+            webhook_url,
             json=webhook_payload,
             timeout=30,
             headers={'Content-Type': 'application/json'}
@@ -994,9 +970,12 @@ def get_session_status(request, session_id):
     total_session_time = 30 * 60  # 30 minutes in seconds
     time_percentage = max(0, min(100, (time_remaining_seconds / total_session_time) * 100))
     
+    # Get agent data for message limit
+    agent_data = AgentFileService.get_agent_by_slug(chat_session.agent_slug)
+    message_limit = agent_data.get('message_limit', 50) if agent_data else 50
+    
     # Message calculations (only count user messages)
     message_count = ChatMessage.objects.filter(session=chat_session, message_type='user').count()
-    message_limit = chat_session.agent.message_limit
     message_percentage = min(100, (message_count / message_limit) * 100)
     
     return Response({
@@ -1055,14 +1034,14 @@ def export_chat_pdf(chat_session, messages):
         alignment=1  # Center alignment
     )
     
-    story.append(Paragraph(f"5 Whys Analysis - {chat_session.agent.name}", title_style))
+    story.append(Paragraph(f"5 Whys Analysis - {chat_session.agent_name}", title_style))
     story.append(Spacer(1, 12))
     
     # Session info
     info_style = styles['Normal']
     story.append(Paragraph(f"<b>Session ID:</b> {chat_session.session_id}", info_style))
     story.append(Paragraph(f"<b>Date:</b> {chat_session.created_at.strftime('%B %d, %Y at %I:%M %p')}", info_style))
-    story.append(Paragraph(f"<b>Agent:</b> {chat_session.agent.name}", info_style))
+    story.append(Paragraph(f"<b>Agent:</b> {chat_session.agent_name}", info_style))
     story.append(Paragraph(f"<b>Total Messages:</b> {messages.count()}", info_style))
     story.append(Spacer(1, 20))
     
@@ -1093,7 +1072,7 @@ def export_chat_pdf(chat_session, messages):
         if message.message_type == 'user':
             story.append(Paragraph(f"<b>You ({timestamp}):</b><br/>{message.content}", user_style))
         elif message.message_type == 'agent':
-            story.append(Paragraph(f"<b>{chat_session.agent.name} ({timestamp}):</b><br/>{message.content}", agent_style))
+            story.append(Paragraph(f"<b>{chat_session.agent_name} ({timestamp}):</b><br/>{message.content}", agent_style))
         elif message.message_type == 'system':
             story.append(Paragraph(f"<i>System ({timestamp}): {message.content}</i>", styles['Normal']))
     
@@ -1110,12 +1089,12 @@ def export_chat_txt(chat_session, messages):
     """Generate TXT export of chat session"""
     content = []
     content.append("=" * 60)
-    content.append(f"5 Whys Analysis - {chat_session.agent.name}")
+    content.append(f"5 Whys Analysis - {chat_session.agent_name}")
     content.append("=" * 60)
     content.append("")
     content.append(f"Session ID: {chat_session.session_id}")
     content.append(f"Date: {chat_session.created_at.strftime('%B %d, %Y at %I:%M %p')}")
-    content.append(f"Agent: {chat_session.agent.name}")
+    content.append(f"Agent: {chat_session.agent_name}")
     content.append(f"Total Messages: {messages.count()}")
     content.append("")
     content.append("-" * 60)
@@ -1130,7 +1109,7 @@ def export_chat_txt(chat_session, messages):
             content.append(f"You ({timestamp}):")
             content.append(message.content)
         elif message.message_type == 'agent':
-            content.append(f"{chat_session.agent.name} ({timestamp}):")
+            content.append(f"{chat_session.agent_name} ({timestamp}):")
             content.append(message.content)
         elif message.message_type == 'system':
             content.append(f"System ({timestamp}): {message.content}")
@@ -1179,10 +1158,10 @@ def direct_access_handler(request, slug):
         return redirect('agents:marketplace')
     
     # Handle payment for paid agents
-    if agent.price > 0:
+    if agent_price > 0:
         user_balance = request.user.wallet_balance
-        if user_balance < agent.price:
-            messages.error(request, f'Insufficient balance. You need {agent.price} AED but have {user_balance} AED.')
+        if user_balance < agent_price:
+            messages.error(request, f'Insufficient balance. You need {agent_price} AED but have {user_balance} AED.')
             return redirect('wallet:wallet')
         
         # Process payment
@@ -1190,7 +1169,7 @@ def direct_access_handler(request, slug):
             from wallet.models import WalletTransaction
             WalletTransaction.objects.create(
                 user=request.user,
-                amount=-agent.price,
+                amount=-agent_price,
                 type='agent_usage',
                 description=f'Payment for {agent.name}',
                 agent_slug=agent.slug
@@ -1270,7 +1249,7 @@ def lean_six_sigma_expert_view(request):
     from datetime import timedelta
     
     recent_execution = AgentExecution.objects.filter(
-        agent__slug=agent.slug,  # Changed to slug-based lookup
+        agent_slug=agent.slug,  # Changed to slug-based lookup
         user=request.user,
         status='completed',
         created_at__gte=timezone.now() - timedelta(hours=2)
@@ -1307,46 +1286,35 @@ def lean_six_sigma_expert_access(request):
         messages.error(request, 'Lean Six Sigma Expert is currently unavailable.')
         return redirect('agents:marketplace')
     
-    # Convert to compatible object
-    class AgentCompat:
-        def __init__(self, data):
-            self.slug = data['slug']
-            self.name = data['name']
-            self.price = float(data['price'])
-            self.webhook_url = data['webhook_url']
-            self.id = data['slug']
-    
-    agent = AgentCompat(agent_data)
+    agent_price = float(agent_data['price'])
     
     # Check if user has sufficient balance
-    if not request.user.has_sufficient_balance(agent.price):
-        messages.error(request, f'Insufficient balance! You need {agent.price} AED to access the Lean Six Sigma Expert.')
+    if not request.user.has_sufficient_balance(agent_price):
+        messages.error(request, f'Insufficient balance! You need {agent_price} AED to access the Lean Six Sigma Expert.')
         return redirect('wallet:wallet')
     
     # Deduct fee from user wallet
     success = request.user.deduct_balance(
-        agent.price, 
-        f'{agent.name} - Direct Access',
-        agent.slug
+        agent_price, 
+        f'{agent_data["name"]} - Direct Access',
+        agent_data['slug']
     )
     
     if not success:
         messages.error(request, 'Failed to process payment. Please try again.')
         return redirect('agents:marketplace')
     
-    # Get or create database record for foreign key compatibility
-    agent_db_record = AgentFileService.get_or_create_agent_db_record(agent_data)
-    
     # Create execution record for tracking
     execution = AgentExecution.objects.create(
-        agent=agent_db_record,
+        agent_slug=agent_data['slug'],
+        agent_name=agent_data['name'],
         user=request.user,
         input_data={'action': 'direct_access', 'source': 'try_now_button'},
-        fee_charged=agent.price,
+        fee_charged=agent_price,
         status='completed',
         output_data={
             'type': 'direct_access',
-            'message': f'Direct access granted to {agent.name}',
+            'message': f'Direct access granted to {agent_data["name"]}',
             'access_method': 'try_now_button'
         },
         completed_at=timezone.now()
@@ -1389,7 +1357,7 @@ def swot_analysis_expert_view(request):
     from datetime import timedelta
     
     recent_execution = AgentExecution.objects.filter(
-        agent__slug=agent.slug,  # Changed to slug-based lookup
+        agent_slug=agent.slug,  # Changed to slug-based lookup
         user=request.user,
         status='completed',
         created_at__gte=timezone.now() - timedelta(hours=2)
@@ -1426,46 +1394,35 @@ def swot_analysis_expert_access(request):
         messages.error(request, 'SWOT Analysis Expert is currently unavailable.')
         return redirect('agents:marketplace')
     
-    # Convert to compatible object
-    class AgentCompat:
-        def __init__(self, data):
-            self.slug = data['slug']
-            self.name = data['name']
-            self.price = float(data['price'])
-            self.webhook_url = data['webhook_url']
-            self.id = data['slug']
-    
-    agent = AgentCompat(agent_data)
+    agent_price = float(agent_data['price'])
     
     # Check if user has sufficient balance
-    if not request.user.has_sufficient_balance(agent.price):
-        messages.error(request, f'Insufficient balance! You need {agent.price} AED to access the SWOT Analysis Expert.')
+    if not request.user.has_sufficient_balance(agent_price):
+        messages.error(request, f'Insufficient balance! You need {agent_price} AED to access the SWOT Analysis Expert.')
         return redirect('wallet:wallet')
     
     # Deduct fee from user wallet
     success = request.user.deduct_balance(
-        agent.price, 
-        f'{agent.name} - Direct Access',
-        agent.slug
+        agent_price, 
+        f'{agent_data["name"]} - Direct Access',
+        agent_data['slug']
     )
     
     if not success:
         messages.error(request, 'Failed to process payment. Please try again.')
         return redirect('agents:marketplace')
     
-    # Get or create database record for foreign key compatibility
-    agent_db_record = AgentFileService.get_or_create_agent_db_record(agent_data)
-    
     # Create execution record for tracking
     execution = AgentExecution.objects.create(
-        agent=agent_db_record,
+        agent_slug=agent_data['slug'],
+        agent_name=agent_data['name'],
         user=request.user,
         input_data={'action': 'direct_access', 'source': 'try_now_button'},
-        fee_charged=agent.price,
+        fee_charged=agent_price,
         status='completed',
         output_data={
             'type': 'direct_access',
-            'message': f'Direct access granted to {agent.name}',
+            'message': f'Direct access granted to {agent_data["name"]}',
             'access_method': 'try_now_button'
         },
         completed_at=timezone.now()

@@ -180,16 +180,23 @@ class AgentsCore extends WorkflowsCore {
         // Process successful execution
         this.constructor.hideProcessing();
         
-        // Update wallet balance if fee was charged
+        // Update wallet balance ONLY after successful AI execution
         if (data.fee_charged) {
             const currentBalance = parseFloat(document.body.getAttribute('data-user-balance') || '0');
             const newBalance = currentBalance - parseFloat(data.fee_charged);
             
+            console.log('Charging wallet after successful execution:', {
+                currentBalance,
+                feeCharged: data.fee_charged,
+                newBalance,
+                executionStatus: data.status
+            });
+            
             // Update the wallet balance display
             this.constructor.updateWalletBalance(newBalance);
             
-            // Update the data attribute for future calculations
-            document.body.setAttribute('data-user-balance', newBalance.toString());
+            // Show notification about successful charge
+            this.constructor.showToast(`💰 Charged ${data.fee_charged} AED - Service completed!`, 'success');
         }
         
         // Display results
@@ -222,256 +229,296 @@ class AgentsCore extends WorkflowsCore {
                 if (data.new_balance !== undefined) {
                     // Update wallet balance display
                     this.constructor.updateWalletBalance(data.new_balance);
-                    document.body.setAttribute('data-user-balance', data.new_balance.toString());
                 }
             }
         } catch (error) {
             console.error('Wallet deduction error:', error);
-            // Continue execution even if wallet update fails
         }
     }
     
     /**
-     * Display results from file processing
+     * Display execution results
      */
-    displayFileProcessingResults(data) {
+    displayExecutionResults(data) {
         const resultsContainer = document.getElementById('resultsContainer');
         const resultsContent = document.getElementById('resultsContent');
         
-        if (!resultsContainer || !resultsContent) return;
-        
-        let content = '';
-        
-        // Handle different response formats from file processing
-        if (data && typeof data === 'object') {
-            if (data.sections && Array.isArray(data.sections)) {
-                // Multi-section response (array format)
-                content = data.sections.map(section => {
-                    const heading = section.heading || 'Section';
-                    const sectionContent = section.content || '';
-                    return `## ${heading}\n\n${sectionContent}`;
-                }).join('\n\n');
-            } else if (data.sections && typeof data.sections === 'object') {
-                // Multi-section response (object format)
-                content = Object.entries(data.sections).map(([section, text]) => {
-                    return `## ${section.replace('_', ' ').toUpperCase()}\n\n${text}`;
-                }).join('\n\n');
-            } else if (data.output || data.result || data.summary) {
-                content = data.output || data.result || data.summary;
-            } else if (data.error) {
-                content = `Error: ${data.error}`;
-            } else {
-                content = JSON.stringify(data, null, 2);
-            }
-        } else if (typeof data === 'string') {
-            content = data;
-        } else {
-            content = 'File processed successfully!';
-        }
-        
-        // Clear and populate results securely
-        resultsContent.textContent = '';
-        this.renderSecureContent(resultsContent, content);
-        
-        // Show results container
-        resultsContainer.style.display = 'block';
-        resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        
-        this.resetSubmitButton();
-    }
-    
-    /**
-     * Display results from agent execution
-     */
-    displayExecutionResults(executionData) {
-        const resultsContainer = document.getElementById('resultsContainer');
-        const resultsContent = document.getElementById('resultsContent');
-        
-        if (!resultsContainer || !resultsContent) return;
-        
-        let content = '';
-        
-        // Handle different response formats
-        if (executionData.output_data && typeof executionData.output_data === 'object') {
-            // Handle N8N response formats
-            const output = executionData.output_data;
-            content = output.output || output.text || output.content || output.result || output.message || JSON.stringify(output, null, 2);
-        } else if (executionData.output_data && typeof executionData.output_data === 'string') {
-            content = executionData.output_data;
-        } else {
-            content = `Agent executed successfully!\n\nExecution ID: ${executionData.id}\nStatus: ${executionData.status}\nFee Charged: ${executionData.fee_charged} AED`;
-        }
-        
-        // Clear and populate results securely
-        resultsContent.textContent = '';
-        this.renderSecureContent(resultsContent, content);
-        
-        // Show results container
-        resultsContainer.style.display = 'block';
-        resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        
-        this.resetSubmitButton();
-    }
-    
-    /**
-     * Secure content rendering without innerHTML to prevent XSS
-     */
-    renderSecureContent(container, content) {
-        // Sanitize and validate content
-        if (!content || typeof content !== 'string') {
-            container.textContent = 'No content available';
+        if (!resultsContainer || !resultsContent) {
+            console.log('Results containers not found');
             return;
         }
         
-        // Create wrapper div
-        const wrapper = document.createElement('div');
-        wrapper.className = 'results-content';
+        // Clear previous results
+        resultsContent.innerHTML = '';
         
-        // Split content into lines and process safely
-        const lines = content.split('\n');
+        // Extract output content with better format handling and debugging
+        let content = '';
         
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-            
-            if (!line) {
-                // Add line break for empty lines
-                if (i > 0) wrapper.appendChild(document.createElement('br'));
-                continue;
+        // Add debugging to see what we're getting
+        console.log('=== DEBUGGING EXECUTION RESULTS ===');
+        console.log('Full data object:', data);
+        console.log('output_data type:', typeof data.output_data);
+        console.log('output_data content:', data.output_data);
+        console.log('Agent slug:', this.agentSlug);
+        
+        // Check for PDF analyzer direct response format FIRST
+        if (data.sections && Array.isArray(data.sections)) {
+            console.log('Using PDF direct response format');
+            content = this.formatPDFAnalysisResults(data.sections);
+        }
+        // Check for PDF analyzer array response format
+        else if (Array.isArray(data) && data[0] && data[0].sections) {
+            console.log('Using PDF array response format');
+            content = this.formatPDFAnalysisResults(data[0].sections);
+        }
+        // Then check for standard output_data format
+        else if (data.output_data && typeof data.output_data === 'object') {
+            // Handle PDF analyzer nested response format
+            if (Array.isArray(data.output_data) && data.output_data[0] && data.output_data[0].sections) {
+                console.log('Using PDF nested analysis format');
+                content = this.formatPDFAnalysisResults(data.output_data[0].sections);
             }
-            
-            let element;
-            
-            // Handle headers (but escape content)
-            if (line.startsWith('### ')) {
-                element = document.createElement('h3');
-                element.textContent = line.substring(4);
-            } else if (line.startsWith('## ')) {
-                element = document.createElement('h2');
-                element.textContent = line.substring(3);
-            } else if (line.startsWith('# ')) {
-                element = document.createElement('h1');
-                element.textContent = line.substring(2);
-            } else {
-                // Handle regular text with basic formatting
-                element = document.createElement('span');
-                this.formatTextSecurely(element, line);
+            // Handle standard webhook response format  
+            else if (data.output_data.output) {
+                console.log('Using standard output format');
+                // Check if this is a job posting and format it specially
+                if (this.agentSlug === 'job-posting-generator') {
+                    content = this.formatJobPostingResults(data.output_data.output);
+                } else {
+                    content = data.output_data.output;
+                }
             }
-            
-            wrapper.appendChild(element);
-            
-            // Add line break if not the last line
-            if (i < lines.length - 1) {
-                wrapper.appendChild(document.createElement('br'));
+            // Handle other response formats
+            else if (data.output_data.result || data.output_data.content) {
+                console.log('Using result/content format');
+                content = data.output_data.result || data.output_data.content;
             }
+            // Show the actual data structure instead of generic message
+            else {
+                console.log('Using JSON fallback format');
+                content = `<div style="background: #f5f5f5; padding: 15px; border-radius: 5px; font-family: monospace; white-space: pre-wrap;">${JSON.stringify(data.output_data, null, 2)}</div>`;
+            }
+        } else if (data.output_data) {
+            console.log('Using string format');
+            content = data.output_data.toString();
+        } else {
+            console.log('No output_data found - using fallback');
+            // Show the full response to debug what's missing
+            content = `<div style="background: #fff3cd; padding: 15px; border: 1px solid #ffeaa7; border-radius: 5px;">
+                <h4>Execution Details:</h4>
+                <p><strong>Status:</strong> ${data.status || 'unknown'}</p>
+                <p><strong>Agent:</strong> ${this.agentSlug}</p>
+                <p><strong>Execution ID:</strong> ${data.id || 'unknown'}</p>
+                <p><strong>Error:</strong> ${data.error_message || 'No error message'}</p>
+                <details>
+                    <summary>Full Response Data</summary>
+                    <pre style="background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto;">${JSON.stringify(data, null, 2)}</pre>
+                </details>
+            </div>`;
+        }
+        console.log('Final content length:', content.length);
+        console.log('=====================================');
+        
+        // Create content element
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'results-content';
+        
+        // Use innerHTML for formatted PDF results, textContent for others
+        if (content.includes('<h') || content.includes('<div')) {
+            contentDiv.innerHTML = content;
+        } else {
+            contentDiv.textContent = content;
         }
         
-        container.appendChild(wrapper);
+        resultsContent.appendChild(contentDiv);
+        
+        // Show results container
+        resultsContainer.style.display = 'block';
+        resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        this.resetSubmitButton();
     }
     
     /**
-     * Format text with basic styling while preventing XSS
+     * Format PDF analysis results - simple and clean
      */
-    formatTextSecurely(element, text) {
-        // Simple approach: handle bold and italic formatting securely
-        const parts = [];
-        let currentText = text;
+    formatPDFAnalysisResults(sections) {
+        let html = '<div class="simple-results">';
         
-        // Process **bold** text
-        currentText = currentText.replace(/\*\*(.*?)\*\*/g, (match, content) => {
-            const placeholder = `__BOLD_${parts.length}__`;
-            parts.push({type: 'bold', content: content});
-            return placeholder;
+        sections.forEach(section => {
+            let content = section.content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            content = content.replace(/\n/g, '<br>');
+            
+            html += `
+                <div class="result-section">
+                    <h3>${section.heading}</h3>
+                    <div>${content}</div>
+                </div>
+            `;
         });
         
-        // Process *italic* text
-        currentText = currentText.replace(/\*(.*?)\*/g, (match, content) => {
-            const placeholder = `__ITALIC_${parts.length}__`;
-            parts.push({type: 'italic', content: content});
-            return placeholder;
-        });
+        html += '</div>';
         
-        // Split by placeholders and create DOM elements
-        const segments = currentText.split(/(__(?:BOLD|ITALIC)_\d+__)/);
+        // Simple, clean styling
+        html += `
+            <style>
+                .simple-results {
+                    font-family: system-ui, sans-serif;
+                    line-height: 1.5;
+                }
+                .result-section {
+                    margin-bottom: 20px;
+                    padding-bottom: 15px;
+                    border-bottom: 1px solid #eee;
+                }
+                .result-section:last-child {
+                    border-bottom: none;
+                }
+                .result-section h3 {
+                    color: #333;
+                    margin: 0 0 10px 0;
+                    font-size: 16px;
+                    font-weight: 600;
+                }
+                .result-section div {
+                    color: #555;
+                    font-size: 14px;
+                }
+                .result-section strong {
+                    color: #222;
+                }
+            </style>
+        `;
         
-        segments.forEach(segment => {
-            if (segment.startsWith('__BOLD_')) {
-                const index = parseInt(segment.match(/\d+/)[0]);
-                const strong = document.createElement('strong');
-                strong.textContent = parts[index].content;
-                element.appendChild(strong);
-            } else if (segment.startsWith('__ITALIC_')) {
-                const index = parseInt(segment.match(/\d+/)[0]);
-                const em = document.createElement('em');
-                em.textContent = parts[index].content;
-                element.appendChild(em);
-            } else if (segment) {
-                element.appendChild(document.createTextNode(segment));
-            }
-        });
+        return html;
     }
     
     /**
-     * Initialize dynamic form validation based on form schema
+     * Process markdown-like content and convert to HTML
+     */
+    processMarkdownContent(content) {
+        // Handle numbered lists (1. **Title**: Description)
+        content = content.replace(/(\d+)\.\s\*\*(.*?)\*\*:\s*(.*?)(?=\n\d+\.|\n-|$)/g, 
+            '<ol><li><strong>$2</strong>: $3</li></ol>');
+        
+        // Fix multiple consecutive ol tags
+        content = content.replace(/<\/ol>\s*<ol>/g, '');
+        
+        // Handle bullet points (- **Title**: Description)
+        content = content.replace(/(?:^|\n)-\s\*\*(.*?)\*\*:\s*(.*?)(?=\n-|$)/g, 
+            '<ul><li><strong>$1</strong>: $2</li></ul>');
+        
+        // Fix multiple consecutive ul tags  
+        content = content.replace(/<\/ul>\s*<ul>/g, '');
+        
+        // Handle standalone numbered items without the list wrapper
+        content = content.replace(/(\d+)\.\s\*\*(.*?)\*\*:\s*(.*?)(?=\n|$)/g, 
+            '<div class="numbered-item"><strong>$1. $2</strong>: $3</div>');
+        
+        // Handle standalone bold items
+        content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        // Handle line breaks
+        content = content.replace(/\n/g, '<br>');
+        
+        // Clean up extra breaks around lists
+        content = content.replace(/<br>\s*<(ol|ul|div class="numbered-item")>/g, '<$1>');
+        content = content.replace(/<\/(ol|ul)>\s*<br>/g, '</$1>');
+        
+        return content;
+    }
+    
+    /**
+     * Format job posting results - simple and clean
+     */
+    formatJobPostingResults(jobPostingText) {
+        // Just convert markdown bold to HTML and preserve line breaks
+        let content = jobPostingText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        content = content.replace(/\n\n/g, '<br><br>');
+        content = content.replace(/\n/g, '<br>');
+        
+        let html = `
+            <div class="simple-job-posting">
+                ${content}
+            </div>
+            <style>
+                .simple-job-posting {
+                    font-family: system-ui, sans-serif;
+                    line-height: 1.5;
+                    color: #333;
+                    font-size: 14px;
+                }
+                .simple-job-posting strong {
+                    color: #222;
+                    font-weight: 600;
+                }
+            </style>
+        `;
+        
+        return html;
+    }
+    
+    /**
+     * Display file processing results
+     */
+    displayFileProcessingResults(data) {
+        // Use same method as regular execution results
+        this.displayExecutionResults(data);
+    }
+    
+    /**
+     * Dynamic form validation based on form schema
      */
     initializeDynamicFormValidation() {
-        const fields = document.querySelectorAll('#agentForm [name]');
+        const formGroups = document.querySelectorAll('.form-group');
         
-        fields.forEach(field => {
-            const fieldName = field.getAttribute('name');
-            if (fieldName && fieldName !== 'csrfmiddlewaretoken') {
-                field.addEventListener('blur', () => this.validateField(fieldName));
-                field.addEventListener('input', () => this.constructor.clearFieldError(fieldName));
+        formGroups.forEach(group => {
+            const field = group.querySelector('input, select, textarea');
+            if (field) {
+                field.addEventListener('blur', () => this.validateField(field));
+                field.addEventListener('input', () => this.constructor.clearFieldError(field.id));
             }
         });
     }
     
-    validateField(fieldName) {
-        const field = document.getElementById(fieldName);
-        if (!field) return true;
+    /**
+     * Validate individual field
+     */
+    validateField(field) {
+        const value = field.value.trim();
+        const isRequired = field.hasAttribute('required');
         
-        const value = field.type === 'checkbox' ? field.checked : field.value.trim();
-        const required = field.hasAttribute('required');
-        
-        // Basic required field validation
-        if (required && (!value || value === '')) {
-            this.constructor.showFieldError(fieldName, `${fieldName.replace('_', ' ')} is required`);
+        if (isRequired && !value) {
+            this.constructor.showFieldError(field.id, 'This field is required');
             return false;
         }
         
-        // Specific validation based on field type
-        if (field.type === 'textarea' && value && value.length < 10) {
-            this.constructor.showFieldError(fieldName, 'Please provide more detailed information (at least 10 characters)');
+        // Type-specific validation
+        if (field.type === 'email' && value && !this.isValidEmail(value)) {
+            this.constructor.showFieldError(field.id, 'Please enter a valid email address');
             return false;
         }
         
-        if (field.type === 'url' && value && !this.isValidURL(value)) {
-            this.constructor.showFieldError(fieldName, 'Please enter a valid URL');
+        if (field.type === 'url' && value && !this.isValidUrl(value)) {
+            this.constructor.showFieldError(field.id, 'Please enter a valid URL');
             return false;
         }
         
-        this.constructor.clearFieldError(fieldName);
+        this.constructor.clearFieldError(field.id);
         return true;
     }
     
-    isValidURL(string) {
-        try {
-            new URL(string);
-            return true;
-        } catch (_) {
-            return false;
-        }
-    }
-    
+    /**
+     * Check if form is valid
+     */
     isFormValid() {
-        const fields = document.querySelectorAll('#agentForm [name]');
         let isValid = true;
+        const formGroups = document.querySelectorAll('.form-group');
         
-        fields.forEach(field => {
-            const fieldName = field.getAttribute('name');
-            if (fieldName && fieldName !== 'csrfmiddlewaretoken') {
-                if (!this.validateField(fieldName)) {
-                    isValid = false;
-                }
+        formGroups.forEach(group => {
+            const field = group.querySelector('input, select, textarea');
+            if (field && !this.validateField(field)) {
+                isValid = false;
             }
         });
         
@@ -479,105 +526,22 @@ class AgentsCore extends WorkflowsCore {
     }
     
     /**
-     * Handle JotForm agent execution (CyberSec Career Navigator)
+     * Email validation helper
      */
-    async handleJotFormAgent() {
-        // Check authentication and balance
-        if (!this.constructor.checkAuthentication()) return;
-        if (!this.constructor.checkBalance(this.price)) return;
-        
-        const submitBtn = document.getElementById('generateBtn');
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.textContent = '⏳ Processing Payment...';
-        }
-        
-        try {
-            // Create execution record and charge wallet via form API
-            const response = await fetch('/agents/api/form/access/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                },
-                body: JSON.stringify({
-                    agent_slug: this.agentSlug
-                })
-            });
-            
-            if (response.ok) {
-                const result = await response.json();
-                
-                // Update wallet balance
-                this.constructor.updateWalletBalance(result.new_balance);
-                
-                // Show white-label interface
-                this.showWhiteLabelInterface(result.interface_url);
-                
-                this.constructor.showToast('✅ Payment processed! Access granted to Quantum AI Career Navigator', 'success');
-                
-            } else {
-                const error = await response.json();
-                throw new Error(error.error || 'Failed to process payment');
-            }
-            
-        } catch (error) {
-            console.error('Form agent error:', error);
-            this.constructor.showToast(`❌ ${error.message}`, 'error');
-            this.resetSubmitButton();
-        }
+    isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
     }
     
     /**
-     * Show white-label interface in results container
+     * URL validation helper
      */
-    showWhiteLabelInterface(interfaceUrl) {
-        const resultsContainer = document.getElementById('resultsContainer');
-        const resultsContent = document.getElementById('resultsContent');
-        
-        if (resultsContainer && resultsContent) {
-            // Update header
-            const widgetTitle = resultsContainer.querySelector('.widget-title');
-            if (widgetTitle) {
-                widgetTitle.innerHTML = '<span class="widget-icon">🎓</span>Quantum AI Career Navigator';
-            }
-            
-            // Create white-label interface
-            resultsContent.innerHTML = `
-                <div class="career-nav-container" style="text-align: center; margin-bottom: 20px;">
-                    <h3 style="color: #0369a1; margin-bottom: 10px;">🎓 Quantum AI Career Navigator</h3>
-                    <p style="color: #6b7280; margin-bottom: 20px;">Meet Jessica, your personal AI cybersecurity career advisor. Share your goals and get expert guidance tailored to your journey.</p>
-                </div>
-                <div class="career-interface-container" style="width: 100%; min-height: 600px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-                    <iframe 
-                        src="${interfaceUrl}" 
-                        style="width: 100%; min-height: 600px; border: none; background: white;"
-                        frameborder="0"
-                        scrolling="auto"
-                        title="Quantum AI Career Navigator - Your Personal Career Advisor">
-                    </iframe>
-                </div>
-                <div class="career-footer" style="margin-top: 20px; padding: 15px; background: #f8fafc; border-radius: 8px; text-align: center;">
-                    <p style="color: #6b7280; font-size: 14px; margin: 0;">
-                        💡 <strong>Pro Tip:</strong> Be specific about your experience level and career goals for the most personalized advice from your AI advisor!
-                    </p>
-                </div>
-            `;
-            
-            // Hide action buttons since this is an interactive interface
-            const actionButtons = resultsContainer.querySelector('.results-actions');
-            if (actionButtons) {
-                actionButtons.style.display = 'none';
-            }
-            
-            // Show results container
-            resultsContainer.style.display = 'block';
-            
-            // Scroll to results
-            resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            
-            // Reset submit button
-            this.resetSubmitButton();
+    isValidUrl(url) {
+        try {
+            new URL(url);
+            return true;
+        } catch {
+            return false;
         }
     }
     
@@ -588,14 +552,34 @@ class AgentsCore extends WorkflowsCore {
         const submitBtn = document.getElementById('generateBtn');
         if (submitBtn) {
             submitBtn.disabled = false;
-            const agentSlug = document.body.getAttribute('data-agent-slug') || 'agent';
-            const agentName = agentSlug.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
-            submitBtn.textContent = `🚀 Execute ${agentName} (${this.price} AED)`;
+            const agentIcon = this.getAgentIcon();
+            submitBtn.textContent = `${agentIcon} Execute ${this.getAgentName()} (${this.price} AED)`;
         }
+    }
+    
+    /**
+     * Get agent icon (fallback to generic icon)
+     */
+    getAgentIcon() {
+        const iconMap = {
+            'social-ads-generator': '📢',
+            'job-posting-generator': '💼',
+            'pdf-summarizer': '📄',
+            'five-whys-analyzer': '❓'
+        };
+        
+        return iconMap[this.agentSlug] || '🤖';
+    }
+    
+    /**
+     * Get agent display name
+     */
+    getAgentName() {
+        return this.agentSlug.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
 }
 
-// Result action functions (global for button onclick handlers)
+// Global functions for button onclick handlers
 function copyResults() {
     const content = document.getElementById('resultsContent');
     if (content) {
@@ -616,10 +600,7 @@ function downloadResults() {
 function resetForm() {
     const form = document.getElementById('agentForm');
     if (form) {
-        // Reset form but preserve CSRF token
-        const csrfToken = form.querySelector('[name="csrfmiddlewaretoken"]').value;
         form.reset();
-        form.querySelector('[name="csrfmiddlewaretoken"]').value = csrfToken;
     }
     
     const resultsContainer = document.getElementById('resultsContainer');
@@ -629,29 +610,11 @@ function resetForm() {
     if (processingStatus) processingStatus.style.display = 'none';
     
     // Clear validation errors
-    const fields = document.querySelectorAll('#agentForm [name]');
-    fields.forEach(field => {
-        const fieldName = field.getAttribute('name');
-        if (fieldName && fieldName !== 'csrfmiddlewaretoken') {
-            WorkflowsCore.clearFieldError(fieldName);
-        }
-    });
-    
-    // Reset file upload UI components
-    const fileUploadContainers = document.querySelectorAll('.file-upload-container');
-    fileUploadContainers.forEach(container => {
-        const input = container.querySelector('.form-file-input');
-        const label = container.querySelector('.file-upload-label');
-        const selectedDiv = container.querySelector('.file-selected');
-        
-        if (input) {
-            input.value = '';
-        }
-        if (label) {
-            label.style.display = 'block';
-        }
-        if (selectedDiv) {
-            selectedDiv.style.display = 'none';
+    const formGroups = document.querySelectorAll('.form-group');
+    formGroups.forEach(group => {
+        const field = group.querySelector('input, select, textarea');
+        if (field) {
+            WorkflowsCore.clearFieldError(field.id);
         }
     });
     
@@ -662,8 +625,55 @@ function resetForm() {
     }
 }
 
-// Initialize Agents Core when DOM is ready
+// Quick Agents Panel Functions
+function toggleQuickAgents() {
+    const panel = document.getElementById('quickAgentsPanel');
+    const overlay = document.getElementById('quickAgentsOverlay');
+    
+    if (panel && overlay) {
+        const isOpen = panel.getAttribute('aria-hidden') === 'false';
+        
+        if (isOpen) {
+            // Close panel
+            panel.setAttribute('aria-hidden', 'true');
+            overlay.setAttribute('aria-hidden', 'true');
+            panel.style.transform = 'translateX(100%)';
+            overlay.style.opacity = '0';
+            overlay.style.visibility = 'hidden';
+        } else {
+            // Open panel
+            panel.setAttribute('aria-hidden', 'false');
+            overlay.setAttribute('aria-hidden', 'false');
+            panel.style.transform = 'translateX(0)';
+            overlay.style.opacity = '1';
+            overlay.style.visibility = 'visible';
+        }
+    }
+}
+
+function closeQuickAgents() {
+    const panel = document.getElementById('quickAgentsPanel');
+    const overlay = document.getElementById('quickAgentsOverlay');
+    
+    if (panel && overlay) {
+        panel.setAttribute('aria-hidden', 'true');
+        overlay.setAttribute('aria-hidden', 'true');
+        panel.style.transform = 'translateX(100%)';
+        overlay.style.opacity = '0';
+        overlay.style.visibility = 'hidden';
+    }
+}
+
+// Close panel with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeQuickAgents();
+    }
+});
+
+// Initialize AgentsCore when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize processor (data attributes set by template)
-    window.agentsCore = new AgentsCore();
+    if (document.getElementById('agentForm')) {
+        window.agentsCore = new AgentsCore();
+    }
 });
