@@ -7,7 +7,6 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db import models
 from .models import Agent, AgentExecution, ChatSession, ChatMessage
 from .serializers import AgentExecutionSerializer
 from .services import AgentFileService
@@ -63,34 +62,7 @@ def validate_webhook_url(url):
     except Exception as e:
         raise ValueError(f"Invalid webhook URL: {str(e)}")
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def agent_list(request):
-    """List all active agents with optional category filtering"""
-    agents = AgentFileService.get_active_agents()
-    
-    category = request.GET.get('category')
-    if category:
-        agents = AgentFileService.get_agents_by_category(category)
-    
-    search = request.GET.get('search')
-    if search:
-        agents = AgentFileService.search_agents(search)
-    
-    paginator = PageNumberPagination()
-    paginator.page_size = 20
-    result_page = paginator.paginate_queryset(agents, request)
-    # Return the data directly since we're working with dictionaries
-    return paginator.get_paginated_response(result_page)
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def agent_detail(request, slug):
-    """Get detailed agent information"""
-    agent = AgentFileService.get_agent_by_slug(slug)
-    if not agent or not agent.get('is_active', True):
-        return Response({'error': 'Agent not found'}, status=status.HTTP_404_NOT_FOUND)
-    return Response(agent)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

@@ -51,6 +51,19 @@ python manage.py dbshell
 python manage.py check_db
 ```
 
+### Agent Management (File-Based System)
+```bash
+# Agents are managed via JSON files - no commands needed!
+# Simply add/edit JSON files in agents/configs/agents/
+
+# View agent statistics
+python -c "
+from agents.services import AgentFileService
+stats = AgentFileService.get_agent_stats()
+print('Agent Stats:', stats)
+"
+```
+
 ### Testing
 ```bash
 # Run Django tests
@@ -98,15 +111,17 @@ gunicorn netcop_hub.wsgi:application
 ### Apps Structure
 - **authentication/**: Custom user model, email verification, password reset
 - **core/**: Homepage, error handlers, utility functions
-- **agents/**: Database-driven agent system (marketplace, execution, models, REST API)
+- **agents/**: File-based agent system (marketplace, execution history, REST API for executions)
 - **wallet/**: Stripe payments, wallet management, transactions
 
 ### Agent System (agents app)
 **Key Files:**
-- `agents/models.py`: Agent, AgentCategory, AgentExecution, ChatSession models
+- `agents/services.py`: AgentFileService - file-based agent management
+- `agents/configs/agents/`: JSON agent configuration files
+- `agents/configs/categories/`: JSON category configuration files  
+- `agents/models.py`: AgentExecution, ChatSession models (execution history)
 - `agents/views.py`: Dual integration systems and web interface views
 - `agents/templates/agents/`: Dynamic agent templates and marketplace
-- `agents/management/commands/`: Agent creation and management commands
 - `templates/career_navigator.html`: Direct access form template
 
 **Dual Integration Systems:**
@@ -168,10 +183,11 @@ For detailed agent information and creation instructions, see `docs/AGENT_CREATI
 ```
 
 ### Key Components
-**Agent Configuration (Database-driven):**
-- All agent metadata stored in database (pricing, descriptions, webhooks)
+**Agent Configuration (File-driven):**
+- All agent metadata stored in JSON files (pricing, descriptions, webhooks)
 - JSON form schemas for dynamic form generation
-- Easy to add new agents via management commands or admin interface
+- Instant agent creation by adding JSON files (no commands needed)
+- Automatic database sync for foreign key compatibility
 
 **Templates:**
 - `templates/base.html`: Main layout with navigation
@@ -184,8 +200,8 @@ For comprehensive agent creation instructions, see **`docs/AGENT_CREATION.md`**.
 
 **Quick Summary:**
 1. Create JSON config in `agents/configs/agents/your-agent-name.json`
-2. Run `python manage.py populate_agents`
-3. Agent appears in marketplace automatically
+2. Git push (or restart server locally)
+3. Agent appears in marketplace automatically - no commands needed!
 
 The platform supports 2 agent types:
 - **Webhook Agents** - N8N integration with dynamic forms
@@ -240,7 +256,7 @@ The platform supports 2 agent types:
 - **8 agents** confirmed working and tested (4 webhook + 4 direct access)
 - **6 categories** with clean, logical organization
 - **Dual integration architecture** with clear separation and documentation
-- **Streamlined agent creation** via JSON configs + `populate_agents` command
+- **Streamlined agent creation** via JSON configs (instant file-based loading)
 - **Scalable architecture** ready for 100+ agents
 
 **Current Agents:**
@@ -249,13 +265,13 @@ The platform supports 2 agent types:
 
 **Latest Changes:**
 - **Added SWOT Analysis Expert** with proper category assignment (analysis)
-- **Streamlined agent creation process** to use only JSON + `populate_agents`
+- **Streamlined agent creation process** to use only JSON files (instant loading)
 - **Separated documentation** into focused files (`docs/AGENT_CREATION.md`)
 - **Removed 10+ redundant management commands** for cleaner codebase
 - **Fixed marketplace consistency** and updated documentation
 
 **Architecture Status:**
-- **Error-free agent creation** via JSON configuration approach
+- **Error-free agent creation** via file-based JSON configuration
 - **Railway-ready deployment** with automatic agent population
 - **Consistent UI standards** across all marketplace components
 - **Comprehensive documentation** prevents common development mistakes
@@ -263,7 +279,7 @@ The platform supports 2 agent types:
 **Future Development:**
 - **New agents** should follow patterns in `docs/AGENT_CREATION.md`
 - **Use existing categories first** to avoid unnecessary proliferation
-- **JSON + populate_agents** is the only supported creation method
+- **JSON file-based approach** is the only supported creation method
 
 ---
 Last updated: 2025-01-08

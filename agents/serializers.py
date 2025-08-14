@@ -1,23 +1,9 @@
 from rest_framework import serializers
-from .models import Agent, AgentCategory, AgentExecution
-
-class AgentCategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AgentCategory
-        fields = ['id', 'name', 'slug', 'description', 'icon']
-
-class AgentSerializer(serializers.ModelSerializer):
-    category = AgentCategorySerializer(read_only=True)
-    
-    class Meta:
-        model = Agent
-        fields = [
-            'id', 'name', 'slug', 'short_description', 'description',
-            'category', 'price', 'form_schema', 'created_at'
-        ]
+from .models import AgentExecution
 
 class AgentExecutionSerializer(serializers.ModelSerializer):
-    agent = AgentSerializer(read_only=True)
+    # Note: agent field will contain the database Agent record for foreign key compatibility
+    # The actual agent data comes from files via AgentFileService
     
     class Meta:
         model = AgentExecution

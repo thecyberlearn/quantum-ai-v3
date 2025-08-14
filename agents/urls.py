@@ -30,8 +30,6 @@ urlpatterns = [
     path('api/chat/end/', views.end_chat_session, name='end_chat_session'),
     path('api/chat/export/<str:session_id>/', views.export_chat, name='export_chat'),
     
-    path('api/', views.agent_list, name='agent_list'),
-    path('api/<slug:slug>/', views.agent_detail, name='agent_detail_api'),
     
     # Generic direct access routes (must be before agent detail)
     path('<slug:slug>/access/', views.direct_access_handler, name='direct_access_handler'),
