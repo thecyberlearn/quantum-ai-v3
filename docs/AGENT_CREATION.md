@@ -1,80 +1,55 @@
 # Agent Creation Guide
 
-This guide provides comprehensive instructions for adding new agents to the Quantum Tasks AI platform.
+Modern guide for adding new agents to the Quantum Tasks AI platform using the streamlined file-based system.
 
 ## Overview
 
-Quantum Tasks AI supports **TWO DISTINCT AGENT SYSTEMS**:
+Quantum Tasks AI uses a **simple file-based agent system**:
+1. Create JSON configuration file
+2. Commit to git 
+3. Agent appears in marketplace automatically
 
-- **Webhook Agents** - N8N integrations for complex processing with dynamic forms
-- **Direct Access Agents** - External form services (JotForm, Google Forms) with embedded interfaces
+**Two Agent Types:**
+- **Webhook Agents** - N8N integrations with dynamic forms
+- **Direct Access Agents** - External forms (JotForm, etc.) with payment processing
 
-**⚡ RECOMMENDED APPROACH:** Use JSON configuration + `populate_agents` command for error-free, Railway-ready agent creation.
+## Current Agents (8 Total)
 
----
+### Webhook Agents (4)
+- **Social Ads Generator** - 6.00 AED - Social media ad creation
+- **Job Posting Generator** - 10.00 AED - Professional job postings  
+- **PDF Summarizer** - 8.00 AED - Document analysis and summarization
+- **5 Whys Analyzer** - 15.00 AED - Interactive root cause analysis
 
-## Current Agent Status
+### Direct Access Agents (4)  
+- **CyberSec Career Navigator** - FREE - Career guidance
+- **AI Brand Strategist** - FREE - Brand strategy consultation
+- **Lean Six Sigma Expert** - FREE - Process improvement
+- **SWOT Analysis Expert** - FREE - Strategic analysis
 
-**Total Agents: 8** (4 webhook + 4 direct access)  
-**Total Categories: 6**
+## Categories (6 Available)
+Use existing categories first to avoid proliferation:
 
-### Webhook Agents (N8N Integration)
-1. **Social Ads Generator** - 6.00 AED - Creates social media advertisements
-2. **Job Posting Generator** - 10.00 AED - Creates professional job postings  
-3. **PDF Summarizer** - 8.00 AED - Analyzes and summarizes PDF documents
-4. **5 Whys Analyzer** - 15.00 AED - Interactive chat-based root cause analysis
+- **`analysis`** 🧠 - Problem-solving, strategic analysis
+- **`career-education`** 🎓 - Career guidance, professional development  
+- **`document-processing`** 📄 - PDF analysis, file processing
+- **`human-resources`** 💼 - Job postings, HR automation
+- **`marketing`** 📢 - Social ads, content marketing
+- **`consulting`** 💼 - Business consultation, expert advice
 
-### Direct Access Agents (External Forms)
-1. **CyberSec Career Navigator** - FREE - Career guidance consultation
-2. **AI Brand Strategist** - FREE - Brand strategy consultation  
-3. **Lean Six Sigma Expert** - FREE - Process improvement consultation
-4. **SWOT Analysis Expert** - FREE - Strategic business analysis
-
----
-
-## 🏷️ Choose Existing Category First
-
-**IMPORTANT:** Always use existing categories before creating new ones to avoid category proliferation.
-
-### Available Categories:
-- 🧠 **`analysis`** - Problem-solving, SWOT analysis, strategic analysis tools
-- 🎓 **`career-education`** - Career guidance, educational resources, professional development
-- 📄 **`document-processing`** - PDF analysis, file processing, document tools
-- 💼 **`human-resources`** - Job postings, HR automation, talent management
-- 📢 **`marketing`** - Social ads, branding, content marketing, advertising
-- 💼 **`consulting`** - Business consultation, strategy services, expert advice
-
-**Only create new categories when absolutely necessary and logically distinct.**
-
----
-
-## 🚀 Agent Creation Workflow
-
-### System 1: Webhook Agents (N8N Integration)
-- **Use for:** Dynamic forms, server-side processing, file uploads, complex workflows
-- **Examples:** Social Ads Generator, PDF Summarizer, Job Posting Generator
-- **Flow:** Marketplace → Agent detail page → Dynamic form → N8N webhook → Results
-
-### System 2: Direct Access Agents (External Forms)
-- **Use for:** External form services (JotForm, Google Forms), consultation interfaces
-- **Examples:** SWOT Analysis Expert, CyberSec Career Navigator, AI Brand Strategist
-- **Flow:** Marketplace → Payment processing → Quantum Tasks header + embedded external form
-
----
-
-## 📝 Implementation Steps
+## Creating New Agents
 
 ### Step 1: Create JSON Configuration
 
-Create a new file in `agents/configs/agents/your-agent-name.json`:
+Add new file in `agents/configs/agents/your-agent-name.json`:
 
 #### Webhook Agent Example:
 ```json
 {
   "slug": "content-optimizer",
-  "name": "Content Optimizer",
+  "name": "Content Optimizer", 
   "short_description": "AI-powered content optimization and enhancement",
-  "description": "Enhance your content for better engagement with AI-powered optimization suggestions, tone analysis, and improvement recommendations.",
+  "description": "Enhance your content with AI-powered optimization suggestions, tone analysis, and improvement recommendations.",
   "category": "marketing",
   "price": 5.0,
   "agent_type": "form",
@@ -88,7 +63,7 @@ Create a new file in `agents/configs/agents/your-agent-name.json`:
         "required": true
       },
       {
-        "name": "content_type",
+        "name": "content_type", 
         "type": "select",
         "label": "Content Type",
         "required": true,
@@ -109,194 +84,105 @@ Create a new file in `agents/configs/agents/your-agent-name.json`:
 #### Direct Access Agent Example:
 ```json
 {
-  "slug": "business-strategist",
-  "name": "Business Strategist",
-  "short_description": "Expert business strategy consultation",
-  "description": "Get professional business strategy insights and recommendations from experienced consultants to grow your business effectively.",
+  "slug": "business-coach",
+  "name": "Business Coach",
+  "short_description": "Expert business coaching consultation", 
+  "description": "Get professional business coaching insights and strategic guidance from experienced consultants.",
   "category": "consulting",
   "price": 0.0,
-  "agent_type": "form",
+  "agent_type": "form", 
   "system_type": "direct_access",
-  "form_schema": {
-    "fields": []
-  },
-  "webhook_url": "https://agent.jotform.com/your-form-id",
+  "form_schema": {"fields": []},
+  "webhook_url": "https://form.jotform.com/your-form-id",
   "access_url_name": "agents:direct_access_handler",
   "display_url_name": "agents:direct_access_display"
 }
 ```
 
-### Step 2: Run populate_agents Command
-
+### Step 2: Commit to Git
 ```bash
-# Development
-source venv/bin/activate
-python manage.py populate_agents
-
-# Production (Railway)
-python manage.py populate_agents  # Runs automatically on deployment
+git add agents/configs/agents/your-agent-name.json
+git commit -m "Add new agent: Your Agent Name"
+git push
 ```
 
-### Step 3: Additional Setup (Direct Access Agents Only)
+### Step 3: Done! 
+- **Development:** Restart server to see new agent
+- **Production:** Railway auto-deploys and agent appears in marketplace
 
-For direct access agents that need custom templates or marketplace integration:
+## JSON Configuration Reference
 
-#### 3a. Create Custom Template (optional):
-```html
-<!-- templates/your_agent_name.html -->
-{% extends 'base.html' %}
-{% load static %}
-
-{% block title %}Your Agent Name - Quantum Tasks AI{% endblock %}
-
-{% block extra_css %}
-<style>
-.main-container { max-width: none; padding: 0; height: calc(100vh - 80px); }
-.iframe-container { width: 100%; height: 100%; }
-.iframe-container iframe { width: 100%; height: 100%; border: none; display: block; }
-.footer { display: none !important; }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="iframe-container">
-    <iframe src="{{ form_url }}" frameborder="0" scrolling="auto" title="Your Agent Name"></iframe>
-</div>
-{% endblock %}
-```
-
-#### 3b. Add Custom Views (if needed):
-Add view functions to `agents/views.py` following the pattern of existing direct access agents.
-
-#### 3c. Add URL Routes (if needed):
-Add routes to `agents/urls.py` following the pattern of existing direct access agents.
-
-#### 3d. Update Marketplace Template (if needed):
-Add button logic to `agents/templates/agents/marketplace.html` for custom marketplace behavior.
-
-**⚠️ Important**: Keep all "Try Now" buttons consistent with the format `Try Now →` (no icons or emojis).
-
-### Step 4: Setup External Services
-
-#### For Webhook Agents:
-- Create N8N workflow at the webhook URL
-- Configure webhook to accept JSON payload with `sessionId`, `message`, etc.
-
-#### For Direct Access Agents:
-- Create external form (JotForm, Google Forms, etc.)
-- Ensure form URL is accessible and properly configured
-
----
-
-## ✅ Benefits of This Approach
-
-- ✅ **Single source of truth** - JSON configs define everything
-- ✅ **Railway-ready immediately** - No manual database setup needed
-- ✅ **Error-free** - No category creation mistakes or typos
-- ✅ **Consistent** - All agents use same reliable creation process
-- ✅ **Scalable** - Easy to add 100+ agents
-- ✅ **Version controlled** - Configs are tracked in git
-
----
-
-## 🔧 Supported Form Field Types (Webhook Agents)
-
-- `text` - Single-line text input
-- `textarea` - Multi-line text input  
-- `select` - Dropdown with options array
-- `file` - File upload with drag-and-drop
-- `url` - URL input with validation
-- `checkbox` - Boolean checkbox
-
----
-
-## ⚠️ Common Mistakes to Avoid
-
-1. **Creating unnecessary categories** - Use existing ones first
-2. **Missing system_type** - Include "webhook" or "direct_access" 
-3. **Wrong access_url_name** - Empty for webhook agents, populated for direct access
-4. **Forgetting populate_agents** - Run after creating JSON config
-5. **Complex custom commands** - Use JSON + populate_agents instead
-6. **Adding icons to Try Now buttons** - Keep all marketplace buttons consistent with "Try Now →" format
-
----
-
-## 🔄 Agent Management Commands
-
-### Essential Commands:
-```bash
-# Populate all agents from JSON configs (main command)
-python manage.py populate_agents
-
-# Clean up expired chat sessions
-python manage.py cleanup_expired_sessions
-```
-
-### Development Workflow:
-1. Create JSON config file
-2. Run `populate_agents` 
-3. Test agent functionality
-4. Commit changes to git
-5. Deploy to Railway (auto-runs populate_agents)
-
----
-
-## 📊 Agent Configuration Reference
-
-### Required JSON Fields:
-- `slug` - URL-friendly identifier (kebab-case)
-- `name` - Display name  
-- `short_description` - Brief description for marketplace
-- `description` - Full description with details
-- `category` - Must match existing category slug
-- `price` - Price in AED (0.0 for free agents)
-- `agent_type` - Always "form" 
+### Required Fields:
+- `slug` - URL identifier (kebab-case)
+- `name` - Display name
+- `short_description` - Brief marketplace description  
+- `description` - Full description
+- `category` - Must match existing category
+- `price` - Price in AED (0.0 for free)
+- `agent_type` - Always "form"
 - `system_type` - "webhook" or "direct_access"
 
 ### System-Specific Fields:
 
-#### Webhook Agents:
-- `form_schema` - JSON schema defining form fields
+**Webhook Agents:**
+- `form_schema` - Form field definitions
 - `webhook_url` - N8N webhook endpoint
-- `access_url_name` - Empty string ""
-- `display_url_name` - Empty string ""
+- `access_url_name` - Empty ""  
+- `display_url_name` - Empty ""
 
-#### Direct Access Agents:
+**Direct Access Agents:**
 - `form_schema` - Usually `{"fields": []}`
-- `webhook_url` - External form URL (JotForm, etc.)
-- `access_url_name` - "agents:direct_access_handler" 
+- `webhook_url` - External form URL
+- `access_url_name` - "agents:direct_access_handler"
 - `display_url_name` - "agents:direct_access_display"
 
+## Form Field Types (Webhook Agents)
+
+- `text` - Single-line text input
+- `textarea` - Multi-line text input
+- `select` - Dropdown with options array  
+- `file` - File upload with drag-and-drop
+- `url` - URL input with validation
+- `checkbox` - Boolean checkbox
+
+## Custom Integration (Advanced)
+
+For agents needing custom behavior, add views to appropriate modules:
+
+- **API endpoints:** `agents/api_views.py`
+- **Chat functionality:** `agents/chat_views.py` 
+- **Web interfaces:** `agents/web_views.py`
+- **Direct access handlers:** `agents/direct_access_views.py`
+- **Utilities:** `agents/utils.py`
+
+Then add URL routes in `agents/urls.py` and update marketplace template if needed.
+
+## External Services
+
+### For Webhook Agents:
+- Create N8N workflow at webhook URL
+- Configure to accept JSON payload with `sessionId`, `message`, etc.
+
+### For Direct Access Agents:
+- Create external form (JotForm, Google Forms, etc.)
+- Ensure form URL is publicly accessible
+
+## Railway Deployment
+
+**Automatic Process:**
+1. ✅ Git push triggers Railway deployment
+2. ✅ Agent files are processed automatically  
+3. ✅ New agents appear in production marketplace
+4. ✅ No manual database work required
+
+## Quick Tips
+
+- **Use existing categories** - Avoid creating unnecessary new categories
+- **Keep descriptions clear** - Users should understand what the agent does
+- **Test webhook URLs** - Ensure N8N endpoints are accessible
+- **Free vs Paid** - Set price to 0.0 for free agents
+- **Consistent naming** - Use kebab-case for slugs, Title Case for names
+
 ---
 
-## 🚀 Railway Deployment
-
-When you commit changes to the repository:
-
-1. ✅ **Railway auto-deploys** new code
-2. ✅ **populate_agents runs automatically** on deployment
-3. ✅ **New agents appear** in production marketplace
-4. ✅ **Categories are created** if needed (but use existing ones first!)
-5. ✅ **No manual database work** required
-
----
-
-## 📞 Support & Documentation
-
-- **Main Documentation**: See `CLAUDE.md` for project overview
-- **Agent Issues**: Check Railway logs and database for agent status
-- **Form Problems**: Verify external form URLs are accessible
-- **Category Issues**: Use existing categories from the list above
-
----
-
-## 🚀 Quick Agent Request
-
-**For fast agent creation**, use the **Agent Request Template**:
-👉 **See `docs/AGENT_REQUEST_TEMPLATE.md`** for a simple template to request new agents
-
-Simply fill out the template and provide it to Claude Code for instant agent creation!
-
----
-
-*Last updated: 2025-01-08*
+*Last updated: 2025-01-14*
