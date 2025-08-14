@@ -4,6 +4,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, Optional
 from django.conf import settings
+from django.core.cache import cache
 import logging
 
 logger = logging.getLogger(__name__)
@@ -21,16 +22,28 @@ class AgentFileService:
     @classmethod
     def clear_cache(cls):
         """Clear all cached data - useful for testing and development"""
-        cls.get_all_agents.cache_clear()
-        cls.get_all_categories.cache_clear()
+        try:
+            cache.delete_many(['agent_configs_all', 'agent_categories_all'])
+            logger.info("Cleared all agent cache data")
+        except Exception as e:
+            logger.warning(f"Could not clear cache (cache not available): {e}")
+            # Cache may not be available in standalone scripts
     
     @classmethod
-    @lru_cache(maxsize=1)
     def get_all_categories(cls) -> List[Dict]:
         """
-        Load all agent categories from categories.json file.
+        Load all agent categories from categories.json file with enhanced caching.
         Returns list of category dictionaries with caching.
         """
+        cache_key = 'agent_categories_all'
+        try:
+            cached_categories = cache.get(cache_key)
+            if cached_categories is not None and not settings.DEBUG:
+                return cached_categories
+        except Exception:
+            # Cache not available, continue with file load
+            cached_categories = None
+            
         try:
             if not cls.CATEGORIES_CONFIG_FILE.exists():
                 logger.warning(f"Categories file not found: {cls.CATEGORIES_CONFIG_FILE}")
@@ -45,7 +58,15 @@ class AgentFileService:
             elif not isinstance(categories, list):
                 logger.error("Categories file should contain an array of categories")
                 return []
-                
+            
+            # Cache for 5 minutes in development, 1 hour in production
+            try:
+                cache_timeout = 300 if settings.DEBUG else 3600
+                cache.set(cache_key, categories, cache_timeout)
+            except Exception:
+                # Cache not available, continue without caching
+                pass
+            
             logger.info(f"Loaded {len(categories)} categories from file")
             return categories
             
@@ -54,12 +75,20 @@ class AgentFileService:
             return []
     
     @classmethod
-    @lru_cache(maxsize=1)
     def get_all_agents(cls) -> List[Dict]:
         """
-        Load all agent configurations from JSON files in the agents config directory.
+        Load all agent configurations from JSON files with enhanced caching.
         Returns list of agent dictionaries with caching.
         """
+        cache_key = 'agent_configs_all'
+        try:
+            cached_agents = cache.get(cache_key)
+            if cached_agents is not None and not settings.DEBUG:
+                return cached_agents
+        except Exception:
+            # Cache not available, continue with file load
+            cached_agents = None
+            
         agents = []
         
         try:
@@ -87,6 +116,12 @@ class AgentFileService:
                     agent_data.setdefault('access_url_name', '')
                     agent_data.setdefault('display_url_name', '')
                     
+                    # Validate agent configuration
+                    validation_errors = cls.validate_agent_config(agent_data)
+                    if validation_errors:
+                        logger.warning(f"Agent {json_file.name} has validation errors: {validation_errors}")
+                        # Still include it but log the issues
+                    
                     agents.append(agent_data)
                     
                 except json.JSONDecodeError as e:
@@ -95,6 +130,14 @@ class AgentFileService:
                 except Exception as e:
                     logger.error(f"Error loading agent from {json_file}: {str(e)}")
                     continue
+            
+            # Cache for 5 minutes in development, 1 hour in production
+            try:
+                cache_timeout = 300 if settings.DEBUG else 3600
+                cache.set(cache_key, agents, cache_timeout)
+            except Exception:
+                # Cache not available, continue without caching
+                pass
             
             logger.info(f"Loaded {len(agents)} agents from {len(json_files)} files")
             return agents
@@ -184,7 +227,7 @@ class AgentFileService:
         required_fields = ['slug', 'name', 'short_description', 'description', 'category', 'price']
         
         for field in required_fields:
-            if not agent_data.get(field):
+            if field not in agent_data or agent_data[field] in [None, '']:
                 errors.append(f"Missing required field: {field}")
         
         # Validate price is numeric
@@ -270,78 +313,3 @@ class AgentFileService:
         
         return enriched_agents
     
-    @classmethod
-    def get_or_create_agent_db_record(cls, agent_data: Dict):
-        """
-        Get or create a database Agent record for foreign key relationships.
-        This maintains compatibility with AgentExecution while using file-based configs.
-        """
-        from .models import Agent, AgentCategory
-        
-        # Get or create category
-        category_data = cls.get_category_by_slug(agent_data.get('category', 'unknown'))
-        if category_data:
-            category, _ = AgentCategory.objects.get_or_create(
-                slug=category_data['slug'],
-                defaults={
-                    'name': category_data['name'],
-                    'description': category_data.get('description', ''),
-                    'icon': category_data['icon'],
-                    'is_active': True
-                }
-            )
-        else:
-            category, _ = AgentCategory.objects.get_or_create(
-                slug='unknown',
-                defaults={
-                    'name': 'Unknown',
-                    'description': 'Unknown category',
-                    'icon': '❓',
-                    'is_active': True
-                }
-            )
-        
-        # Get or create agent
-        agent, created = Agent.objects.get_or_create(
-            slug=agent_data['slug'],
-            defaults={
-                'name': agent_data['name'],
-                'short_description': agent_data['short_description'],
-                'description': agent_data['description'],
-                'category': category,
-                'price': agent_data['price'],
-                'agent_type': agent_data.get('agent_type', 'form'),
-                'form_schema': agent_data.get('form_schema', {}),
-                'webhook_url': agent_data['webhook_url'],
-                'message_limit': agent_data.get('message_limit', 50),
-                'access_url_name': agent_data.get('access_url_name', ''),
-                'display_url_name': agent_data.get('display_url_name', ''),
-                'is_active': agent_data.get('is_active', True)
-            }
-        )
-        
-        # Update existing record if needed (sync file data to db)
-        if not created:
-            updated = False
-            for field, value in {
-                'name': agent_data['name'],
-                'short_description': agent_data['short_description'],
-                'description': agent_data['description'],
-                'price': agent_data['price'],
-                'agent_type': agent_data.get('agent_type', 'form'),
-                'form_schema': agent_data.get('form_schema', {}),
-                'webhook_url': agent_data['webhook_url'],
-                'message_limit': agent_data.get('message_limit', 50),
-                'access_url_name': agent_data.get('access_url_name', ''),
-                'display_url_name': agent_data.get('display_url_name', ''),
-                'is_active': agent_data.get('is_active', True),
-                'category': category
-            }.items():
-                if getattr(agent, field) != value:
-                    setattr(agent, field, value)
-                    updated = True
-            
-            if updated:
-                agent.save()
-        
-        return agent

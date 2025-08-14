@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Agent, AgentExecution, ChatSession, ChatMessage
+from .models import AgentExecution, ChatSession, ChatMessage
 from .serializers import AgentExecutionSerializer
 from .services import AgentFileService
 import requests
@@ -78,30 +78,19 @@ def execute_agent(request):
     if not agent_data or not agent_data.get('is_active', True):
         return Response({'error': 'Agent not found'}, status=status.HTTP_404_NOT_FOUND)
     
-    # Convert agent data to a simple object for compatibility
-    class AgentCompat:
-        def __init__(self, data):
-            self.slug = data['slug']
-            self.name = data['name']
-            self.price = float(data['price'])
-            self.webhook_url = data['webhook_url']
-            self.id = data['slug']  # Use slug as ID for file-based agents
-    
-    agent = AgentCompat(agent_data)
+    agent_price = float(agent_data['price'])
     
     # Check if user has sufficient balance (using existing wallet system)
-    if hasattr(request.user, 'has_sufficient_balance') and not request.user.has_sufficient_balance(agent.price):
+    if hasattr(request.user, 'has_sufficient_balance') and not request.user.has_sufficient_balance(agent_price):
         return Response({'error': 'Insufficient wallet balance'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    # Get or create database record for foreign key compatibility
-    agent_db_record = AgentFileService.get_or_create_agent_db_record(agent_data)
     
     # Create execution record
     execution = AgentExecution.objects.create(
-        agent=agent_db_record,
+        agent_slug=agent_data['slug'],
+        agent_name=agent_data['name'],
         user=request.user,
         input_data=input_data,
-        fee_charged=agent.price,
+        fee_charged=agent_price,
         status='pending'
     )
     
@@ -109,9 +98,9 @@ def execute_agent(request):
         # Deduct fee from user wallet (using existing wallet system)
         if hasattr(request.user, 'deduct_balance'):
             success = request.user.deduct_balance(
-                agent.price, 
-                f'{agent.name} - Execution {str(execution.id)[:8]}',
-                agent.slug
+                agent_price, 
+                f'{agent_data["name"]} - Execution {str(execution.id)[:8]}',
+                agent_data['slug']
             )
             if not success:
                 execution.status = 'failed'
@@ -121,7 +110,7 @@ def execute_agent(request):
         
         # Validate webhook URL to prevent SSRF attacks
         try:
-            validate_webhook_url(agent.webhook_url)
+            validate_webhook_url(agent_data['webhook_url'])
         except ValueError as e:
             execution.status = 'failed'
             execution.error_message = f'Invalid webhook URL: {str(e)}'
@@ -136,20 +125,20 @@ def execute_agent(request):
         session_id = f"session_{int(time.time() * 1000)}_{str(uuid.uuid4())[:8]}"
         
         # Format message text for N8N based on agent type
-        message_text = format_agent_message(agent.slug, input_data)
+        message_text = format_agent_message(agent_data['slug'], input_data)
         
         webhook_payload = {
             'sessionId': session_id,
             'message': {'text': message_text},
-            'webhookUrl': agent.webhook_url,
+            'webhookUrl': agent_data['webhook_url'],
             'executionMode': 'production',
-            'agentId': str(agent.id),
+            'agentId': agent_data['slug'],
             'executionId': str(execution.id),
             'userId': str(request.user.id)
         }
         
         response = requests.post(
-            agent.webhook_url,
+            agent_data['webhook_url'],
             json=webhook_payload,
             timeout=90,  # Increased timeout for complex processing
             headers={'Content-Type': 'application/json'}

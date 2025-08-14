@@ -6,7 +6,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django_ratelimit.decorators import ratelimit
 from django_ratelimit import UNSAFE
-from agents.models import Agent
+from agents.services import AgentFileService
 from .models import ContactSubmission
 from django.db import connection
 import logging
@@ -23,8 +23,9 @@ def homepage_view(request):
         messages.warning(request, 'Too many requests. Please wait a moment before refreshing.')
     
     try:
-        # Get featured agents for homepage from database
-        featured_agents = Agent.objects.filter(is_active=True).select_related('category')[:6]
+        # Get featured agents for homepage from files
+        all_agents = AgentFileService.get_active_agents()
+        featured_agents = all_agents[:6]  # Get first 6 agents
         
         context = {
             'user_balance': request.user.wallet_balance if request.user.is_authenticated else 0,
@@ -242,9 +243,10 @@ def health_check_view(request):
                 'response_time_ms': round((time.time() - start_time) * 1000, 2)
             }
             
-        # If database is working, get agent count from database
+        # If database is working, get agent count from files
         try:
-            agent_count = Agent.objects.filter(is_active=True).count()
+            active_agents = AgentFileService.get_active_agents()
+            agent_count = len(active_agents)
             health_data['checks']['agents'] = {
                 'status': 'healthy',
                 'active_count': agent_count
