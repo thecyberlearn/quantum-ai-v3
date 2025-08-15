@@ -39,9 +39,11 @@ Use existing categories first to avoid proliferation:
 
 ## Creating New Agents
 
-### Step 1: Create JSON Configuration
+### Only Step: Create JSON Configuration ⚡
 
 Add new file in `agents/configs/agents/your-agent-name.json`:
+
+**That's it! No other files needed.**
 
 #### Webhook Agent Example:
 ```json
@@ -99,16 +101,18 @@ Add new file in `agents/configs/agents/your-agent-name.json`:
 }
 ```
 
-### Step 2: Commit to Git
+### Step 2: Commit to Git (Optional for Production)
 ```bash
 git add agents/configs/agents/your-agent-name.json
-git commit -m "Add new agent: Your Agent Name"
+git commit -m "Add new agent: Your Agent Name 🤖 Generated with Claude Code"
 git push
 ```
 
-### Step 3: Done! 
-- **Development:** Restart server to see new agent
+### Step 3: Done! ✅
+- **Development:** Agent loads automatically (or restart: `python manage.py runserver`)
 - **Production:** Railway auto-deploys and agent appears in marketplace
+
+**No Python code, no URL routes, no templates needed!** 🎉
 
 ## JSON Configuration Reference
 
@@ -144,6 +148,46 @@ git push
 - `file` - File upload with drag-and-drop
 - `url` - URL input with validation
 - `checkbox` - Boolean checkbox
+
+## System Architecture Benefits 🚀
+
+### True File-Based System
+- **Zero Manual Coding**: Generic handlers for both agent types automatically handle everything
+- **Zero URL Configuration**: Dynamic routing based on JSON config properties  
+- **Zero Templates**: Single generic template works for all direct access agents
+- **Zero Database Setup**: Pure file-based loading with intelligent caching
+
+### Agent Type Handling
+- **Webhook Agents**: Automatically generate dynamic forms from `form_schema`
+- **Direct Access Agents**: Automatically handle payment processing + external redirect
+- **Both Types**: Work with only JSON configuration, no additional code
+
+### Development Workflow Comparison
+```bash
+# ❌ Old Complex Way (5+ steps)  
+1. Create JSON config
+2. Write Python view functions
+3. Add URL routes  
+4. Create HTML templates
+5. Update view imports
+6. Test and debug
+
+# ✅ New Simple Way (1 step)
+1. Create JSON config
+# Done! Everything else is automatic 🎉
+```
+
+### How Both Agent Types Work Now
+
+**Webhook Agents:**
+- JSON config → Dynamic form via `agent_detail_view`
+- Form submission → N8N webhook → Results display
+- No individual Python code needed
+
+**Direct Access Agents:**
+- JSON config → Generic payment handler  
+- Payment → Generic iframe display
+- No individual Python code needed
 
 ## Custom Integration (Advanced)
 

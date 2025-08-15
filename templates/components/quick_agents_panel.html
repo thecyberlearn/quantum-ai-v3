@@ -8,9 +8,11 @@
 
     <div class="quick-agents-grid">
         {% for agent in all_agents %}
-            {% if agent.slug == 'cybersec-career-navigator' %}
-                <a href="{% url 'agents:career_navigator_access' %}" class="quick-agent-card">
+            {% if agent.access_url_name and agent.display_url_name %}
+                <!-- Direct Access Agent -->
+                <a href="{% url 'agents:direct_access_handler' agent.slug %}" class="quick-agent-card">
             {% else %}
+                <!-- Webhook Agent -->
                 <a href="{% url 'agents:detail' agent.slug %}" class="quick-agent-card">
             {% endif %}
                 <div class="agent-icon">{{ agent.category.icon }}</div>

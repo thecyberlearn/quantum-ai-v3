@@ -26,14 +26,6 @@ from .web_views import (
 )
 
 from .direct_access_views import (
-    career_navigator_access,
-    career_navigator_view,
-    ai_brand_strategist_view,
-    ai_brand_strategist_access,
-    lean_six_sigma_expert_view,
-    lean_six_sigma_expert_access,
-    swot_analysis_expert_view,
-    swot_analysis_expert_access,
     direct_access_handler,
     direct_access_display
 )

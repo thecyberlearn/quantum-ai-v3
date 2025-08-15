@@ -7,15 +7,7 @@ urlpatterns = [
     # Web interface
     path('', views.agents_marketplace, name='marketplace'),
     
-    # Direct access routes
-    path('career-navigator/', views.career_navigator_view, name='career_navigator'),
-    path('career-navigator/access/', views.career_navigator_access, name='career_navigator_access'),
-    path('ai-brand-strategist/', views.ai_brand_strategist_view, name='ai_brand_strategist'),
-    path('ai-brand-strategist/access/', views.ai_brand_strategist_access, name='ai_brand_strategist_access'),
-    path('lean-six-sigma-expert/', views.lean_six_sigma_expert_view, name='lean_six_sigma_expert'),
-    path('lean-six-sigma-expert/access/', views.lean_six_sigma_expert_access, name='lean_six_sigma_expert_access'),
-    path('swot-analysis-expert/', views.swot_analysis_expert_view, name='swot_analysis_expert'),
-    path('swot-analysis-expert/access/', views.swot_analysis_expert_access, name='swot_analysis_expert_access'),
+    # Note: Direct access routes now handled by generic handlers below
     
     # API endpoints - specific URLs first to avoid slug conflicts
     path('api/execute/', views.execute_agent, name='execute_agent'),

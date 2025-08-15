@@ -7,7 +7,18 @@
   "price": 15.0,
   "agent_type": "chat",
   "system_type": "webhook",
-  "form_schema": null,
+  "form_schema": {
+    "fields": [
+      {
+        "name": "problem_description",
+        "type": "textarea",
+        "label": "Describe the problem you want to analyze",
+        "placeholder": "Describe the issue, failure, or problem you're experiencing",
+        "required": true,
+        "rows": 4
+      }
+    ]
+  },
   "webhook_url": "http://localhost:5678/webhook/5-whys-web",
   "access_url_name": "",
   "display_url_name": ""
