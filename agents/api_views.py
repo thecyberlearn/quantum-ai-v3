@@ -102,18 +102,35 @@ def execute_agent(request):
         # Store webhook response
         execution.webhook_response = response.json() if response.headers.get('content-type', '').startswith('application/json') else {'raw': response.text}
         
-        if response.status_code == 200:
+        # Check if response contains N8N error indicators
+        has_error = False
+        if response.status_code == 200 and execution.webhook_response:
+            # Check for N8N error patterns
+            if isinstance(execution.webhook_response, dict):
+                if 'errorMessage' in execution.webhook_response or 'error' in execution.webhook_response:
+                    has_error = True
+        
+        if response.status_code == 200 and not has_error:
             execution.status = 'completed'
             execution.output_data = execution.webhook_response
+            execution.completed_at = timezone.now()
+            execution.save()
+            
+            serializer = AgentExecutionSerializer(execution)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             execution.status = 'failed'
-            execution.error_message = f"Webhook returned {response.status_code}: {response.text[:500]}"
-        
-        execution.completed_at = timezone.now()
-        execution.save()
-        
-        serializer = AgentExecutionSerializer(execution)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+            if has_error:
+                error_msg = execution.webhook_response.get('errorMessage', 'Webhook execution failed')
+                execution.error_message = f"N8N Error: {error_msg[:500]}"
+            else:
+                execution.error_message = f"Webhook returned {response.status_code}: {response.text[:500]}"
+            execution.completed_at = timezone.now()
+            execution.save()
+            
+            return Response({
+                'error': 'Agent is temporarily unavailable. Please try again later.'
+            }, status=status.HTTP_400_BAD_REQUEST)
         
     except requests.RequestException as e:
         execution.status = 'failed'

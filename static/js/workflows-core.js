@@ -32,8 +32,9 @@ class WorkflowsCore {
                 position: fixed;
                 top: 20px;
                 right: 20px;
-                z-index: 10000;
+                z-index: 99999;
                 max-width: 400px;
+                pointer-events: none;
             `;
             
             // Safely append to body
@@ -61,6 +62,9 @@ class WorkflowsCore {
             display: flex;
             align-items: center;
             animation: slideIn 0.3s ease-out;
+            pointer-events: auto;
+            position: relative;
+            z-index: 100000;
         `;
         
         // Add icon and message
@@ -94,12 +98,13 @@ class WorkflowsCore {
         
         toastContainer.appendChild(toast);
         
-        // Auto-remove after 5 seconds
+        // Auto-remove after longer time for errors
+        const timeout = type === 'error' ? 8000 : 5000; // 8 seconds for errors, 5 for others
         setTimeout(() => {
             if (toast.parentElement) {
                 toast.remove();
             }
-        }, 5000);
+        }, timeout);
     }
     
     /**

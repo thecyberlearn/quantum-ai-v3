@@ -57,7 +57,7 @@ class AgentsCore extends WorkflowsCore {
         } catch (error) {
             console.error('Form submission error:', error);
             this.constructor.hideProcessing();
-            this.constructor.showToast('❌ Connection error. Please try again.', 'error');
+            this.showErrorMessage('❌ Agent is temporarily unavailable. Please try again later.');
             this.resetSubmitButton();
         }
     }
@@ -84,7 +84,7 @@ class AgentsCore extends WorkflowsCore {
         } catch (error) {
             console.error('Agent execution error:', error);
             this.constructor.hideProcessing();
-            this.constructor.showToast(`❌ ${error.message}`, 'error');
+            this.showErrorMessage('❌ Agent is temporarily unavailable. Please try again later.');
             this.resetSubmitButton();
         }
     }
@@ -542,6 +542,36 @@ class AgentsCore extends WorkflowsCore {
             return true;
         } catch {
             return false;
+        }
+    }
+    
+    /**
+     * Show error message in results container
+     */
+    showErrorMessage(message) {
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsContent = document.getElementById('resultsContent');
+        
+        if (resultsContainer && resultsContent) {
+            resultsContent.innerHTML = `
+                <div style="
+                    background: #fee2e2;
+                    border: 1px solid #fecaca;
+                    border-radius: 8px;
+                    padding: 20px;
+                    text-align: center;
+                    color: #dc2626;
+                    font-size: 16px;
+                    font-weight: 500;
+                    margin: 20px 0;
+                ">
+                    ${message}
+                </div>
+            `;
+            
+            // Show results container
+            resultsContainer.style.display = 'block';
+            resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
     
