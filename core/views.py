@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.core.mail import send_mail
 from django.conf import settings
 from django_ratelimit.decorators import ratelimit
@@ -282,3 +282,61 @@ def health_check_view(request):
     
     # Always return 200 - we're healthy if Django is running
     return JsonResponse(health_data, status=200)
+
+
+# Simple external service wrapper configurations
+EXTERNAL_PAGES = {
+    'event-invitation': {
+        'title': 'Event Registration',
+        'description': 'Register for our upcoming event',
+        'external_url': 'https://form.jotform.com/252214924850455',
+        'template': 'iframe',  # iframe, landing, or redirect
+    },
+    'demo-form': {
+        'title': 'Product Demo Request', 
+        'description': 'Schedule a personalized demo of our platform',
+        'external_url': 'https://calendly.com/your-demo-link',
+        'template': 'landing',
+    },
+    'consultation': {
+        'title': 'Free Consultation',
+        'external_url': 'https://www.jotform.com/consultation-form',
+        'template': 'redirect',
+    },
+}
+
+
+@ratelimit(key='ip', rate='30/m', method='GET', block=False)
+def external_page_view(request, page_name):
+    """
+    Simple external service wrapper view.
+    Just renders templates with external URLs - no database needed.
+    """
+    # Check rate limiting
+    if getattr(request, 'limited', False):
+        logger.warning(f"External page rate limit exceeded for IP {request.META.get('REMOTE_ADDR')}")
+        messages.warning(request, 'Too many requests. Please wait a moment.')
+        return redirect('core:homepage')
+    
+    # Get page config
+    page_config = EXTERNAL_PAGES.get(page_name)
+    if not page_config:
+        raise Http404("Page not found")
+    
+    # Choose template
+    template_map = {
+        'iframe': 'wrapper/iframe.html',
+        'landing': 'wrapper/landing.html', 
+        'redirect': 'wrapper/redirect.html',
+    }
+    
+    template_name = template_map.get(page_config['template'], 'wrapper/iframe.html')
+    
+    context = {
+        'page_title': page_config['title'],
+        'page_description': page_config.get('description', ''),
+        'external_url': page_config['external_url'],
+        'user_balance': request.user.wallet_balance if request.user.is_authenticated else 0,
+    }
+    
+    return render(request, template_name, context)

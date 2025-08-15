@@ -1,0 +1,16 @@
+{
+  "slug": "demo-assistant",
+  "name": "Demo AI Assistant",
+  "short_description": "Demo AI assistant for testing direct access agent functionality",
+  "description": "A simple demo AI assistant that showcases the direct access agent system. Perfect for testing and demonstration purposes.",
+  "category": "analysis",
+  "price": 0.0,
+  "agent_type": "form",
+  "system_type": "direct_access",
+  "form_schema": {
+    "fields": []
+  },
+  "webhook_url": "https://agent.jotform.com/019865a942ab7fa5b5b743a5fd2abe09e345",
+  "access_url_name": "agents:direct_access_handler",
+  "display_url_name": "agents:direct_access_display"
+}

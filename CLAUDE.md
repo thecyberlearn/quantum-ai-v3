@@ -212,6 +212,57 @@ The platform supports 2 agent types:
 - **Webhook Agents** - N8N integration with dynamic forms
 - **Direct Access Agents** - External forms (JotForm, etc.) with embedded interfaces
 
+## External Service Wrappers
+
+**Simple template-based system for event invitations, demos, and external forms:**
+
+**Configuration:** Edit `EXTERNAL_PAGES` dict in `core/views.py`:
+```python
+EXTERNAL_PAGES = {
+    'event-invitation': {
+        'title': 'Event Registration',
+        'external_url': 'https://form.jotform.com/252214924850455',
+        'template': 'iframe',  # iframe, landing, or redirect
+    }
+}
+```
+
+**Templates Available:**
+- `templates/wrapper/iframe.html` - Full-screen iframe embed
+- `templates/wrapper/landing.html` - Branded landing page with embed
+- `templates/wrapper/redirect.html` - Auto-redirect with countdown
+
+**Access:** `/{page-name}/` (e.g., `/event-invitation/`)
+
+**Features:**
+- Rate limiting protection
+- Consistent branding
+- Mobile responsive
+- No database needed
+
+## Social Media Integration
+
+**Rich social media previews implemented in `templates/base.html`:**
+
+**Open Graph Tags:**
+- `og:title` - Page title for social sharing
+- `og:description` - Page description  
+- `og:image` - Preview image (`static/img/social-preview.png`)
+- `og:url` - Canonical page URL
+- `og:site_name` - "Quantum Tasks AI"
+
+**Twitter Card Tags:**
+- `twitter:card` - Large image format
+- `twitter:title/description/image` - Twitter-specific metadata
+
+**Custom Per-Page:** Override blocks in templates:
+```django
+{% block og_title %}Custom Page Title{% endblock %}
+{% block meta_description %}Custom description{% endblock %}
+```
+
+**Result:** Rich previews on WhatsApp, Discord, Twitter, LinkedIn with branded image and professional descriptions.
+
 ## Production Deployment
 
 **Railway Configuration:**
@@ -269,6 +320,8 @@ The platform supports 2 agent types:
 - **Direct Access Agents (4)**: CyberSec Career Navigator, AI Brand Strategist, Lean Six Sigma Expert, SWOT Analysis Expert
 
 **Latest Changes:**
+- **External service wrapper system** - Simple template-based system for JotForm, Zapier, event invitations
+- **Social media meta tags** - Rich previews with Open Graph and Twitter Card tags
 - **View separation completed** - Split large views.py into focused modules (api, chat, web, direct access)
 - **Restored digital-branding.css** from git history with proper design system integration
 - **Added SWOT Analysis Expert** with proper category assignment (analysis)

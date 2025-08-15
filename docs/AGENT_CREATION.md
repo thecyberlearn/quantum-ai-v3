@@ -156,25 +156,29 @@ git push
 - **Zero URL Configuration**: Dynamic routing based on JSON config properties  
 - **Zero Templates**: Single generic template works for all direct access agents
 - **Zero Database Setup**: Pure file-based loading with intelligent caching
+- **Zero Error Handling**: Automatic webhook error detection and user feedback
 
 ### Agent Type Handling
 - **Webhook Agents**: Automatically generate dynamic forms from `form_schema`
 - **Direct Access Agents**: Automatically handle payment processing + external redirect
 - **Both Types**: Work with only JSON configuration, no additional code
+- **Error Handling**: Automatically detects webhook failures (OpenAI quota, N8N issues, timeouts) and shows user-friendly messages
 
 ### Development Workflow Comparison
 ```bash
-# ❌ Old Complex Way (5+ steps)  
+# ❌ Old Complex Way (6+ steps)  
 1. Create JSON config
 2. Write Python view functions
 3. Add URL routes  
 4. Create HTML templates
 5. Update view imports
-6. Test and debug
+6. Write error handling code
+7. Test and debug
 
 # ✅ New Simple Way (1 step)
 1. Create JSON config
 # Done! Everything else is automatic 🎉
+# - Forms, routing, error handling, user feedback all automated
 ```
 
 ### How Both Agent Types Work Now
@@ -182,12 +186,52 @@ git push
 **Webhook Agents:**
 - JSON config → Dynamic form via `agent_detail_view`
 - Form submission → N8N webhook → Results display
+- Automatic error detection and user feedback
 - No individual Python code needed
 
 **Direct Access Agents:**
 - JSON config → Generic payment handler  
 - Payment → Generic iframe display
 - No individual Python code needed
+
+## Automatic Error Handling 🛡️
+
+The platform now includes **completely automated error handling** for all agents:
+
+### What's Automatically Handled
+- **N8N Webhook Failures**: Service down, timeouts, configuration errors
+- **AI Service Limits**: OpenAI quota exceeded, rate limits, API errors  
+- **Network Issues**: Connection failures, DNS problems, timeouts
+- **Invalid Responses**: Malformed data, unexpected formats
+
+### User Experience
+- **Clear Error Messages**: "Agent is temporarily unavailable. Please try again later."
+- **Persistent Display**: Error shown in results area (won't disappear like notifications)
+- **No Technical Jargon**: Simple, friendly language instead of HTTP status codes
+
+### Developer Benefits
+- **Zero Configuration**: No error handling code needed in JSON configs
+- **Automatic Detection**: System distinguishes between success and various failure types
+- **Consistent UX**: All agents have identical error handling behavior
+- **Debug Friendly**: Technical errors still logged to console for troubleshooting
+
+### Examples of Handled Errors
+```json
+// N8N Response (OpenAI quota exceeded)
+{
+  "errorMessage": "You exceeded your current quota",
+  "errorDetails": {"httpCode": "429"}
+}
+// → User sees: "Agent is temporarily unavailable. Please try again later."
+
+// HTTP 500 from webhook
+// → User sees: "Agent is temporarily unavailable. Please try again later."
+
+// Connection timeout
+// → User sees: "Agent is temporarily unavailable. Please try again later."
+```
+
+All technical details are logged for debugging, but users always see the same friendly message.
 
 ## Custom Integration (Advanced)
 
@@ -229,4 +273,4 @@ Then add URL routes in `agents/urls.py` and update marketplace template if neede
 
 ---
 
-*Last updated: 2025-01-14*
+*Last updated: 2025-01-15*
