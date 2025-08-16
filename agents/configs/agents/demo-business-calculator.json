@@ -1,0 +1,16 @@
+{
+  "slug": "demo-business-calculator",
+  "name": "Demo Business Calculator",
+  "short_description": "Free business calculation tools and financial planning demo",
+  "description": "Access a comprehensive business calculator suite for financial planning, ROI calculations, and business metrics analysis. Perfect for entrepreneurs and business professionals who need quick calculations and planning tools.",
+  "category": "consulting",
+  "price": 0.0,
+  "agent_type": "form",
+  "system_type": "direct_access",
+  "form_schema": {
+    "fields": []
+  },
+  "webhook_url": "https://calculator.net/business-calculator.html",
+  "access_url_name": "agents:direct_access_handler",
+  "display_url_name": "agents:direct_access_display"
+}
