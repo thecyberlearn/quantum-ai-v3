@@ -292,6 +292,12 @@ EXTERNAL_PAGES = {
         'external_url': 'https://form.jotform.com/252214924850455',
         'template': 'iframe',  # iframe, landing, or redirect
     },
+    'cea': {
+        'title': 'CEA Registration',
+        'description': 'Access CEA registration form',
+        'external_url': 'https://agent.jotform.com/0198a8860b46796895f2a40367a6cea4df0c',
+        'template': 'iframe',
+    },
     'demo-form': {
         'title': 'Product Demo Request', 
         'description': 'Schedule a personalized demo of our platform',
