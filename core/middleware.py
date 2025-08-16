@@ -23,21 +23,45 @@ class SecurityHeadersMiddleware:
         
         # Content Security Policy
         if not settings.DEBUG:
-            # Production CSP - Strict security
-            csp_policy = (
-                "default-src 'self'; "
-                "script-src 'self' 'unsafe-inline' https://js.stripe.com https://checkout.stripe.com; "
-                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-                "font-src 'self' https://fonts.gstatic.com; "
-                "img-src 'self' data: https: blob:; "
-                "connect-src 'self' https://api.stripe.com https://checkout.stripe.com; "
-                "frame-src 'self' https://js.stripe.com https://hooks.stripe.com; "
-                "object-src 'none'; "
-                "base-uri 'self'; "
-                "form-action 'self'; "
-                "frame-ancestors 'none'; "
-                "upgrade-insecure-requests;"
+            # Check if this is a direct access agent page that needs external frames
+            is_direct_access_page = (
+                '/agents/' in request.path and 
+                request.path.count('/') >= 3 and
+                not request.path.endswith('/api/execute/')
             )
+            
+            if is_direct_access_page:
+                # Relaxed CSP for direct access agent pages (external forms)
+                csp_policy = (
+                    "default-src 'self'; "
+                    "script-src 'self' 'unsafe-inline' https://js.stripe.com https://checkout.stripe.com https://form.jotform.com https://www.jotform.com https://agent.jotform.com https://cdn.jotfor.ms; "
+                    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://form.jotform.com https://www.jotform.com https://agent.jotform.com https://cdn.jotfor.ms; "
+                    "font-src 'self' https://fonts.gstatic.com https://form.jotform.com https://www.jotform.com https://agent.jotform.com https://cdn.jotfor.ms; "
+                    "img-src 'self' data: https: blob:; "
+                    "connect-src 'self' https: wss: ws:; "
+                    "frame-src 'self' https: http:; "
+                    "child-src 'self' https: http:; "
+                    "object-src 'none'; "
+                    "base-uri 'self'; "
+                    "form-action 'self' https: http:; "
+                    "frame-ancestors 'none';"
+                )
+            else:
+                # Production CSP - Strict security for other pages
+                csp_policy = (
+                    "default-src 'self'; "
+                    "script-src 'self' 'unsafe-inline' https://js.stripe.com https://checkout.stripe.com; "
+                    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                    "font-src 'self' https://fonts.gstatic.com; "
+                    "img-src 'self' data: https: blob:; "
+                    "connect-src 'self' https://api.stripe.com https://checkout.stripe.com; "
+                    "frame-src 'self' https://js.stripe.com https://hooks.stripe.com; "
+                    "object-src 'none'; "
+                    "base-uri 'self'; "
+                    "form-action 'self'; "
+                    "frame-ancestors 'none'; "
+                    "upgrade-insecure-requests;"
+                )
         else:
             # Development CSP - More permissive for development tools
             csp_policy = (
@@ -47,14 +71,13 @@ class SecurityHeadersMiddleware:
                 "font-src 'self' https://fonts.gstatic.com; "
                 "img-src 'self' data: https: blob:; "
                 "connect-src 'self' ws: wss: https:; "
-                "frame-src 'self' https:;"
+                "frame-src 'self' https: http:;"
             )
         
         response['Content-Security-Policy'] = csp_policy
         
         # Additional Security Headers
         response['X-Content-Type-Options'] = 'nosniff'
-        response['X-Frame-Options'] = 'DENY'
         response['X-XSS-Protection'] = '1; mode=block'
         response['Referrer-Policy'] = 'strict-origin-when-cross-origin'
         response['Permissions-Policy'] = (
@@ -62,6 +85,14 @@ class SecurityHeadersMiddleware:
             'payment=(self "https://js.stripe.com"), '
             'usb=(), magnetometer=(), gyroscope=(), accelerometer=()'
         )
+        
+        # X-Frame-Options handling
+        if request.path.endswith('/display/') and '/agents/' in request.path:
+            # Allow direct access agent display pages to be framed (they contain external iframes)
+            response['X-Frame-Options'] = 'SAMEORIGIN'
+        else:
+            # Deny framing for all other pages
+            response['X-Frame-Options'] = 'DENY'
         
         # Security for critical pages
         if request.path.startswith('/admin/') or request.path.startswith('/wallet/'):
