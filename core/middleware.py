@@ -18,100 +18,12 @@ class SecurityHeadersMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
     
-    def _needs_external_iframe_support(self, request):
-        """
-        Detect if this page needs external iframe support for CSP.
-        Covers direct access agents, external wrapper pages, and future additions.
-        """
-        path = request.path
-        
-        # Direct access agent display pages
-        if '/agents/' in path and path.endswith('/display/'):
-            return True
-        
-        # External wrapper pages (events, forms, etc.)
-        # Pattern: /<page_name>/ where page_name is in EXTERNAL_PAGES
-        if path.count('/') == 2 and not path.startswith('/admin/') and not path.startswith('/auth/') and not path.startswith('/wallet/') and not path.startswith('/agents/'):
-            # Import here to avoid circular imports
-            from .views import EXTERNAL_PAGES
-            page_name = path.strip('/')
-            if page_name in EXTERNAL_PAGES:
-                config = EXTERNAL_PAGES[page_name]
-                # Only iframe and landing templates need CSP relaxation
-                return config.get('template') in ['iframe', 'landing']
-        
-        return False
 
     def __call__(self, request):
         response = self.get_response(request)
         
-        # Content Security Policy
-        if not settings.DEBUG:
-            # Check if this page needs external iframe support
-            is_external_iframe_page = self._needs_external_iframe_support(request)
-            
-            if is_external_iframe_page:
-                # Relaxed CSP for pages with external iframes (agents, events, forms, etc.)
-                # Includes common external service domains for future-proofing
-                csp_policy = (
-                    "default-src 'self'; "
-                    "script-src 'self' 'unsafe-inline' https://js.stripe.com https://checkout.stripe.com "
-                    "https://form.jotform.com https://www.jotform.com https://agent.jotform.com https://cdn.jotfor.ms "
-                    "https://calendly.com https://assets.calendly.com "
-                    "https://www.googletagmanager.com https://www.google-analytics.com "
-                    "https://typeform.com https://*.typeform.com "
-                    "https://airtable.com https://*.airtable.com "
-                    "https://hubspot.com https://*.hubspot.com "
-                    "https://zapier.com https://*.zapier.com; "
-                    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com "
-                    "https://form.jotform.com https://www.jotform.com https://agent.jotform.com https://cdn.jotfor.ms "
-                    "https://calendly.com https://assets.calendly.com "
-                    "https://typeform.com https://*.typeform.com "
-                    "https://airtable.com https://*.airtable.com "
-                    "https://hubspot.com https://*.hubspot.com "
-                    "https://zapier.com https://*.zapier.com; "
-                    "font-src 'self' https://fonts.gstatic.com "
-                    "https://form.jotform.com https://www.jotform.com https://agent.jotform.com https://cdn.jotfor.ms "
-                    "https://calendly.com https://assets.calendly.com "
-                    "https://typeform.com https://*.typeform.com; "
-                    "img-src 'self' data: https: blob:; "
-                    "connect-src 'self' https: wss: ws:; "
-                    "frame-src 'self' https: http:; "
-                    "child-src 'self' https: http:; "
-                    "object-src 'none'; "
-                    "base-uri 'self'; "
-                    "form-action 'self' https: http:; "
-                    "frame-ancestors 'none';"
-                )
-            else:
-                # Production CSP - Strict security for other pages
-                csp_policy = (
-                    "default-src 'self'; "
-                    "script-src 'self' 'unsafe-inline' https://js.stripe.com https://checkout.stripe.com; "
-                    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-                    "font-src 'self' https://fonts.gstatic.com; "
-                    "img-src 'self' data: https: blob:; "
-                    "connect-src 'self' https://api.stripe.com https://checkout.stripe.com; "
-                    "frame-src 'self' https://js.stripe.com https://hooks.stripe.com; "
-                    "object-src 'none'; "
-                    "base-uri 'self'; "
-                    "form-action 'self'; "
-                    "frame-ancestors 'none'; "
-                    "upgrade-insecure-requests;"
-                )
-        else:
-            # Development CSP - More permissive for development tools
-            csp_policy = (
-                "default-src 'self' 'unsafe-inline' 'unsafe-eval'; "
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; "
-                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-                "font-src 'self' https://fonts.gstatic.com; "
-                "img-src 'self' data: https: blob:; "
-                "connect-src 'self' ws: wss: https:; "
-                "frame-src 'self' https: http:;"
-            )
-        
-        response['Content-Security-Policy'] = csp_policy
+        # Note: CSP removed - Django's built-in security + input validation provides better protection
+        # Complex CSP was causing more issues than security benefits
         
         # Additional Security Headers
         response['X-Content-Type-Options'] = 'nosniff'
@@ -123,23 +35,18 @@ class SecurityHeadersMiddleware:
             'usb=(), magnetometer=(), gyroscope=(), accelerometer=()'
         )
         
-        # X-Frame-Options handling
-        needs_iframe_support = is_external_iframe_page if not settings.DEBUG else self._needs_external_iframe_support(request)
-        if needs_iframe_support:
-            # Allow external iframe pages to be framed (they contain external iframes)
+        # X-Frame-Options handling - Simple and effective
+        if (request.path.endswith('/display/') and '/agents/' in request.path) or \
+           (request.path.count('/') == 2 and not request.path.startswith(('/admin/', '/auth/', '/wallet/', '/agents/'))):
+            # Allow iframe embedding for agent display pages and external wrapper pages
             response['X-Frame-Options'] = 'SAMEORIGIN'
         else:
             # Deny framing for all other pages
             response['X-Frame-Options'] = 'DENY'
         
-        # Special handling for static assets (og-image, etc.)
+        # Optimize static asset serving
         if request.path.startswith('/static/'):
-            # Allow social media scrapers to access og-image and other static assets
-            response['X-Frame-Options'] = 'SAMEORIGIN'
-            response['Cache-Control'] = 'public, max-age=31536000'  # 1 year cache
-            # Remove CSP for static assets to ensure accessibility
-            if 'Content-Security-Policy' in response:
-                del response['Content-Security-Policy']
+            response['Cache-Control'] = 'public, max-age=31536000'  # 1 year cache for static assets
         
         # Security for critical pages
         elif request.path.startswith('/admin/') or request.path.startswith('/wallet/'):
