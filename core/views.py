@@ -284,6 +284,11 @@ def health_check_view(request):
     return JsonResponse(health_data, status=200)
 
 
+def test_og_view(request):
+    """Test page for debugging social media Open Graph previews."""
+    return render(request, 'test_og.html')
+
+
 # Simple external service wrapper configurations
 EXTERNAL_PAGES = {
     'event': {

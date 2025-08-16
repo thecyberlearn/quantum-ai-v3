@@ -132,8 +132,17 @@ class SecurityHeadersMiddleware:
             # Deny framing for all other pages
             response['X-Frame-Options'] = 'DENY'
         
+        # Special handling for static assets (og-image, etc.)
+        if request.path.startswith('/static/'):
+            # Allow social media scrapers to access og-image and other static assets
+            response['X-Frame-Options'] = 'SAMEORIGIN'
+            response['Cache-Control'] = 'public, max-age=31536000'  # 1 year cache
+            # Remove CSP for static assets to ensure accessibility
+            if 'Content-Security-Policy' in response:
+                del response['Content-Security-Policy']
+        
         # Security for critical pages
-        if request.path.startswith('/admin/') or request.path.startswith('/wallet/'):
+        elif request.path.startswith('/admin/') or request.path.startswith('/wallet/'):
             response['X-Frame-Options'] = 'DENY'
             response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
             response['Pragma'] = 'no-cache'
