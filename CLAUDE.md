@@ -247,7 +247,7 @@ EXTERNAL_PAGES = {
 **Open Graph Tags:**
 - `og:title` - Page title for social sharing
 - `og:description` - Page description  
-- `og:image` - Preview image (`static/img/social-preview.png`)
+- `og:image` - Preview image (`static/img/og-image.png`)
 - `og:url` - Canonical page URL
 - `og:site_name` - "Quantum Tasks AI"
 
@@ -320,8 +320,8 @@ EXTERNAL_PAGES = {
 - **Direct Access Agents (4)**: CyberSec Career Navigator, AI Brand Strategist, Lean Six Sigma Expert, SWOT Analysis Expert
 
 **Latest Changes:**
+- **Social media integration complete** - Rich previews with branded og-image.png
 - **External service wrapper system** - Simple template-based system for JotForm, Zapier, event invitations
-- **Social media meta tags** - Rich previews with Open Graph and Twitter Card tags
 - **View separation completed** - Split large views.py into focused modules (api, chat, web, direct access)
 - **Restored digital-branding.css** from git history with proper design system integration
 - **Added SWOT Analysis Expert** with proper category assignment (analysis)
