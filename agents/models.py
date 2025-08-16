@@ -70,6 +70,8 @@ class ChatSession(models.Model):
             models.Index(fields=['session_id']),
             models.Index(fields=['agent_slug', '-created_at']),
             models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['agent_slug', 'user', 'status']),  # For active session lookups
+            models.Index(fields=['status', 'expires_at']),  # For cleanup operations
         ]
     
     def __str__(self):
@@ -107,6 +109,7 @@ class ChatMessage(models.Model):
         ordering = ['timestamp']
         indexes = [
             models.Index(fields=['session', 'timestamp']),
+            models.Index(fields=['session', 'message_type']),  # For message counts by type
         ]
     
     def __str__(self):

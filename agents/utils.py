@@ -5,12 +5,16 @@ Contains webhook validation, message formatting, and other helper functions.
 
 import ipaddress
 from urllib.parse import urlparse
+from django.conf import settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def validate_webhook_url(url):
     """
     Validate webhook URL to prevent SSRF attacks.
-    Only allows HTTPS URLs to external, non-private networks.
+    Implements strict security controls with special handling for development.
     """
     try:
         parsed = urlparse(url)
@@ -24,25 +28,69 @@ def validate_webhook_url(url):
         if not hostname:
             raise ValueError("Invalid hostname in URL")
         
-        # For localhost development, allow localhost URLs first
-        if hostname in ['localhost', '127.0.0.1'] and parsed.port in [5678, 8000, 8080]:
-            return True  # Allow N8N development server
+        # Production security: Only HTTPS allowed
+        if not settings.DEBUG and parsed.scheme != 'https':
+            raise ValueError("Only HTTPS URLs allowed in production")
+        
+        # Block dangerous localhost access in production
+        if not settings.DEBUG:
+            # Block ALL localhost/internal access in production
+            localhost_patterns = [
+                'localhost', '127.0.0.1', '0.0.0.0', '::1', 
+                'local', 'internal', 'private'
+            ]
+            if any(pattern in hostname.lower() for pattern in localhost_patterns):
+                raise ValueError("Localhost/internal addresses not allowed in production")
+        
+        # Development mode: Allow specific localhost ports for N8N
+        if settings.DEBUG and hostname in ['localhost', '127.0.0.1']:
+            allowed_dev_ports = [5678, 8000, 8080, 3000]  # Common development ports
+            if parsed.port in allowed_dev_ports:
+                logger.info(f"Development mode: Allowing localhost URL {url}")
+                return True
         
         # Check if hostname is an IP address
         try:
             ip = ipaddress.ip_address(hostname)
-            # Block private, loopback, and reserved IP ranges
-            if (ip.is_private or ip.is_loopback or ip.is_reserved or 
-                ip.is_link_local or ip.is_multicast):
-                raise ValueError("Internal/private IP addresses are not allowed")
+            
+            # Block all private/internal IPs in production
+            if not settings.DEBUG:
+                if (ip.is_private or ip.is_loopback or ip.is_reserved or 
+                    ip.is_link_local or ip.is_multicast or ip.is_unspecified):
+                    raise ValueError("Internal/private IP addresses not allowed in production")
+            
+            # In development, only allow specific ranges
+            elif settings.DEBUG:
+                if ip.is_loopback:
+                    # Allow loopback only for specific ports
+                    allowed_dev_ports = [5678, 8000, 8080, 3000]
+                    if parsed.port not in allowed_dev_ports:
+                        raise ValueError(f"Loopback IP only allowed on ports {allowed_dev_ports}")
+                elif (ip.is_private or ip.is_reserved or ip.is_link_local or 
+                      ip.is_multicast or ip.is_unspecified):
+                    raise ValueError("Internal/private IP addresses not allowed")
+                    
         except ValueError as e:
             if "does not appear to be an IPv4 or IPv6 address" not in str(e):
                 raise  # Re-raise if it's not just a "not an IP" error
-            # If it's not an IP, it's a domain name - that's fine
-            
+            # If it's not an IP, it's a domain name - continue validation
+        
+        # Additional domain validation for production
+        if not settings.DEBUG:
+            # Block suspicious domain patterns
+            suspicious_patterns = [
+                '.local', '.internal', '.private', '.corp', '.lan',
+                'metadata', 'instance-data', 'user-data'
+            ]
+            if any(pattern in hostname.lower() for pattern in suspicious_patterns):
+                raise ValueError(f"Suspicious domain pattern detected: {hostname}")
+        
+        # Log successful validation
+        logger.info(f"Webhook URL validated successfully: {url}")
         return True
         
     except Exception as e:
+        logger.warning(f"Webhook URL validation failed for {url}: {str(e)}")
         raise ValueError(f"Invalid webhook URL: {str(e)}")
 
 

@@ -1,5 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
+import secrets
+import getpass
 
 User = get_user_model()
 
@@ -7,11 +9,43 @@ User = get_user_model()
 class Command(BaseCommand):
     help = 'Check and fix admin user status'
     
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--password',
+            type=str,
+            help='Admin password (if not provided, will generate secure random password)'
+        )
+        parser.add_argument(
+            '--prompt-password',
+            action='store_true',
+            help='Prompt for password input (secure)'
+        )
+        parser.add_argument(
+            '--check-only',
+            action='store_true',
+            help='Only check user status, do not reset password'
+        )
+    
     def handle(self, *args, **options):
         # Check both possible admin emails (preferred email first)
         possible_emails = ['admin@quantumtaskai.com', 'admin@netcop.ai']
         username = 'admin'
-        password = 'P9cKE9G$R%ni#p'
+        
+        # Secure password handling
+        if options['check_only']:
+            password = None
+        elif options['prompt_password']:
+            password = getpass.getpass("Enter admin password: ")
+            if not password:
+                self.stdout.write(self.style.ERROR("Password cannot be empty"))
+                return
+        elif options['password']:
+            password = options['password']
+        else:
+            # Generate secure random password
+            password = secrets.token_urlsafe(16)
+            self.stdout.write(f"🔐 Generated secure password: {password}")
+            self.stdout.write("⚠️  SAVE THIS PASSWORD SECURELY - it will not be shown again!")
         
         user = None
         found_email = None
@@ -42,17 +76,21 @@ class Command(BaseCommand):
                 user.save()
                 self.stdout.write("🔧 Fixed user permissions")
             
-            # Reset password to ensure it's correct
-            user.set_password(password)
-            user.save()
-            self.stdout.write("🔑 Password reset successfully")
+            # Reset password to ensure it's correct (only if password provided)
+            if password:
+                user.set_password(password)
+                user.save()
+                self.stdout.write("🔑 Password reset successfully")
             
             # Show login instructions
             self.stdout.write("\n📝 Login Instructions:")
             self.stdout.write(f"URL: https://www.quantumtaskai.com/admin/")
             self.stdout.write(f"Email: {found_email}")
             self.stdout.write(f"Username: {username}")
-            self.stdout.write(f"Password: {password}")
+            if password:
+                self.stdout.write(f"Password: {password}")
+            else:
+                self.stdout.write("Password: (not changed - use existing password)")
             
         else:
             self.stdout.write("❌ Admin user not found! Creating new admin user...")

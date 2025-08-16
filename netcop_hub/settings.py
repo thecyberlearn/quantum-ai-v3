@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 from decouple import config
 import sys
+import logging.handlers
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -99,6 +100,8 @@ if DEBUG:
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'core.middleware.SecurityHeadersMiddleware',  # Custom security headers and CSP
+    'core.middleware.SecurityMonitoringMiddleware',  # Security monitoring
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -117,21 +120,37 @@ if DEBUG:
     except ImportError:
         pass
 
-# Security Headers
+# Security Headers - Applied globally
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 
 # Production security settings (applied when DEBUG=False)
 if not DEBUG:
+    # HTTPS and HSTS Configuration
     SECURE_SSL_REDIRECT = True
     SECURE_HSTS_SECONDS = 31536000  # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+    
+    # Cookie Security
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     CSRF_COOKIE_HTTPONLY = True
     SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    CSRF_COOKIE_SAMESITE = 'Lax'
+    
+    # Additional Security Headers for Production
+    SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
+    
+# Development security settings
+else:
+    # Allow more relaxed settings for development
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SECURE_SSL_REDIRECT = False
 
 ROOT_URLCONF = 'netcop_hub.urls'
 
@@ -367,13 +386,19 @@ except (ImportError, Exception):
 # Session Configuration
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
-SESSION_COOKIE_AGE = 3600  # 1 hour
-SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_AGE = 7200  # 2 hours
+SESSION_SAVE_EVERY_REQUEST = False  # Performance optimization
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_NAME = 'quantumtaskai_sessionid'  # Custom session name for security
 
 # Authentication URLs
 LOGIN_URL = '/auth/login/'
 LOGIN_REDIRECT_URL = '/admin/'  # Redirect to admin after admin login
 LOGOUT_REDIRECT_URL = '/'
+
+# Ensure logs directory exists
+import os
+os.makedirs(BASE_DIR / 'logs', exist_ok=True)
 
 # Logging Configuration
 LOGGING = {
@@ -400,6 +425,14 @@ LOGGING = {
             'level': 'DEBUG' if DEBUG else 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
+        },
+        'security_file': {
+            'level': 'WARNING',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'security.log',
+            'maxBytes': 1024*1024*5,  # 5MB
+            'backupCount': 10,
+            'formatter': 'verbose',
         },
     },
     'root': {
@@ -428,8 +461,8 @@ LOGGING = {
             'propagate': False,
         },
         'core.security': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
+            'handlers': ['console', 'file', 'security_file'],
+            'level': 'WARNING',
             'propagate': False,
         },
         'wallet.security': {

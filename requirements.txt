@@ -16,3 +16,4 @@ django-redis==5.4.0
 
 # Security dependencies
 django-ratelimit==4.1.0
+bleach==6.2.0

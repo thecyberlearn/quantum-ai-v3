@@ -11,6 +11,8 @@ from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.core.exceptions import ValidationError
+from django_ratelimit.decorators import ratelimit
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -20,19 +22,31 @@ from io import BytesIO
 from .models import ChatSession, ChatMessage
 from .services import AgentFileService
 from .utils import validate_webhook_url, AgentCompat
+from core.validators import validate_api_input, InputValidator
 import requests
 import time
 import uuid
+import logging
+
+logger = logging.getLogger('agents.chat')
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@ratelimit(key='user', rate='5/m', method='POST', block=True)
 def start_chat_session(request):
     """Start a new chat session"""
-    agent_slug = request.data.get('agent_slug')
-    
-    if not agent_slug:
-        return Response({'error': 'agent_slug is required'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        # Validate and sanitize input data
+        validated_data = validate_api_input(request.data)
+        agent_slug = validated_data.get('agent_slug')
+        
+        if not agent_slug:
+            return Response({'error': 'agent_slug is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+    except ValidationError as e:
+        logger.warning(f"Input validation failed for user {request.user.id}: {str(e)}")
+        return Response({'error': 'Invalid input data'}, status=status.HTTP_400_BAD_REQUEST)
     
     agent_data = AgentFileService.get_agent_by_slug(agent_slug)
     if not agent_data or not agent_data.get('is_active', True) or agent_data.get('agent_type') != 'chat':
@@ -124,13 +138,20 @@ Let's discover the root cause together! 💪"""
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@ratelimit(key='user', rate='20/m', method='POST', block=True)
 def send_chat_message(request):
     """Send a message in a chat session"""
-    session_id = request.data.get('session_id')
-    message_content = request.data.get('message', '').strip()
-    
-    if not session_id or not message_content:
-        return Response({'error': 'session_id and message are required'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        # Validate and sanitize input
+        session_id = InputValidator.sanitize_string(request.data.get('session_id', ''), max_length=100)
+        message_content = InputValidator.sanitize_string(request.data.get('message', ''), max_length=2000).strip()
+        
+        if not session_id or not message_content:
+            return Response({'error': 'session_id and message are required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+    except ValidationError as e:
+        logger.warning(f"Input validation failed for user {request.user.id}: {str(e)}")
+        return Response({'error': 'Invalid input data'}, status=status.HTTP_400_BAD_REQUEST)
     
     # Get chat session
     chat_session = get_object_or_404(
@@ -150,8 +171,11 @@ def send_chat_message(request):
     agent_data = AgentFileService.get_agent_by_slug(chat_session.agent_slug)
     message_limit = agent_data.get('message_limit', 50) if agent_data else 50
     
-    # Check message limit (only count user messages)
-    current_user_message_count = ChatMessage.objects.filter(session=chat_session, message_type='user').count()
+    # Check message limit (only count user messages) - optimized query
+    current_user_message_count = ChatMessage.objects.filter(
+        session=chat_session, 
+        message_type='user'
+    ).count()
     if current_user_message_count >= message_limit:
         # Auto-complete the session when message limit is reached
         chat_session.status = 'completed'

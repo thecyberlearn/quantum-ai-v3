@@ -64,17 +64,33 @@ class User(AbstractUser):
             
             # Update the current instance's balance to reflect the change
             self.wallet_balance = user.wallet_balance
+            
+            # Invalidate wallet cache
+            try:
+                from core.cache_utils import invalidate_user_cache
+                invalidate_user_cache(self.id, 'wallet_data')
+            except ImportError:
+                pass  # Cache utils not available
+            
             return True
         return False
     
+    @transaction.atomic
     def add_balance(self, amount, description="", stripe_session_id=""):
-        self.wallet_balance += Decimal(str(amount))
-        self.save()
+        """
+        Add balance to user wallet with atomic transaction to prevent race conditions.
+        Uses select_for_update to lock the user record during the transaction.
+        """
+        # Lock the user record for the duration of this transaction
+        user = User.objects.select_for_update().get(id=self.id)
         
-        # Create transaction record
+        user.wallet_balance += Decimal(str(amount))
+        user.save()
+        
+        # Create transaction record within the same atomic transaction
         from wallet.models import WalletTransaction
         transaction_data = {
-            'user': self,
+            'user': user,
             'amount': Decimal(str(amount)),
             'type': 'top_up',
             'description': description,
@@ -91,6 +107,16 @@ class User(AbstractUser):
                 WalletTransaction.objects.create(**transaction_data)
             else:
                 raise e
+        
+        # Update the current instance's balance to reflect the change
+        self.wallet_balance = user.wallet_balance
+        
+        # Invalidate wallet cache
+        try:
+            from core.cache_utils import invalidate_user_cache
+            invalidate_user_cache(self.id, 'wallet_data')
+        except ImportError:
+            pass  # Cache utils not available
 
 
 class PasswordResetToken(models.Model):

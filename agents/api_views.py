@@ -10,24 +10,38 @@ from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.core.exceptions import ValidationError
+from django_ratelimit.decorators import ratelimit
 from .models import AgentExecution
 from .serializers import AgentExecutionSerializer
 from .services import AgentFileService
 from .utils import validate_webhook_url, format_agent_message
+from core.validators import validate_api_input, InputValidator
 import requests
 import time
 import uuid
+import logging
+
+logger = logging.getLogger('agents.api')
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@ratelimit(key='user', rate='10/m', method='POST', block=True)
 def execute_agent(request):
     """Execute an agent with provided input data"""
-    agent_slug = request.data.get('agent_slug')
-    input_data = request.data.get('input_data', {})
-    
-    if not agent_slug:
-        return Response({'error': 'agent_slug is required'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        # Validate and sanitize input data
+        validated_data = validate_api_input(request.data)
+        agent_slug = validated_data.get('agent_slug')
+        input_data = validated_data.get('input_data', {})
+        
+        if not agent_slug:
+            return Response({'error': 'agent_slug is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+    except ValidationError as e:
+        logger.warning(f"Input validation failed for user {request.user.id}: {str(e)}")
+        return Response({'error': 'Invalid input data'}, status=status.HTTP_400_BAD_REQUEST)
     
     agent_data = AgentFileService.get_agent_by_slug(agent_slug)
     if not agent_data or not agent_data.get('is_active', True):
@@ -146,9 +160,20 @@ def execute_agent(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@ratelimit(key='user', rate='30/m', method='GET', block=True)
 def execution_list(request):
-    """List user's agent executions"""
-    executions = AgentExecution.objects.filter(user=request.user)
+    """List user's agent executions with optimized queries"""
+    executions = AgentExecution.objects.filter(user=request.user).select_related('user').order_by('-created_at')
+    
+    # Add filtering by agent if specified
+    agent_slug = request.GET.get('agent')
+    if agent_slug:
+        executions = executions.filter(agent_slug=agent_slug)
+    
+    # Add status filtering
+    status_filter = request.GET.get('status')
+    if status_filter:
+        executions = executions.filter(status=status_filter)
     
     paginator = PageNumberPagination()
     paginator.page_size = 20
@@ -159,6 +184,7 @@ def execution_list(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@ratelimit(key='user', rate='60/m', method='GET', block=True)
 def execution_detail(request, execution_id):
     """Get detailed execution information"""
     execution = get_object_or_404(AgentExecution, id=execution_id, user=request.user)

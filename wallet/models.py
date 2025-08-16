@@ -25,6 +25,12 @@ class WalletTransaction(models.Model):
     
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),  # For user transaction history
+            models.Index(fields=['type', '-created_at']),  # For filtering by transaction type
+            models.Index(fields=['stripe_session_id']),  # For duplicate payment checks
+            models.Index(fields=['user', 'type']),  # For aggregation queries
+        ]
     
     def __str__(self):
         return f"{self.user.email} - {self.amount} AED ({self.type})"

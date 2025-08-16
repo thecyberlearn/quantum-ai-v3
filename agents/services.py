@@ -38,7 +38,8 @@ class AgentFileService:
         cache_key = 'agent_categories_all'
         try:
             cached_categories = cache.get(cache_key)
-            if cached_categories is not None and not settings.DEBUG:
+            if cached_categories is not None:
+                # In debug mode, cache for 1 minute; in production, cache for 1 hour
                 return cached_categories
         except Exception:
             # Cache not available, continue with file load
@@ -83,7 +84,8 @@ class AgentFileService:
         cache_key = 'agent_configs_all'
         try:
             cached_agents = cache.get(cache_key)
-            if cached_agents is not None and not settings.DEBUG:
+            if cached_agents is not None:
+                # Return cached data regardless of debug mode
                 return cached_agents
         except Exception:
             # Cache not available, continue with file load

@@ -15,6 +15,7 @@ import ipaddress
 import json
 from django.views.decorators.csrf import ensure_csrf_cookie
 from decimal import Decimal
+from core.cache_utils import cache_user_data
 
 logger = logging.getLogger(__name__)
 
@@ -28,13 +29,25 @@ STRIPE_WEBHOOK_IPS = [
 
 
 @login_required
+@cache_user_data('wallet_data', timeout=300)  # Cache for 5 minutes
 def wallet_view(request):
-    """Wallet management page"""
-    transactions = request.user.wallet_transactions.all()[:50]
+    """Wallet management page with optimized queries"""
+    from django.db.models import Sum, Q
     
-    # Calculate statistics
-    total_spent = sum(abs(t.amount) for t in transactions if t.type == 'agent_usage')
-    total_topped_up = sum(t.amount for t in transactions if t.type == 'top_up')
+    # Get recent transactions with optimized query
+    transactions = (request.user.wallet_transactions
+                   .select_related('user')
+                   .order_by('-created_at')[:50])
+    
+    # Calculate statistics with database aggregation (much faster)
+    stats = request.user.wallet_transactions.aggregate(
+        total_spent=Sum('amount', filter=Q(type='agent_usage')),
+        total_topped_up=Sum('amount', filter=Q(type='top_up'))
+    )
+    
+    # Handle None values from aggregation
+    total_spent = abs(stats['total_spent'] or 0)
+    total_topped_up = stats['total_topped_up'] or 0
     
     context = {
         'transactions': transactions,

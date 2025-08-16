@@ -1,5 +1,8 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
+from django.conf import settings
+import secrets
+import getpass
 
 User = get_user_model()
 
@@ -7,10 +10,35 @@ User = get_user_model()
 class Command(BaseCommand):
     help = 'Reset admin user - delete existing and create fresh'
     
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--password',
+            type=str,
+            help='Admin password (if not provided, will generate secure random password)'
+        )
+        parser.add_argument(
+            '--prompt-password',
+            action='store_true',
+            help='Prompt for password input (secure)'
+        )
+    
     def handle(self, *args, **options):
         email = 'admin@quantumtaskai.com'
         username = 'admin'
-        password = 'P9cKE9G$R%ni#p'
+        
+        # Secure password handling
+        if options['prompt_password']:
+            password = getpass.getpass("Enter admin password: ")
+            if not password:
+                self.stdout.write(self.style.ERROR("Password cannot be empty"))
+                return
+        elif options['password']:
+            password = options['password']
+        else:
+            # Generate secure random password
+            password = secrets.token_urlsafe(16)
+            self.stdout.write(f"🔐 Generated secure password: {password}")
+            self.stdout.write("⚠️  SAVE THIS PASSWORD SECURELY - it will not be shown again!")
         
         self.stdout.write("🔄 Resetting admin user...")
         
