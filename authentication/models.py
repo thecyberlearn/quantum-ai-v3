@@ -11,7 +11,6 @@ class User(AbstractUser):
     wallet_balance = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), db_index=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
-    email_verified = models.BooleanField(default=False)
     
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
@@ -120,27 +119,3 @@ class PasswordResetToken(models.Model):
         return f"Password reset token for {self.user.email}"
 
 
-class EmailVerificationToken(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='email_verification_tokens')
-    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField()
-    is_used = models.BooleanField(default=False)
-    
-    def save(self, *args, **kwargs):
-        if not self.expires_at:
-            self.expires_at = timezone.now() + timedelta(hours=24)  # 24-hour expiration for email verification
-        super().save(*args, **kwargs)
-    
-    def is_valid(self):
-        return not self.is_used and timezone.now() < self.expires_at
-    
-    def mark_as_used(self):
-        self.is_used = True
-        self.save()
-    
-    class Meta:
-        ordering = ['-created_at']
-    
-    def __str__(self):
-        return f"Email verification token for {self.user.email}"

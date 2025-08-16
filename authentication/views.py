@@ -10,7 +10,7 @@ from django.urls import reverse
 from django_ratelimit.decorators import ratelimit
 from django_ratelimit import UNSAFE
 from django_ratelimit.exceptions import Ratelimited
-from .models import User, PasswordResetToken, EmailVerificationToken
+from .models import User, PasswordResetToken
 import logging
 
 logger = logging.getLogger(__name__)
@@ -35,48 +35,6 @@ def validate_password_strength(password):
     return []
 
 
-def send_verification_email(user):
-    """Send email verification to new user"""
-    try:
-        # Create verification token
-        verification_token = EmailVerificationToken.objects.create(user=user)
-        
-        # Build verification URL
-        verification_path = reverse('authentication:verify_email', kwargs={'token': verification_token.token})
-        verification_url = f"{settings.SITE_URL}{verification_path}"
-        
-        # Send email
-        subject = 'Verify Your Email Address - Quantum Tasks AI'
-        message = f'''
-Hello {user.username},
-
-Welcome to Quantum Tasks AI! Please verify your email address to complete your account setup.
-
-Click the link below to verify your email:
-{verification_url}
-
-This link will expire in 24 hours.
-
-If you didn't create this account, please ignore this email.
-
-Best regards,
-Quantum Tasks AI Team
-        '''
-        
-        send_mail(
-            subject,
-            message,
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email],
-            fail_silently=False,
-        )
-        
-        logger.info(f"Verification email sent successfully to {user.email}")
-        return True
-        
-    except Exception as e:
-        logger.error(f"Failed to send verification email to {user.email}: {str(e)}")
-        return False
 
 
 def handle_ratelimited(request, exception):
@@ -108,12 +66,6 @@ def login_view(request):
         
         user = authenticate(request, username=email, password=password)
         if user is not None:
-            # Check if email is verified (only if email verification is required)
-            if settings.REQUIRE_EMAIL_VERIFICATION and not user.email_verified:
-                messages.warning(request, 'Please verify your email address before logging in. Check your inbox for the verification link.')
-                # Store resend URL in context for template
-                context = {'show_resend_verification': True}
-                return render(request, 'authentication/login.html', context)
             
             login(request, user)
             # Clear rate limit flag on successful login
@@ -168,24 +120,10 @@ def register_view(request):
                 password=password1
             )
             
-            # Handle email verification based on settings
-            if settings.REQUIRE_EMAIL_VERIFICATION:
-                # Don't automatically login - require email verification first
-                # Send verification email
-                if send_verification_email(user):
-                    messages.success(request, 'Account created. Check your email to verify.')
-                else:
-                    messages.warning(request, 'Account created. Email verification failed - try again later.')
-                
-                return redirect('authentication:login')
-            else:
-                # Skip email verification - auto-verify and login
-                user.email_verified = True
-                user.save()
-                
-                login(request, user)
-                messages.success(request, f'Welcome {user.username}!')
-                return redirect('core:homepage')
+            # Auto-login new users (no email verification required)
+            login(request, user)
+            messages.success(request, f'Welcome {user.username}!')
+            return redirect('core:homepage')
         except Exception as e:
             logger.error(f"Error creating account for {email}: {str(e)}")
             messages.error(request, 'Error creating account')
@@ -353,53 +291,5 @@ def reset_password_view(request, token):
     return render(request, 'authentication/reset_password.html', {'token': token})
 
 
-def verify_email_view(request, token):
-    """Email verification view"""
-    verification_token = get_object_or_404(EmailVerificationToken, token=token)
-    
-    if not verification_token.is_valid():
-        messages.error(request, 'This verification link has expired or is invalid.')
-        return redirect('authentication:login')
-    
-    # Mark email as verified
-    user = verification_token.user
-    user.email_verified = True
-    user.save()
-    
-    # Mark token as used
-    verification_token.mark_as_used()
-    
-    messages.success(request, 'Email verified. You can now log in.')
-    return redirect('authentication:login')
 
 
-@ratelimit(key='ip', rate='2/5m', method=UNSAFE, block=False)
-def resend_verification_view(request):
-    """Resend email verification"""
-    # Check if rate limited
-    if getattr(request, 'limited', False):
-        logger.warning(f"Verification resend rate limit exceeded for IP {request.META.get('REMOTE_ADDR')}")
-        messages.error(request, 'Too many verification requests. Please try again in a few minutes.')
-        return redirect('authentication:login')
-    
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        
-        try:
-            user = User.objects.get(email=email)
-            
-            if user.email_verified:
-                messages.info(request, 'Your email is already verified. You can log in.')
-                return redirect('authentication:login')
-            
-            # Send new verification email
-            if send_verification_email(user):
-                messages.success(request, 'Verification email sent.')
-            else:
-                messages.error(request, 'Unable to send verification email at this time.')
-            
-        except User.DoesNotExist:
-            # Show same success message to prevent user enumeration
-            messages.success(request, 'If an account with that email exists, a verification email has been sent.')
-    
-    return render(request, 'authentication/resend_verification.html')

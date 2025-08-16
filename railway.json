@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "python manage.py migrate; python manage.py reset_admin; python manage.py verify_email admin@quantumtaskai.com --force || true; python manage.py collectstatic --noinput && gunicorn netcop_hub.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 60",
+    "startCommand": "python manage.py migrate; python manage.py reset_admin; python manage.py collectstatic --noinput && gunicorn netcop_hub.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 60",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
   },

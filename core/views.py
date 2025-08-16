@@ -286,7 +286,7 @@ def health_check_view(request):
 
 # Simple external service wrapper configurations
 EXTERNAL_PAGES = {
-    'event-invitation': {
+    'event': {
         'title': 'Event Registration',
         'description': 'Register for our upcoming event',
         'external_url': 'https://form.jotform.com/252214924850455',
