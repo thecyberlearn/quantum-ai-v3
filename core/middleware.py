@@ -17,26 +17,63 @@ class SecurityHeadersMiddleware:
     
     def __init__(self, get_response):
         self.get_response = get_response
+    
+    def _needs_external_iframe_support(self, request):
+        """
+        Detect if this page needs external iframe support for CSP.
+        Covers direct access agents, external wrapper pages, and future additions.
+        """
+        path = request.path
+        
+        # Direct access agent display pages
+        if '/agents/' in path and path.endswith('/display/'):
+            return True
+        
+        # External wrapper pages (events, forms, etc.)
+        # Pattern: /<page_name>/ where page_name is in EXTERNAL_PAGES
+        if path.count('/') == 2 and not path.startswith('/admin/') and not path.startswith('/auth/') and not path.startswith('/wallet/') and not path.startswith('/agents/'):
+            # Import here to avoid circular imports
+            from .views import EXTERNAL_PAGES
+            page_name = path.strip('/')
+            if page_name in EXTERNAL_PAGES:
+                config = EXTERNAL_PAGES[page_name]
+                # Only iframe and landing templates need CSP relaxation
+                return config.get('template') in ['iframe', 'landing']
+        
+        return False
 
     def __call__(self, request):
         response = self.get_response(request)
         
         # Content Security Policy
         if not settings.DEBUG:
-            # Check if this is a direct access agent page that needs external frames
-            is_direct_access_page = (
-                '/agents/' in request.path and 
-                request.path.count('/') >= 3 and
-                not request.path.endswith('/api/execute/')
-            )
+            # Check if this page needs external iframe support
+            is_external_iframe_page = self._needs_external_iframe_support(request)
             
-            if is_direct_access_page:
-                # Relaxed CSP for direct access agent pages (external forms)
+            if is_external_iframe_page:
+                # Relaxed CSP for pages with external iframes (agents, events, forms, etc.)
+                # Includes common external service domains for future-proofing
                 csp_policy = (
                     "default-src 'self'; "
-                    "script-src 'self' 'unsafe-inline' https://js.stripe.com https://checkout.stripe.com https://form.jotform.com https://www.jotform.com https://agent.jotform.com https://cdn.jotfor.ms; "
-                    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://form.jotform.com https://www.jotform.com https://agent.jotform.com https://cdn.jotfor.ms; "
-                    "font-src 'self' https://fonts.gstatic.com https://form.jotform.com https://www.jotform.com https://agent.jotform.com https://cdn.jotfor.ms; "
+                    "script-src 'self' 'unsafe-inline' https://js.stripe.com https://checkout.stripe.com "
+                    "https://form.jotform.com https://www.jotform.com https://agent.jotform.com https://cdn.jotfor.ms "
+                    "https://calendly.com https://assets.calendly.com "
+                    "https://www.googletagmanager.com https://www.google-analytics.com "
+                    "https://typeform.com https://*.typeform.com "
+                    "https://airtable.com https://*.airtable.com "
+                    "https://hubspot.com https://*.hubspot.com "
+                    "https://zapier.com https://*.zapier.com; "
+                    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com "
+                    "https://form.jotform.com https://www.jotform.com https://agent.jotform.com https://cdn.jotfor.ms "
+                    "https://calendly.com https://assets.calendly.com "
+                    "https://typeform.com https://*.typeform.com "
+                    "https://airtable.com https://*.airtable.com "
+                    "https://hubspot.com https://*.hubspot.com "
+                    "https://zapier.com https://*.zapier.com; "
+                    "font-src 'self' https://fonts.gstatic.com "
+                    "https://form.jotform.com https://www.jotform.com https://agent.jotform.com https://cdn.jotfor.ms "
+                    "https://calendly.com https://assets.calendly.com "
+                    "https://typeform.com https://*.typeform.com; "
                     "img-src 'self' data: https: blob:; "
                     "connect-src 'self' https: wss: ws:; "
                     "frame-src 'self' https: http:; "
@@ -87,8 +124,9 @@ class SecurityHeadersMiddleware:
         )
         
         # X-Frame-Options handling
-        if request.path.endswith('/display/') and '/agents/' in request.path:
-            # Allow direct access agent display pages to be framed (they contain external iframes)
+        needs_iframe_support = is_external_iframe_page if not settings.DEBUG else self._needs_external_iframe_support(request)
+        if needs_iframe_support:
+            # Allow external iframe pages to be framed (they contain external iframes)
             response['X-Frame-Options'] = 'SAMEORIGIN'
         else:
             # Deny framing for all other pages
