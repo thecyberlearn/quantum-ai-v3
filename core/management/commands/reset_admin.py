@@ -42,40 +42,47 @@ class Command(BaseCommand):
         
         self.stdout.write("🔄 Resetting admin user...")
         
-        # Delete ANY existing admin users (all possible emails/usernames)
-        deleted_count = 0
+        # Check for existing admin user (update instead of creating new)
+        existing_admin = None
         
         # Check for users with admin emails
         admin_emails = ['admin@quantumtaskai.com', 'admin@netcop.ai']
         for admin_email in admin_emails:
             try:
-                user = User.objects.get(email=admin_email)
-                user.delete()
-                deleted_count += 1
-                self.stdout.write(f"❌ Deleted user with email: {admin_email}")
+                existing_admin = User.objects.get(email=admin_email)
+                self.stdout.write(f"📧 Found existing admin with email: {admin_email}")
+                break
             except User.DoesNotExist:
                 pass
         
-        # Check for users with admin username
-        try:
-            user = User.objects.get(username=username)
-            if user.email not in admin_emails:  # Don't double-delete
-                user.delete()
-                deleted_count += 1
-                self.stdout.write(f"❌ Deleted user with username: {username}")
-        except User.DoesNotExist:
-            pass
+        # Check for users with admin username if no email match
+        if not existing_admin:
+            try:
+                existing_admin = User.objects.get(username=username)
+                self.stdout.write(f"👤 Found existing admin with username: {username}")
+            except User.DoesNotExist:
+                pass
         
-        self.stdout.write(f"🗑️  Deleted {deleted_count} existing admin user(s)")
-        
-        # Create fresh admin user
-        self.stdout.write("🆕 Creating fresh admin user...")
-        
-        user = User.objects.create_superuser(
-            username=username,
-            email=email,
-            password=password,
-        )
+        if existing_admin:
+            # Update existing admin user
+            self.stdout.write("🔄 Updating existing admin user...")
+            existing_admin.username = username
+            existing_admin.email = email
+            existing_admin.set_password(password)
+            existing_admin.is_superuser = True
+            existing_admin.is_staff = True
+            existing_admin.is_active = True
+            existing_admin.save()
+            user = existing_admin
+            self.stdout.write("✅ Existing admin user updated successfully!")
+        else:
+            # Create fresh admin user
+            self.stdout.write("🆕 Creating fresh admin user...")
+            user = User.objects.create_superuser(
+                username=username,
+                email=email,
+                password=password,
+            )
         
         # Add initial balance
         user.add_balance(100, "Initial admin balance")
