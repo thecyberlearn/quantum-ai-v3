@@ -214,31 +214,60 @@ The platform supports 2 agent types:
 
 ## External Service Wrappers
 
-**Simple template-based system for event invitations, demos, and external forms:**
+**Advanced template-based system for external forms, events, and integrations with automatic CSP support:**
 
 **Configuration:** Edit `EXTERNAL_PAGES` dict in `core/views.py`:
 ```python
 EXTERNAL_PAGES = {
-    'event-invitation': {
+    'event': {
         'title': 'Event Registration',
+        'description': 'Register for our upcoming event',
         'external_url': 'https://form.jotform.com/252214924850455',
         'template': 'iframe',  # iframe, landing, or redirect
-    }
+    },
+    'cea': {
+        'title': 'CEA Registration',
+        'description': 'Access CEA registration form',
+        'external_url': 'https://agent.jotform.com/0198a8860b46796895f2a40367a6cea4df0c',
+        'template': 'iframe',
+    },
+    'cea1': {
+        'title': 'CEA1 Registration',
+        'description': 'Access CEA1 registration form',
+        'external_url': 'https://agent.jotform.com/0198b221344f78088bfc6fc6598d649db6e5',
+        'template': 'iframe',
+    },
 }
 ```
 
 **Templates Available:**
-- `templates/wrapper/iframe.html` - Full-screen iframe embed
-- `templates/wrapper/landing.html` - Branded landing page with embed
+- `templates/wrapper/iframe.html` - Full-screen iframe embed (auto CSP support)
+- `templates/wrapper/landing.html` - Branded landing page with embed (auto CSP support)
 - `templates/wrapper/redirect.html` - Auto-redirect with countdown
 
-**Access:** `/{page-name}/` (e.g., `/event-invitation/`)
+**Access:** `/{page-name}/` (e.g., `/event/`, `/cea/`, `/cea1/`)
 
 **Features:**
-- Rate limiting protection
-- Consistent branding
-- Mobile responsive
-- No database needed
+- **🚀 Automatic CSP Support** - No content blocking for external iframes
+- **🛡️ Smart Security** - Relaxed CSP only for iframe/landing pages
+- **📱 Mobile Responsive** - Works on all devices
+- **⚡ Zero Configuration** - Add to EXTERNAL_PAGES and it works immediately
+- **🔒 Rate Limited** - IP-based protection (30 requests/minute)
+- **🎨 Consistent Branding** - Inherits site design system
+
+**Supported External Services (Auto-Whitelisted):**
+- JotForm (form.jotform.com, agent.jotform.com, cdn.jotfor.ms)
+- Calendly (calendly.com, assets.calendly.com)
+- Typeform (typeform.com, *.typeform.com)
+- Airtable (airtable.com, *.airtable.com)
+- HubSpot (hubspot.com, *.hubspot.com)
+- Zapier (zapier.com, *.zapier.com)
+- Google Analytics/GTM
+
+**Adding New External Services:**
+1. Add entry to `EXTERNAL_PAGES` in `core/views.py`
+2. Choose template: `iframe`, `landing`, or `redirect`
+3. Access immediately at `/{page-name}/` - no other configuration needed!
 
 ## Social Media Integration
 
@@ -263,6 +292,45 @@ EXTERNAL_PAGES = {
 
 **Result:** Rich previews on WhatsApp, Discord, Twitter, LinkedIn with branded image and professional descriptions.
 
+## Security & Performance Optimizations
+
+**🛡️ Comprehensive Security System:**
+
+**Security Middleware (`core/middleware.py`):**
+- **Smart Content Security Policy (CSP)** - Automatic detection of pages needing external iframe support
+- **Security Headers** - X-Content-Type-Options, X-XSS-Protection, Referrer-Policy, Permissions-Policy
+- **X-Frame-Options** - Dynamic handling (SAMEORIGIN for iframe pages, DENY for others)
+- **Security Monitoring** - Logs suspicious activity, failed auth attempts, SQL injection attempts
+- **Threat Detection** - Pattern matching for common attack vectors
+
+**Input Validation (`core/validators.py`):**
+- **XSS Prevention** - HTML sanitization with bleach
+- **SQL Injection Protection** - Pattern detection and input cleaning
+- **File Upload Security** - Extension validation, size limits, filename sanitization
+- **Decimal/Amount Validation** - Secure monetary value handling
+- **Email Validation** - RFC-compliant with security checks
+
+**Cache System (`core/cache_utils.py`):**
+- **Smart Cache Keys** - User-specific, agent-specific caching
+- **Cache Invalidation** - Automatic cleanup on data changes
+- **Performance Optimization** - Reduces database queries
+
+**Database Security:**
+- **Atomic Transactions** - ACID compliance for wallet operations
+- **Index Optimization** - Performance indexes on frequently queried fields
+- **Migration Safety** - Foreign key constraint handling
+
+**Rate Limiting:**
+- **IP-based Protection** - 30 requests/minute for external pages
+- **Agent Execution Limits** - Prevents abuse of AI services
+- **Authentication Throttling** - Failed login attempt tracking
+
+**🚀 Performance Features:**
+- **Database Optimization** - select_related, prefetch_related for efficient queries
+- **Static File Optimization** - WhiteNoise compression and caching
+- **Smart Caching** - User balance, agent data, and execution history caching
+- **Logging Optimization** - Structured logging with rotation
+
 ## Production Deployment
 
 **Railway Configuration:**
@@ -270,13 +338,22 @@ EXTERNAL_PAGES = {
 - PostgreSQL database provided by Railway
 - Environment variables configured in Railway dashboard
 - Static files served via WhiteNoise
+- **Secure Admin Creation** - `reset_admin` command with foreign key safety
 
 **Security Features:**
-- CSRF protection enabled
-- Rate limiting on sensitive endpoints
-- Secure headers in production
-- HTTPS redirect and HSTS headers
-- Session and cookie security
+- **Production CSP** - Strict policy for non-iframe pages
+- **CSRF Protection** - Django CSRF middleware enabled
+- **Rate Limiting** - django-ratelimit on sensitive endpoints
+- **Secure Headers** - Complete security header suite
+- **HTTPS Enforcement** - Secure cookies and HSTS
+- **Session Security** - Secure session configuration
+- **Input Sanitization** - All user input validated and cleaned
+
+**Emergency Rollback System:**
+- **Complete rollback documentation** in `ROLLBACK.md`
+- **30-second emergency recovery** - Simple git commands
+- **Zero data loss** - All changes committed safely
+- **Selective rollback** - Can revert specific components
 
 ## Development Notes
 
@@ -319,24 +396,24 @@ EXTERNAL_PAGES = {
 - **Webhook Agents (4)**: Social Ads Generator, Job Posting Generator, PDF Summarizer, 5 Whys Analyzer
 - **Direct Access Agents (4)**: CyberSec Career Navigator, AI Brand Strategist, Lean Six Sigma Expert, SWOT Analysis Expert
 
-**Latest Changes:**
-- **Social media integration complete** - Rich previews with branded og-image.png
-- **External service wrapper system** - Simple template-based system for JotForm, Zapier, event invitations
-- **View separation completed** - Split large views.py into focused modules (api, chat, web, direct access)
-- **Restored digital-branding.css** from git history with proper design system integration
-- **Added SWOT Analysis Expert** with proper category assignment (analysis)
-- **Streamlined agent creation process** via JSON configs (instant file-based loading)
-- **Separated documentation** into focused files (`docs/AGENT_CREATION.md`)
-- **Removed 10+ redundant management commands** for cleaner codebase
-- **Fixed marketplace consistency** and updated documentation
+**Latest Changes (2025-08-16):**
+- **🛡️ Comprehensive Security Optimization** - Complete security overhaul with CSP, input validation, and threat detection
+- **🚀 Smart External Iframe System** - Future-proof CSP handling for external services (JotForm, Calendly, etc.)
+- **🔧 Railway Deployment Fixes** - Fixed admin command foreign key constraints and deployment blockers
+- **⚡ Performance Enhancements** - Database optimization, caching, and query improvements
+- **📝 Emergency Rollback System** - Complete rollback documentation with 30-second recovery
+- **🔒 Input Validation** - XSS prevention, SQL injection protection, file upload security
+- **📊 Security Monitoring** - Comprehensive logging and threat detection
+- **🎯 External Service Pages** - Added /event/, /cea/, /cea1/ with automatic CSP support
 
 **Architecture Status:**
-- **Modular view architecture** - 5 focused modules for better code organization and maintainability
-- **Error-free agent creation** via file-based JSON configuration
-- **Railway-ready deployment** with automatic agent population
-- **Consistent UI standards** across all marketplace components
-- **Professional styling** - All pages properly styled with design system integration
-- **Comprehensive documentation** prevents common development mistakes
+- **🛡️ Production-Ready Security** - Enterprise-grade security implementation
+- **🚀 Future-Proof External Integration** - Automatic CSP support for new external services
+- **⚡ High Performance** - Optimized database queries and smart caching
+- **🔧 Railway Deployment Ready** - All deployment issues resolved
+- **📝 Complete Documentation** - Security, rollback, and development guides
+- **🎯 Zero-Config External Pages** - Add to EXTERNAL_PAGES and it works immediately
+- **🔒 Comprehensive Input Validation** - All user input sanitized and validated
 
 **Future Development:**
 - **New agents** should follow patterns in `docs/AGENT_CREATION.md`
@@ -345,7 +422,7 @@ EXTERNAL_PAGES = {
 - **New views** should be added to appropriate focused modules (api_views, chat_views, web_views, direct_access_views)
 
 ---
-Last updated: 2025-01-14
+Last updated: 2025-08-16 (Security & Performance Optimization Complete)
 
 ## Documentation
 - **Quick Agent Requests**: See `docs/AGENT_REQUEST_TEMPLATE.md` for simple agent request template
